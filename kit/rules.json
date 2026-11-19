@@ -1,0 +1,375 @@
+{
+  "rules_version": "1",
+  "format_version": "0.3",
+  "licenses": [
+    "MIT",
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "BSD-2-Clause",
+    "CC-BY-4.0",
+    "CC0-1.0"
+  ],
+  "fields": [
+    {
+      "id": "title",
+      "path": "study.title",
+      "level": "block",
+      "label": "Title",
+      "todo": "a title",
+      "fix": "Set experiment.title to a short name for the experiment. You may write this yourself from the goal."
+    },
+    {
+      "id": "question",
+      "path": "study.question",
+      "level": "suggest",
+      "label": "Summary",
+      "todo": "a short summary",
+      "fix": "Set experiment.summary to one or two sentences on what was studied."
+    },
+    {
+      "id": "license",
+      "path": "study.license",
+      "level": "block",
+      "label": "Metadata license",
+      "todo": "a metadata license",
+      "kind": "license",
+      "fix": "Run: cameo.py fix FILE to set the default (MIT). If the depositor named another, set experiment.license to it; it must be one of: MIT, Apache-2.0, BSD-3-Clause, BSD-2-Clause, CC-BY-4.0, CC0-1.0.",
+      "bad_msg": "choose one of the open licenses CAMEO takes: MIT, Apache-2.0, BSD-3-Clause, BSD-2-Clause, CC-BY-4.0, CC0-1.0"
+    },
+    {
+      "id": "orcid",
+      "path": "contributor.orcid",
+      "level": "suggest",
+      "label": "ORCID",
+      "todo": "your ORCID",
+      "pattern": "^\\d{4}-\\d{4}-\\d{4}-\\d{3}[\\dX]$",
+      "pattern_msg": "Use the form 0000-0000-0000-0000",
+      "fix": "Set experiment.depositor.orcid. Leave it as not_reported if the depositor did not give one."
+    },
+    {
+      "id": "code_url",
+      "path": "study.code_url",
+      "level": "suggest",
+      "label": "Code link",
+      "todo": "a code link",
+      "pattern": "^https://\\S+$",
+      "pattern_msg": "Start with https://",
+      "fix": "Set experiment.code_url to the public repository, if there is one."
+    },
+    {
+      "id": "publication",
+      "path": "study.publication",
+      "level": "suggest",
+      "label": "Publication (DOI or link)",
+      "todo": "the publication",
+      "fix": "Set experiment.publication to a DOI or link, if there is one."
+    },
+    {
+      "id": "accession",
+      "path": "dataset.accession",
+      "level": "suggest",
+      "label": "Dataset accession",
+      "todo": "the dataset accession",
+      "fix": "Set experiment.data.accession to the public id of the dataset (for example a Zenodo or GEO id)."
+    },
+    {
+      "id": "lab",
+      "path": "contributor.lab",
+      "level": "suggest",
+      "label": "Lab",
+      "todo": "your lab",
+      "fix": "Set experiment.depositor.lab."
+    },
+    {
+      "id": "institution",
+      "path": "contributor.institution",
+      "level": "suggest",
+      "label": "Institution",
+      "todo": "your institution",
+      "fix": "Set experiment.depositor.institution."
+    }
+  ],
+  "checks": {
+    "json-invalid": {
+      "level": "block",
+      "message": "This is not valid JSON: {detail}",
+      "fix": "Repair the file so that it parses."
+    },
+    "json-nonfinite": {
+      "level": "block",
+      "message": "{n} number(s) are Infinity or NaN, which JSON does not allow. The first is on line {line}.",
+      "fix": "Run: cameo.py fix FILE. It records them as diverged."
+    },
+    "shape": {
+      "level": "block",
+      "message": "The file needs experiment, models, training and runs at the top level.",
+      "fix": "Start from: cameo.py init"
+    },
+    "depositor-name": {
+      "level": "block",
+      "message": "Name the depositor",
+      "path": "contributor.name",
+      "fix": "Set experiment.depositor.name."
+    },
+    "dataset-name": {
+      "level": "block",
+      "message": "Name the dataset",
+      "path": "dataset.name",
+      "fix": "Set experiment.data.name."
+    },
+    "no-scored": {
+      "level": "block",
+      "message": "No run has a score",
+      "fix": "Each finished run needs performance.score, the number the study optimised."
+    },
+    "duplicate-id": {
+      "level": "block",
+      "message": "{n} id(s) are used twice: {ids}",
+      "fix": "Give every model and every run its own id."
+    },
+    "dangling-model": {
+      "level": "block",
+      "message": "{n} run(s) name a model that is not in the file",
+      "fix": "Add the model, or correct runs[].model."
+    },
+    "dangling-parent": {
+      "level": "block",
+      "message": "{n} run(s) point to a parent that is not in the file",
+      "fix": "Add the parent run, or set history.parent to null."
+    },
+    "dangling-recipe": {
+      "level": "block",
+      "message": "{n} run(s) name a training recipe that is not in the file",
+      "fix": "Add the recipe under training, or correct runs[].training."
+    },
+    "done-no-score": {
+      "level": "block",
+      "message": "{n} run(s) are marked done but have no score",
+      "fix": "Give the score, or set performance.status to what happened (failed, invalid)."
+    },
+    "format": {
+      "level": "suggest",
+      "message": "The file says format {found}; this kit writes {want}",
+      "fix": "Run: cameo.py fix FILE"
+    },
+    "speed": {
+      "level": "suggest",
+      "message": "Add inference speed from your own hardware",
+      "fix": "Run: cameo.py add-speed FILE, on the hardware you want to report."
+    },
+    "layers": {
+      "level": "suggest",
+      "message": "Add layer lists, so model workflows can be drawn",
+      "fix": "Run: cameo.py add-layers FILE"
+    },
+    "crossover": {
+      "level": "suggest",
+      "message": "Record both parents of each crossover",
+      "fix": "For each run made by combining two lines, set runs[].history.second_parent to {\"run\": id} or {\"lineage\": id}."
+    },
+    "recipe": {
+      "level": "suggest",
+      "message": "Recipe \"{recipe}\": training details missing ({n})",
+      "fix": "Fill the missing details under training.{recipe}. They are listed in the reproduce section of this report."
+    },
+    "bad-status": {
+      "level": "block",
+      "message": "{n} run(s) have a status that is not one of: {allowed}",
+      "fix": "Set performance.status to one of the listed values."
+    },
+    "dangling-second-parent": {
+      "level": "block",
+      "message": "{n} run(s) name a second parent that is not in the file",
+      "fix": "history.second_parent is {\"run\": id} or {\"lineage\": id}; the id must exist under runs or experiment.search.lineages."
+    },
+    "dangling-model-parent": {
+      "level": "block",
+      "message": "{n} model(s) name a parent model that is not in the file",
+      "fix": "Add the parent model, or set models[].parent to null."
+    },
+    "dangling-lineage": {
+      "level": "suggest",
+      "message": "{n} run(s) name a line of work that is not under experiment.search.lineages",
+      "fix": "Add each line under experiment.search.lineages with its name, family and parents."
+    },
+    "recipe-source": {
+      "level": "suggest",
+      "message": "Recipe \"{recipe}\": training code not stored",
+      "fix": "Set training.{recipe}.code to {\"entry_point\": ..., \"script\": \"<the training script as text>\"}."
+    },
+    "model-source": {
+      "level": "suggest",
+      "message": "{n} model(s) have no code stored",
+      "fix": "Store the model file as text under models[].code. It must define build_model()."
+    },
+    "parameters": {
+      "level": "suggest",
+      "message": "{n} finished run(s) have no parameter count",
+      "fix": "Set performance.parameters to the number of trainable parameters."
+    },
+    "runtime": {
+      "level": "suggest",
+      "message": "{n} finished run(s) have no training time",
+      "fix": "Set performance.training_minutes: wall-clock minutes from the start of training to its end."
+    },
+    "metrics": {
+      "level": "suggest",
+      "message": "{n} finished run(s) have no validation or test metrics",
+      "fix": "Set performance.valid and performance.test, each a map from metric name to value."
+    },
+    "training-context": {
+      "level": "suggest",
+      "message": "Training device not recorded",
+      "fix": "Set experiment.environment.training_hardware: device (the GPU or CPU model, for example \"NVIDIA A100\"), count and precision."
+    },
+    "speed-some": {
+      "level": "suggest",
+      "message": "{n} model(s) with a finished run have no inference speed",
+      "fix": "Run: cameo.py add-speed FILE, on the hardware you want to report."
+    },
+    "speed-context": {
+      "level": "suggest",
+      "message": "Inference speed is recorded without its device",
+      "fix": "Set experiment.environment.inference_hardware: device (the GPU or CPU model), threads, batch and precision. cameo.py add-speed writes it."
+    },
+    "seed": {
+      "level": "suggest",
+      "message": "{n} finished run(s) have no seed",
+      "fix": "Set runs[].seed."
+    },
+    "environment": {
+      "level": "suggest",
+      "message": "Software versions not recorded",
+      "fix": "Set experiment.environment: python, framework and packages, each with its version."
+    },
+    "data-split": {
+      "level": "suggest",
+      "message": "The data split is not shared",
+      "fix": "Set experiment.data.splits to an object with how the split was made, plus the code that builds it (\"code\") or the split files (\"files\": name → {url, sha256})."
+    }
+  },
+  "recipe_details": {
+    "setting": {
+      "message": "the {name} setting",
+      "fix": "Set {name} under the recipe's settings, or under settings for each run that used its own value."
+    },
+    "loss-kind": {
+      "message": "loss kind",
+      "fix": "Set loss.kind, for example \"mse\" or \"cross_entropy\"."
+    },
+    "loss-terms": {
+      "message": "loss terms and weights",
+      "fix": "Set loss.terms to one entry per output: {\"output\": name, \"weight\": number}."
+    },
+    "loss-reduction": {
+      "message": "loss reduction",
+      "fix": "Set loss.reduction, for example \"mean over examples, then weighted sum over outputs\"."
+    },
+    "schedule": {
+      "message": "what the \"{name}\" schedule does",
+      "fix": "Under schedules.{name}, give its parameters: start and end rates, warm-up share, and whether it steps per batch or per epoch."
+    },
+    "stopping-metric": {
+      "message": "stopping metric and split",
+      "fix": "Set early_stopping.metric and early_stopping.split, or set early_stopping to false if training always runs to the last epoch."
+    },
+    "stopping-patience": {
+      "message": "stopping patience",
+      "fix": "Set early_stopping.patience, or early_stopping.patience_setting to the name of the setting that holds it."
+    },
+    "checkpoint": {
+      "message": "which weights were scored (best or last)",
+      "fix": "Set checkpoint to \"best_validation\", \"last\", or a short description."
+    },
+    "shuffle": {
+      "message": "shuffling",
+      "fix": "Set shuffle to true or false."
+    },
+    "augmentation": {
+      "message": "augmentation",
+      "fix": "Set augmentation to a list of steps with their parameters, or to \"none\"."
+    },
+    "definition": {
+      "message": "what \"{name}\" means",
+      "fix": "Under definitions.{name}, say in one or two sentences what turning it on does."
+    },
+    "init": {
+      "message": "starting weights",
+      "fix": "Set init to \"random\", or say where the weights came from: {\"from\": \"parent run\"} or {\"from\": \"<link to pretrained weights>\"}."
+    }
+  },
+  "defined_settings": [
+    "rc_average",
+    "amp"
+  ],
+  "statuses": [
+    "done",
+    "failed",
+    "invalid",
+    "stopped_early",
+    "not_run"
+  ],
+  "core_settings": [
+    "optimizer",
+    "lr",
+    "batch_size",
+    "epochs"
+  ],
+  "source_detail": {
+    "message": "the training code",
+    "fix": "Set code to {\"entry_point\": ..., \"script\": \"<the training script as text>\"}. With it, a run can be rebuilt exactly."
+  },
+  "levels": {
+    "exact": "The training code is stored.",
+    "faithful": "Every training detail is recorded; the code is not.",
+    "partial": "Some training details are missing."
+  },
+  "license_notes": {
+    "MIT": "default",
+    "CC-BY-4.0": "credit required",
+    "CC0-1.0": "no conditions"
+  },
+  "license_default": "MIT",
+  "parts": {
+    "experiment": [
+      "depositor-name",
+      "dataset-name",
+      "data-split",
+      "environment"
+    ],
+    "model": [
+      "model-source"
+    ],
+    "training": [
+      "recipe",
+      "seed"
+    ],
+    "performance": [
+      "no-scored",
+      "parameters",
+      "runtime",
+      "metrics",
+      "training-context",
+      "speed",
+      "speed-some",
+      "speed-context"
+    ]
+  },
+  "tags": {
+    "reproducible": {
+      "label": "Reproducible",
+      "cls": "tie",
+      "means": "The model, its training and the setup are all recorded."
+    },
+    "partial": {
+      "label": "Partly reproducible",
+      "cls": "rev",
+      "means": "A partial entry. Some of what a rebuild needs is missing."
+    },
+    "results-only": {
+      "label": "Results only",
+      "cls": "plain",
+      "means": "No model code is stored, so nothing can be rebuilt."
+    }
+  }
+}

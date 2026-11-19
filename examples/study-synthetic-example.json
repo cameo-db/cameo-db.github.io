@@ -1,0 +1,517 @@
+{
+ "format_version": "0.3",
+ "experiment": {
+  "id": "study-synthetic-example",
+  "title": "Synthetic example: two small CNNs",
+  "summary": "A made-up study that shows the shape of a complete file. None of its numbers are real.",
+  "license": "CC0-1.0",
+  "created": "2026-11-18",
+  "code_url": "not_reported",
+  "publication": "not_reported",
+  "notes": [
+   {
+    "kind": "warning",
+    "text": "Synthetic. Do not deposit."
+   }
+  ],
+  "depositor": {
+   "name": "Example Depositor",
+   "orcid": "not_reported",
+   "lab": "Example Lab",
+   "institution": "Example Institute"
+  },
+  "run_by": {
+   "kind": "person",
+   "tool": "not_reported",
+   "model": "not_reported",
+   "supervised_by": "Example Depositor"
+  },
+  "objective": {
+   "goal": "Show what a complete study file looks like.",
+   "kind": "example",
+   "optimize": {
+    "metric": "mse",
+    "split": "valid",
+    "direction": "minimize"
+   }
+  },
+  "data": {
+   "name": "Synthetic sequences",
+   "accession": "not_reported",
+   "input": "100 bp DNA, one-hot (4, 100)",
+   "output": "one made-up activity value",
+   "examples": {
+    "train": 1000,
+    "valid": 200,
+    "test": 200
+   },
+   "splits": {
+    "how": "random 1000 / 200 / 200, seed 0",
+    "code": "import numpy as np\nidx = np.random.default_rng(0).permutation(1400)\ntrain, valid, test = idx[:1000], idx[1000:1200], idx[1200:]\n"
+   },
+   "preprocessing": "one-hot A,C,G,T"
+  },
+  "evaluation": {
+   "primary_metric": "mse",
+   "direction": "minimize",
+   "selection_split": "valid",
+   "other_metrics": [
+    "pearson"
+   ],
+   "test_policy": "made up",
+   "seeds": [
+    0
+   ],
+   "noise_floor": null,
+   "noise_floor_method": "not_reported"
+  },
+  "environment": {
+   "python": "3.11",
+   "framework": "PyTorch 2.4",
+   "packages": {
+    "numpy": "1.26"
+   },
+   "training_hardware": {
+    "device": "Example GPU",
+    "count": 1,
+    "precision": "fp32"
+   },
+   "inference_hardware": {
+    "device": "Intel(R) Xeon(R) Processor @ 2.30GHz",
+    "threads": 2,
+    "batch": 64,
+    "precision": "float32",
+    "framework": "PyTorch 2.15.0+cu132",
+    "passes": "one forward pass per example, eval mode, fastest of 2 to 6 timed passes",
+    "measured_by": "the kit, on the machine that built this example"
+   }
+  },
+  "search": {
+   "method": "two models tried by hand",
+   "budget": {
+    "trials": 3
+   },
+   "lineages": {
+    "L1": {
+     "name": "small_cnn",
+     "family": "cnn",
+     "parents": []
+    }
+   }
+  },
+  "conclusions": {
+   "findings": [
+    {
+     "statement": "Synthetic: the wider model scored lower validation MSE.",
+     "evidence": [
+      "trial-001",
+      "trial-002"
+     ]
+    }
+   ],
+   "open_questions": []
+  }
+ },
+ "models": [
+  {
+   "id": "model-a",
+   "name": "small_cnn_16",
+   "family": "cnn",
+   "parent": null,
+   "hypothesis": "A starting point.",
+   "inputs": {
+    "x": {
+     "kind": "one-hot DNA",
+     "shape": "(N, 4, 100)"
+    }
+   },
+   "outputs": {
+    "y": {
+     "kind": "activity"
+    }
+   },
+   "custom_ops": {
+    "model_source": {
+     "description": "build_model() returns the network"
+    }
+   },
+   "layers": {
+    "name": "",
+    "cls": "Net",
+    "label": "",
+    "detail": "",
+    "kind": "group",
+    "out": [
+     1
+    ],
+    "calls": 1,
+    "params": 353,
+    "own": 0,
+    "children": [
+     {
+      "name": "body",
+      "cls": "Sequential",
+      "label": "",
+      "detail": "",
+      "kind": "group",
+      "out": [
+       16
+      ],
+      "calls": 1,
+      "params": 336,
+      "own": 0,
+      "children": [
+       {
+        "name": "0",
+        "cls": "Conv1d",
+        "label": "4 → 16",
+        "detail": "k5, pad 2",
+        "kind": "weights",
+        "out": [
+         16,
+         100
+        ],
+        "calls": 1,
+        "params": 336,
+        "own": 336,
+        "used": true
+       },
+       {
+        "name": "1",
+        "cls": "ReLU",
+        "label": "",
+        "detail": "",
+        "kind": "light",
+        "out": [
+         16,
+         100
+        ],
+        "calls": 1,
+        "params": 0,
+        "own": 0,
+        "used": true
+       },
+       {
+        "name": "2",
+        "cls": "AdaptiveAvgPool1d",
+        "label": "to length 1",
+        "detail": "",
+        "kind": "shape",
+        "out": [
+         16,
+         1
+        ],
+        "calls": 1,
+        "params": 0,
+        "own": 0,
+        "used": true
+       },
+       {
+        "name": "3",
+        "cls": "Flatten",
+        "label": "",
+        "detail": "",
+        "kind": "shape",
+        "out": [
+         16
+        ],
+        "calls": 1,
+        "params": 0,
+        "own": 0,
+        "used": true
+       }
+      ],
+      "used": true
+     },
+     {
+      "name": "out",
+      "cls": "Linear",
+      "label": "16 → 1",
+      "detail": "",
+      "kind": "weights",
+      "out": [
+       1
+      ],
+      "calls": 1,
+      "params": 17,
+      "own": 17,
+      "used": true
+     }
+    ],
+    "used": true
+   },
+   "parameters": 353,
+   "inference_speed": {
+    "seq_per_s": 471621.6
+   },
+   "code": "class Net(nn.Module):\n    def __init__(self, width=16):\n        super().__init__()\n        self.body = nn.Sequential(nn.Conv1d(4, width, 5, padding=2), nn.ReLU(), nn.AdaptiveAvgPool1d(1), nn.Flatten())\n        self.out = nn.Linear(width, 1)\n\n    def forward(self, x):\n        return self.out(self.body(x))\n\n\ndef build_model():\n    return Net(16)\n"
+  },
+  {
+   "id": "model-b",
+   "name": "small_cnn_32",
+   "family": "cnn",
+   "parent": "model-a",
+   "hypothesis": "Twice the width.",
+   "inputs": {
+    "x": {
+     "kind": "one-hot DNA",
+     "shape": "(N, 4, 100)"
+    }
+   },
+   "outputs": {
+    "y": {
+     "kind": "activity"
+    }
+   },
+   "custom_ops": {
+    "model_source": {
+     "description": "build_model() returns the network"
+    }
+   },
+   "layers": {
+    "name": "",
+    "cls": "Net",
+    "label": "",
+    "detail": "",
+    "kind": "group",
+    "out": [
+     1
+    ],
+    "calls": 1,
+    "params": 705,
+    "own": 0,
+    "children": [
+     {
+      "name": "body",
+      "cls": "Sequential",
+      "label": "",
+      "detail": "",
+      "kind": "group",
+      "out": [
+       32
+      ],
+      "calls": 1,
+      "params": 672,
+      "own": 0,
+      "children": [
+       {
+        "name": "0",
+        "cls": "Conv1d",
+        "label": "4 → 32",
+        "detail": "k5, pad 2",
+        "kind": "weights",
+        "out": [
+         32,
+         100
+        ],
+        "calls": 1,
+        "params": 672,
+        "own": 672,
+        "used": true
+       },
+       {
+        "name": "1",
+        "cls": "ReLU",
+        "label": "",
+        "detail": "",
+        "kind": "light",
+        "out": [
+         32,
+         100
+        ],
+        "calls": 1,
+        "params": 0,
+        "own": 0,
+        "used": true
+       },
+       {
+        "name": "2",
+        "cls": "AdaptiveAvgPool1d",
+        "label": "to length 1",
+        "detail": "",
+        "kind": "shape",
+        "out": [
+         32,
+         1
+        ],
+        "calls": 1,
+        "params": 0,
+        "own": 0,
+        "used": true
+       },
+       {
+        "name": "3",
+        "cls": "Flatten",
+        "label": "",
+        "detail": "",
+        "kind": "shape",
+        "out": [
+         32
+        ],
+        "calls": 1,
+        "params": 0,
+        "own": 0,
+        "used": true
+       }
+      ],
+      "used": true
+     },
+     {
+      "name": "out",
+      "cls": "Linear",
+      "label": "32 → 1",
+      "detail": "",
+      "kind": "weights",
+      "out": [
+       1
+      ],
+      "calls": 1,
+      "params": 33,
+      "own": 33,
+      "used": true
+     }
+    ],
+    "used": true
+   },
+   "parameters": 705,
+   "inference_speed": {
+    "seq_per_s": 194865.9
+   },
+   "code": "class Net(nn.Module):\n    def __init__(self, width=16):\n        super().__init__()\n        self.body = nn.Sequential(nn.Conv1d(4, width, 5, padding=2), nn.ReLU(), nn.AdaptiveAvgPool1d(1), nn.Flatten())\n        self.out = nn.Linear(width, 1)\n\n    def forward(self, x):\n        return self.out(self.body(x))\n\n\ndef build_model():\n    return Net(32)\n"
+  }
+ ],
+ "training": {
+  "base": {
+   "name": "Adam with early stopping",
+   "settings": {
+    "optimizer": "adam",
+    "lr": 0.001,
+    "epochs": 20,
+    "patience": 3,
+    "batch_size": 64,
+    "schedule": "constant"
+   },
+   "loss": {
+    "kind": "mse",
+    "terms": [
+     {
+      "output": "y",
+      "weight": 1.0
+     }
+    ],
+    "reduction": "mean over examples"
+   },
+   "schedules": {},
+   "early_stopping": {
+    "metric": "mse",
+    "split": "valid",
+    "patience": 3
+   },
+   "checkpoint": "best_validation",
+   "shuffle": true,
+   "definitions": {},
+   "augmentation": "none",
+   "code": {
+    "entry_point": "train",
+    "script": "def train(net, loader, valid, settings):\n    opt = torch.optim.Adam(net.parameters(), lr=settings[\"lr\"])\n    best, best_state, bad = float(\"inf\"), None, 0\n    for epoch in range(settings[\"epochs\"]):\n        net.train()\n        for x, y in loader:                      # loader shuffles\n            loss = F.mse_loss(net(x), y)         # mean over examples\n            opt.zero_grad(); loss.backward(); opt.step()\n        score = evaluate(net, valid)             # validation MSE\n        if score < best:\n            best, best_state, bad = score, {k: v.clone() for k, v in net.state_dict().items()}, 0\n        else:\n            bad += 1\n            if bad >= settings[\"patience\"]:\n                break\n    net.load_state_dict(best_state)              # score the best epoch\n    return best\n"
+   },
+   "init": "random"
+  }
+ },
+ "runs": [
+  {
+   "id": "trial-001",
+   "model": "model-a",
+   "training": "base",
+   "seed": 0,
+   "settings": {},
+   "history": {
+    "lineage": "L1",
+    "parent": null,
+    "move": "baseline",
+    "hypothesis": "A starting point.",
+    "predicted_effect": "not_reported"
+   },
+   "performance": {
+    "status": "done",
+    "score": 0.52,
+    "valid": {
+     "mse": 0.52,
+     "pearson": 0.61
+    },
+    "test": {
+     "mse": 0.55,
+     "pearson": 0.59
+    },
+    "best_epoch": 7,
+    "epochs_run": 10,
+    "parameters": 353,
+    "training_minutes": 0.2
+   }
+  },
+  {
+   "id": "trial-002",
+   "model": "model-b",
+   "training": "base",
+   "seed": 0,
+   "settings": {
+    "lr": 0.002
+   },
+   "history": {
+    "lineage": "L1",
+    "parent": "trial-001",
+    "move": "structural_change",
+    "hypothesis": "Twice the width.",
+    "predicted_effect": "Lower validation MSE."
+   },
+   "performance": {
+    "status": "done",
+    "score": 0.47,
+    "valid": {
+     "mse": 0.47,
+     "pearson": 0.66
+    },
+    "test": {
+     "mse": 0.5,
+     "pearson": 0.63
+    },
+    "best_epoch": 9,
+    "epochs_run": 12,
+    "parameters": 705,
+    "training_minutes": 0.3
+   }
+  },
+  {
+   "id": "trial-003",
+   "model": "model-b",
+   "training": "base",
+   "seed": 0,
+   "settings": {
+    "lr": 0.1
+   },
+   "history": {
+    "lineage": "L1",
+    "parent": "trial-002",
+    "move": "settings_move",
+    "hypothesis": "A much higher learning rate.",
+    "predicted_effect": "not_reported"
+   },
+   "performance": {
+    "status": "failed",
+    "score": null,
+    "valid": {},
+    "test": {},
+    "best_epoch": null,
+    "epochs_run": 1,
+    "parameters": 705,
+    "training_minutes": 0.1
+   },
+   "notes": [
+    {
+     "kind": "failure",
+     "text": "Loss became non-finite in the first epoch."
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,4 @@
+[
+ {"id": "deepstarr", "title": "DeepSTARR enhancer activity", "dataset": "DeepSTARR UMI-STARR-seq, Drosophila S2", "task": "Regression from 249 bp of DNA",
+  "match": "deepstarr", "metric": "pearson", "split": "test", "metric_label": "Test Pearson r", "direction": "maximize"}
+]

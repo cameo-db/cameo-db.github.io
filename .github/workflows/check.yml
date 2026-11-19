@@ -1,0 +1,22 @@
+name: Check studies
+on:
+  pull_request:
+    paths: ["studies/**", "benchmarks.json", "kit/**", "tools/**"]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Check every study file
+        run: |
+          status=0
+          for f in studies/*.json; do
+            echo "::group::$f"
+            python3 kit/cameo.py check "$f" || status=1
+            echo "::endgroup::"
+          done
+          exit $status
+      - name: Build the site
+        run: python3 tools/build_site.py _site

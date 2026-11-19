@@ -1,0 +1,10 @@
+{
+  "_how": "Copy this to depositor.json and fill it in yourself. The agent reads it and never edits it. Leave not_reported where you have nothing.",
+  "name": "not_reported",
+  "orcid": "not_reported",
+  "lab": "not_reported",
+  "institution": "not_reported",
+  "contact": "not_reported",
+  "license": "MIT",
+  "_license_choices": "MIT (the default), Apache-2.0, BSD-3-Clause, BSD-2-Clause, CC-BY-4.0, CC0-1.0"
+}
