@@ -82,9 +82,67 @@ def recipes_of(S):
     return {"base": {"settings": (S.get("search") or {}).get("training_defaults") or {}}}, True
 
 
+def kind_of(t):
+    """How a run got its result: train (from scratch), finetune (from existing weights), evaluate (no training),
+    or reported (the number is copied from a paper or other source; nothing was run in this study)."""
+    k = t.get("kind")
+    return k if isinstance(k, str) and k in RULES["kinds"] else "train"
+
+
+def source_link(t):
+    """Where a reported result comes from: a DOI or an https address, or None."""
+    s = t.get("reported_in")
+    v = (s.get("doi") if known(s.get("doi")) else s.get("url")) if isinstance(s, dict) else s
+    return str(v).strip() if known(v) and re.fullmatch(RULES["link_pattern"], str(v).strip()) else None
+
+
+def has_metric(t):
+    """True when a run carries at least one number: its score, or any validation, test or per-dataset metric."""
+    r = t.get("result") if isinstance(t.get("result"), dict) else {}
+    num = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool)
+    maps = [r.get("valid"), r.get("test")] + [e.get("metrics") for e in (r.get("evaluations") or []) if isinstance(e, dict)]
+    return num(r.get("score")) or any(num(v) for m in maps if isinstance(m, dict) for v in m.values())
+
+
 def recipe_id(trial, recipes):
     r = trial.get("recipe")
-    return r if known(r) else next(iter(recipes))
+    if known(r):
+        return r
+    return None if kind_of(trial) in ("evaluate", "reported") or not recipes else next(iter(recipes))
+
+
+def datasets_of(S):
+    """Every dataset in the entry by id. The one under experiment.data is called main."""
+    d = {}
+    if isinstance(S.get("dataset"), dict):
+        d["main"] = S["dataset"]
+    if isinstance(S.get("datasets"), dict):
+        d.update({k: v for k, v in S["datasets"].items() if isinstance(v, dict)})
+    return d
+
+
+def linked(ds):
+    return any(known(ds.get(k)) for k in ("doi", "accession", "url"))
+
+
+def split_shared(ds):
+    sp = ds.get("splits")
+    return isinstance(sp, dict) and (known(sp.get("code")) or has_known(sp.get("files")))
+
+
+def weights_given(t, m):
+    """A link to the weights a run produced or scored."""
+    w = t.get("weights")
+    if (isinstance(w, dict) and (known(w.get("url")) or known(w.get("doi")))) or (isinstance(w, str) and known(w)):
+        return True
+    b = m.get("base_model")
+    return kind_of(t) == "evaluate" and isinstance(b, dict) and known(b.get("link"))
+
+
+def base_given(m, rec):
+    """A link to the weights a fine-tuned run started from."""
+    b, i = m.get("base_model"), (rec or {}).get("init")
+    return (isinstance(b, dict) and known(b.get("link"))) or (isinstance(i, dict) and known(i.get("from")))
 
 
 def resolved(trial, recipe):
@@ -103,11 +161,11 @@ def is_crossover(t):
 # ----------------------------------------------------------------------------- file layout
 # On disk a study has four parts: experiment, models, training, runs. The checks below work on an older,
 # flatter layout (study, contributor, dataset, recipes, trials ...), so files are converted on the way in and out.
-GROUPS = ("depositor", "run_by", "objective", "data", "evaluation", "environment", "search", "conclusions")
+GROUPS = ("depositor", "run_by", "objective", "data", "datasets", "evaluation", "environment", "search", "conclusions")
 HISTORY = ("lineage", "parent_trial", "second_parent", "move", "purpose", "hypothesis", "predicted_effect")
 SRC = "custom_ops.model_source.reference_implementation"
 HW = (("training_hardware", "training_context"), ("inference_hardware", "speed_context"))
-OLD_TOP = ("format_version", "study", "contributor", "objective", "dataset", "evaluation", "environment", "search", "lineages", "summary", "recipes", "models", "trials")
+OLD_TOP = ("format_version", "study", "contributor", "objective", "dataset", "datasets", "evaluation", "environment", "search", "lineages", "summary", "recipes", "models", "trials")
 
 
 def D_(v):
@@ -145,6 +203,8 @@ def to_internal(S):
         out["objective"] = E["objective"]
     if "data" in E:
         out["dataset"] = E["data"]
+    if "datasets" in E:
+        out["datasets"] = E["datasets"]
     if "lineages" in search:
         out["lineages"] = search.pop("lineages")
     if search:
@@ -168,13 +228,17 @@ def to_internal(S):
         m = D_(m)
         if "code" in m:
             put(m, SRC, m.pop("code"))
+        sp = m.get("inference_speed")
+        if isinstance(sp, dict) and "examples_per_s" in sp:
+            sp["seq_per_s"] = sp.pop("examples_per_s")
         models.append(m)
     trials = []
     for r in (S.get("runs") if isinstance(S.get("runs"), list) else []):
         r = D_(r); t = {k: v for k, v in r.items() if k not in ("training", "settings", "history", "performance")}
         if "training" in r:
             t["recipe"] = r["training"]
-        t["training"] = D_(r.get("settings"))
+        if "settings" in r:
+            t["training"] = D_(r["settings"])
         for k, v in D_(r.get("history")).items():
             if k == "second_parent" and isinstance(v, dict) and "run" in v:
                 v["trial"] = v.pop("run")
@@ -202,6 +266,8 @@ def to_external(S):
         E["objective"] = S["objective"]
     if "dataset" in S:
         E["data"] = S["dataset"]
+    if "datasets" in S:
+        E["datasets"] = S["datasets"]
     ev, env, search = D_(S.get("evaluation")), D_(S.get("environment")), D_(S.get("search"))
     for a, b in HW:
         if b in ev:
@@ -227,6 +293,8 @@ def to_external(S):
                 c["script"] = c.pop("code")
             r["code"] = c
         training[rid] = r
+    if implied and all(kind_of(t) in ("evaluate", "reported") for t in (S.get("trials") or []) if isinstance(t, dict)):
+        training = {}   # nothing was trained, so there is no recipe to write
     models = []
     for m in (S.get("models") if isinstance(S.get("models"), list) else []):
         m = D_(m); src = get(m, SRC)
@@ -237,14 +305,19 @@ def to_external(S):
             if not m["custom_ops"]:
                 del m["custom_ops"]
             m["code"] = src
+        sp = m.get("inference_speed")
+        if isinstance(sp, dict) and "seq_per_s" in sp:
+            sp["examples_per_s"] = sp.pop("seq_per_s")
         models.append(m)
     runs = []
     for t in (S.get("trials") if isinstance(S.get("trials"), list) else []):
         t = D_(t); r = {k: t[k] for k in ("id", "model", "model_args") if k in t}
-        r["training"] = recipe_id(t, recipes)
+        if recipe_id(t, recipes) is not None:
+            r["training"] = recipe_id(t, recipes)
         if "seed" in t:
             r["seed"] = t["seed"]
-        r["settings"] = D_(t.get("training"))
+        if "training" in t:
+            r["settings"] = D_(t["training"])
         h = {}
         for k in HISTORY:
             if k in t:
@@ -252,7 +325,8 @@ def to_external(S):
                 if k == "second_parent" and isinstance(v, dict) and "trial" in v:
                     v["run"] = v.pop("trial")
                 h["parent" if k == "parent_trial" else k] = v
-        r["history"] = h
+        if h:
+            r["history"] = h
         if "result" in t:
             p = t["result"]
             if isinstance(p, dict) and "runtime_minutes" in p:
@@ -306,8 +380,8 @@ def recipe_missing(rec, trials):
     if not known(rec.get("init")):
         need("init")
     defs = rec.get("definitions") if isinstance(rec.get("definitions"), dict) else {}
-    for name in RULES["defined_settings"]:
-        if any(u.get(name) is True for u in used) and not known(defs.get(name)):
+    for name in sorted({k for u in used for k, v in u.items() if v is True}):   # every switch that is on
+        if not known(defs.get(name)):
             need("definition", name=name)
     return miss
 
@@ -352,8 +426,9 @@ def check_text(text):
         v = get(S, f["path"])
         item = {"id": f["id"], "path": shown(f["path"]), "fix": f["fix"]}
         if not known(v):
-            item["message"] = "Add " + f["todo"]
-            rep["blocking" if f["level"] == "block" else "suggested"].append(item)
+            if f["level"] != "optional":   # optional links are never asked for, only checked when given
+                item["message"] = "Add " + f["todo"]
+                rep["blocking" if f["level"] == "block" else "suggested"].append(item)
         elif f.get("kind") == "license":
             if v not in RULES["licenses"]:
                 item["message"] = f["label"] + ": " + f["bad_msg"]
@@ -383,7 +458,7 @@ def check_text(text):
     if n:
         add("dangling-recipe", n=n)
     res = lambda t: t.get("result") if isinstance(t.get("result"), dict) else {}
-    scored = [t for t in trials if isinstance(res(t).get("score"), (int, float)) and not isinstance(res(t).get("score"), bool)]
+    scored = [t for t in trials if (isinstance(res(t).get("score"), (int, float)) and not isinstance(res(t).get("score"), bool)) or (kind_of(t) == "reported" and has_metric(t))]
     if not scored:
         add("no-scored")
     n = sum(1 for t in trials if res(t).get("status") == "done" and t not in scored)
@@ -392,6 +467,17 @@ def check_text(text):
     n = sum(1 for t in trials if res(t).get("status") not in RULES["statuses"])
     if n:
         add("bad-status", n=n, allowed=", ".join(RULES["statuses"]))
+    n = sum(1 for t in trials if known(t.get("kind")) and kind_of(t) != t["kind"])
+    if n:
+        add("bad-kind", n=n, allowed=", ".join(RULES["kinds"]))
+    n = sum(1 for t in trials if kind_of(t) == "reported" and not source_link(t))
+    if n:
+        add("reported-source", n=n)
+    DS = datasets_of(S)
+    refs = [t["data"] for t in trials if known(t.get("data"))] + [e["dataset"] for t in trials for e in (res(t).get("evaluations") or []) if isinstance(e, dict) and known(e.get("dataset"))]
+    n = sum(1 for r in refs if r not in DS)
+    if n:
+        add("dangling-dataset", n=n)
     lin0 = S.get("lineages") if isinstance(S.get("lineages"), dict) else {}
     sp_ok = lambda sp: isinstance(sp, dict) and ((known(sp.get("trial")) and sp["trial"] in tids) or (known(sp.get("lineage")) and (sp["lineage"] in lin0 or any(t.get("lineage") == sp["lineage"] for t in trials))))
     n = sum(1 for t in trials if known(t.get("second_parent")) and not sp_ok(t["second_parent"]))
@@ -407,42 +493,59 @@ def check_text(text):
 
     # worth adding: enough to rebuild the model and to compare performance
     done_t = [t for t in trials if res(t).get("status") == "done"]
-    done_models = {t.get("model") for t in done_t}
+    own = [t for t in done_t if kind_of(t) != "reported"]       # runs made in this study; reported results are copied from elsewhere
+    trained = [t for t in own if kind_of(t) != "evaluate"]      # runs that did some training
+    rep_only = bool(done_t) and not own                         # nothing was run here: the entry only lists published numbers
+    mby = {m.get("id"): m for m in models}
+    done_models = {t.get("model") for t in own}
     has_speed = lambda m: known(get(m, "inference_speed.seq_per_s"))
-    n_code = sum(1 for m in models if known(get(m, "custom_ops.model_source.reference_implementation")))
-    if len(models) - n_code:
-        add("model-source", n=len(models) - n_code)
-    n_par = sum(1 for t in done_t if not known(res(t).get("parameters")))
+    # a model needs code unless every run of it is a reported result
+    need_code = [m for m in models if not any(t.get("model") == m.get("id") for t in trials) or any(t.get("model") == m.get("id") and kind_of(t) != "reported" for t in trials)]
+    n_code = sum(1 for m in need_code if known(get(m, "custom_ops.model_source.reference_implementation")))
+    if len(need_code) - n_code:
+        add("model-source", n=len(need_code) - n_code)
+    n_par = sum(1 for t in own if not known(res(t).get("parameters")))
     if n_par:
         add("parameters", n=n_par)
-    n_time = sum(1 for t in done_t if not known(res(t).get("runtime_minutes")))
+    n_time = sum(1 for t in trained if not known(res(t).get("runtime_minutes")))
     if n_time:
         add("runtime", n=n_time)
-    n_met = sum(1 for t in done_t if not (has_known(res(t).get("valid")) or has_known(res(t).get("test"))))
+    n_met = sum(1 for t in done_t if not (has_known(res(t).get("valid")) or has_known(res(t).get("test")) or has_known(res(t).get("evaluations"))))
     if n_met:
         add("metrics", n=n_met)
-    n_seed = sum(1 for t in done_t if not known(t.get("seed")))
+    n_seed = sum(1 for t in trained if not known(t.get("seed")))
     if n_seed:
         add("seed", n=n_seed)
     has_env = has_known(S.get("environment"))
-    if not has_env:
+    if not has_env and not rep_only:
         add("environment")
-    sp = get(S, "dataset.splits")
-    has_split = isinstance(sp, dict) and (known(sp.get("code")) or has_known(sp.get("files")))
+    used = {t["data"] if known(t.get("data")) else "main" for t in trained}   # only datasets that were trained on need their split
+    has_split = all(split_shared(DS[k]) for k in used if k in DS)
     if not has_split:
         add("data-split")
+    no_link = sorted(k for k in DS if k != "main" and not linked(DS[k]))
+    has_link = linked(DS.get("main") or {}) and not no_link
+    if no_link:
+        add("dataset-link", n=len(no_link), ids=", ".join(no_link))
+    n_base = sum(1 for t in done_t if kind_of(t) == "finetune" and not base_given(mby.get(t.get("model")) or {}, recipes.get(recipe_id(t, recipes)) if isinstance(recipes.get(recipe_id(t, recipes)), dict) else {}))
+    if n_base:
+        add("base-weights", n=n_base)
+    n_evalw = sum(1 for t in done_t if kind_of(t) == "evaluate" and not weights_given(t, mby.get(t.get("model")) or {}))
+    if n_evalw:
+        add("eval-weights", n=n_evalw)
     hw_train, hw_speed = known(D_(get(S, "evaluation.training_context")).get("device")), known(D_(get(S, "evaluation.speed_context")).get("device"))
-    if not hw_train:
+    if trained and not hw_train:
         add("training-context")
     n_speed = sum(1 for m in models if m.get("id") in done_models and not has_speed(m))
     any_speed = any(has_speed(m) for m in models)
     if not any_speed:
-        add("speed")
+        if not rep_only:
+            add("speed")
     elif n_speed:
         add("speed-some", n=n_speed)
     if any_speed and not hw_speed:
         add("speed-context")
-    if not any(known(m.get("layers")) for m in models):
+    if not any(known(m.get("layers")) for m in models) and not rep_only:
         add("layers")
     lin = S.get("lineages") if isinstance(S.get("lineages"), dict) else {}
     two = lambda t: known(t.get("second_parent")) or len((lin.get(t.get("lineage")) or {}).get("parents") or []) > 1
@@ -463,16 +566,28 @@ def check_text(text):
         if mine and not has_code(rec):
             add("recipe-source", recipe=rid, runs=len(mine))
     rep["sufficient"] = {
-        "experiment": {"ok": known(get(S, "contributor.name")) and known(get(S, "dataset.name")) and has_split and has_env,
-                       "data_split_shared": has_split, "software_versions": has_env},
-        "model": {"ok": bool(models) and n_code == len(models), "models": len(models), "with_code": n_code},
-        "training": {"ok": bool(rr) and not n_seed and all(r["level"] != "partial" for r in rr.values() if r["runs"]), "runs_missing_seed": n_seed, "recipes": {k: r["level"] for k, r in rr.items() if r["runs"]}},
-        "performance": {"ok": bool(done_t) and not (n_par or n_time or n_met or n_speed) and hw_train and hw_speed, "finished_runs": len(done_t), "missing_parameters": n_par,
+        "experiment": {"ok": known(get(S, "contributor.name")) and known(get(S, "dataset.name")) and has_link and has_split and has_env,
+                       "dataset_link": has_link, "data_split_shared": has_split, "software_versions": has_env},
+        "model": {"ok": bool(need_code) and n_code == len(need_code), "models": len(need_code), "with_code": n_code},
+        "training": {"ok": bool(own) and not (n_seed or n_base or n_evalw) and all(r["level"] != "partial" for r in rr.values() if r["runs"]), "runs_missing_seed": n_seed,
+                     "finetuned_without_base_link": n_base, "evaluated_without_weights_link": n_evalw, "recipes": {k: r["level"] for k, r in rr.items() if r["runs"]}},
+        "performance": {"ok": bool(own) and not (n_par or n_time or n_met or n_speed) and (hw_train or not trained) and hw_speed, "finished_runs": len(done_t), "reported_results": len(done_t) - len(own), "missing_parameters": n_par,
                         "missing_training_time": n_time, "missing_metrics": n_met, "models_missing_speed": n_speed, "training_hardware": hw_train, "speed_hardware": hw_speed}}
-    miss_parts = [k for k in ("experiment", "model", "training") if not rep["sufficient"][k]["ok"]]
-    tag = "reproducible" if not miss_parts else ("results-only" if n_code == 0 else "partial")
-    rep["reproducibility"] = {"tag": tag, "label": RULES["tags"][tag]["label"], "missing": miss_parts}
-    rep["reproduce"] = {"models": {"total": len(models), "with_source": sum(1 for m in models if known(get(m, "custom_ops.model_source.reference_implementation"))),
+    # the star: worked out from the file, never declared by it
+    su = rep["sufficient"]
+    core = bool(own) and not (n_seed or n_base or n_evalw) and not any(m["id"].startswith("setting:") for r in rr.values() if r["runs"] for m in r["missing"])
+    if rep_only:
+        level, nxt = "none", ["runs made in this study"]
+    elif not (has_link and su["model"]["ok"]):
+        level, nxt = "none", ([] if has_link else ["a link to every dataset"]) + ([] if su["model"]["ok"] else ["model code"])
+    elif all(su[k]["ok"] for k in ("experiment", "model", "training", "performance")):
+        level, nxt = "gold", []
+    elif core:
+        level, nxt = "silver", [k for k in ("experiment", "training", "performance") if not su[k]["ok"]]
+    else:
+        level, nxt = "bronze", ["every run's training settings and seed, or a link to the weights it scored"]
+    rep["star"] = {"level": level, "label": RULES["stars"][level]["label"], "next": nxt}
+    rep["reproduce"] = {"models": {"total": len(need_code), "with_source": n_code,
                                    "with_layers": sum(1 for m in models if known(m.get("layers")))}, "recipes": rr}
     nd = sum(1 for t in trials if res(t).get("diverged"))
     if nd:
@@ -494,12 +609,14 @@ def cmd_check(a):
         su = rep.get("sufficient")
         if su:
             print("Sufficient? " + " · ".join("%s: %s" % (k, "yes" if su[k]["ok"] else "no") for k in ("experiment", "model", "training", "performance")))
-            rp = rep["reproducibility"]
-            print("Tag: %s%s" % (rp["label"], (" (missing: %s)" % ", ".join(rp["missing"])) if rp["missing"] else ""))
+            st = rep["star"]
+            print("Star: %s%s" % (st["label"], (" (for the next star: %s)" % ", ".join(st["next"])) if st["next"] else ""))
         mo = rep["reproduce"].get("models")
         if mo:
             print("Rebuild: %d of %d models have their code stored." % (mo["with_source"], mo["total"]))
         for rid, r in (rep["reproduce"].get("recipes") or {}).items():
+            if not r["runs"]:
+                continue
             print("Rebuild: recipe \"%s\" (%d runs) is %s. %s" % (rid, r["runs"], r["level"], r["level_means"]))
             for m in r["missing"]:
                 print("  - missing: %s\n      fix: %s" % (m["message"], m["fix"]))
@@ -648,7 +765,31 @@ def build_model(src):
     torch.manual_seed(0)
     net = ns["build_model"]()
     net.eval()
+    net._cameo_example = ns.get("example_inputs")   # the model file may say what to call the model with
     return net
+
+
+def example_of(net, shape, batch):
+    """What to call the model with: the model file's own example_inputs(batch), else a random float tensor of the input shape."""
+    f = getattr(net, "_cameo_example", None)
+    if f:
+        return f(batch)
+    if not shape:
+        raise ValueError("no input shape in the file, and the model file defines no example_inputs(batch)")
+    return make_input(shape, batch)
+
+
+def call(net, x):
+    return net(**x) if isinstance(x, dict) else net(*x) if isinstance(x, (tuple, list)) else net(x)
+
+
+def each(x, f):
+    """Apply f to every tensor in a tensor, a tuple or a dict of them."""
+    if isinstance(x, dict):
+        return {k: each(v, f) for k, v in x.items()}
+    if isinstance(x, (tuple, list)):
+        return type(x)(each(v, f) for v in x)
+    return f(x) if hasattr(x, "shape") else x
 
 
 def describe(m):
@@ -716,7 +857,7 @@ def trace(net, x):
 
     hs = [m.register_forward_hook(hook) for m in net.modules()]
     with torch.no_grad():
-        y = net(x)
+        y = call(net, x)
     for h in hs:
         h.remove()
 
@@ -781,10 +922,11 @@ def cmd_add_layers(a):
     ok = bad = same = diff = norec = 0
     for m in S["models"]:
         src, shape = source_of(m), input_shape(m, a.input_shape)
-        if not known(src) or not shape:
-            bad += 1; print("skipped %s: %s" % (m.get("id"), "no source code in the file" if not known(src) else "no input shape (use --input-shape)")); continue
+        if not known(src):
+            bad += 1; print("skipped %s: no source code in the file" % m.get("id")); continue
         try:
-            tree, n = trace(build_model(src), make_input(shape, 2))
+            net = build_model(src)
+            tree, n = trace(net, example_of(net, shape, 2))
             m["layers"], m["parameters"] = tree, n; ok += 1
             if m["id"] in rec:
                 if n in rec[m["id"]]: same += 1
@@ -813,16 +955,17 @@ def cmd_add_speed(a):
     ok = bad = 0
     for m in S["models"]:
         src, shape = source_of(m), input_shape(m, a.input_shape)
-        if not known(src) or not shape:
+        if not known(src):
             bad += 1; continue
         try:
-            net, x = build_model(src).to(dev), make_input(shape, a.batch).to(dev)
+            net = build_model(src).to(dev)
+            x = each(example_of(net, shape, a.batch), lambda v: v.to(dev))
             sync = (lambda: torch.cuda.synchronize()) if dev == "cuda" else (lambda: None)
             with torch.no_grad():
-                net(x[:8]); net(x); sync()
+                call(net, each(x, lambda v: v[:8])); call(net, x); sync()
                 times = []
                 while len(times) < 6 and (sum(times) < 1.5 or len(times) < 2):
-                    t0 = time.perf_counter(); net(x); sync(); times.append(time.perf_counter() - t0)
+                    t0 = time.perf_counter(); call(net, x); sync(); times.append(time.perf_counter() - t0)
             m["inference_speed"] = {"seq_per_s": round(a.batch / min(times), 1)}; ok += 1
         except Exception as e:
             bad += 1; print("could not time %s: %s: %s" % (m.get("id"), type(e).__name__, str(e)[:160]))
@@ -841,6 +984,8 @@ def cmd_export_run(a):
     if not t:
         print("no run with id " + a.trial); return 2
     m = next((x for x in S["models"] if x.get("id") == t.get("model")), None) or {}
+    if kind_of(t) == "reported":
+        print("run %s is a result reported elsewhere (%s). It was not run in this study, so there is nothing to rebuild." % (a.trial, source_link(t) or "no link given")); return 2
     recipes, implied = recipes_of(S)
     rid = recipe_id(t, recipes); rec = recipes.get(rid) or {}
     os.makedirs(a.output, exist_ok=True)
@@ -859,7 +1004,12 @@ def cmd_export_run(a):
         for name, text in (get(rec, "source.files") or {}).items():   # the loop's own modules the script imports
             if isinstance(text, str):
                 w(os.path.basename(name), text + "\n"); made.append(os.path.basename(name) + ": a module the training script imports")
-    miss = recipe_missing(rec, [t]); level = rebuild_level(rec, miss)
+    ev = kind_of(t) == "evaluate"   # a run that only scored existing weights has no training to rebuild
+    miss = [] if ev else recipe_missing(rec, [t]); level = rebuild_level(rec, miss)
+    wt, bm = t.get("weights"), m.get("base_model")
+    wl = (wt.get("url") if known(wt.get("url")) else wt.get("doi")) if isinstance(wt, dict) else wt
+    if not known(wl):
+        wl = bm.get("link") if isinstance(bm, dict) and known(bm.get("link")) else None
     data = S.get("dataset") or {}
     lines = ["# Rebuilding run %s" % t.get("id"), "", "Model: %s (%s)." % (m.get("name"), t.get("model")), "", "## What is here", ""] + ["- " + x for x in made] + ["",
         "## Data", "", "- Dataset: %s" % data.get("name"), "- Accession: %s" % data.get("accession"), "- Input: %s" % data.get("input"), "- Output: %s" % data.get("output"),
@@ -871,13 +1021,14 @@ def cmd_export_run(a):
     if not known(src):
         lines += ["## Model code is missing", "", "The file has no source code for this model, so it cannot be rebuilt from this export.", ""]
     lines += ["## How far this goes", "", "- Model: %s" % ("can be rebuilt from model.py." if known(src) else "cannot be rebuilt; its code is not in the file."),
-              "- Training: %s. %s" % (level, RULES["levels"][level]), ""]
+              "- Training: none. This run only scored existing weights." if ev else "- Training: %s. %s" % (level, RULES["levels"][level]),
+              "- Weights: %s" % (wl or "no link in the file"), ""]
     if miss:
         lines += ["## Training details the file does not give", ""] + ["- " + x["message"] for x in miss] + ["",
                   "Do not guess these silently. If you choose a value, write down that you chose it." if level == "partial" else "train.py settles these, but they are not recorded as fields.", ""]
     w("REBUILD.md", "\n".join(lines))
     print("wrote %s: %s, REBUILD.md" % (a.output, ", ".join(x.split(":")[0] for x in made)))
-    print("training: %s. %s%s" % (level, RULES["levels"][level], (" %d detail(s) missing; see REBUILD.md" % len(miss)) if miss else ""))
+    print("training: none (evaluated only)" if ev else "training: %s. %s%s" % (level, RULES["levels"][level], (" %d detail(s) missing; see REBUILD.md" % len(miss)) if miss else ""))
     return 0
 
 

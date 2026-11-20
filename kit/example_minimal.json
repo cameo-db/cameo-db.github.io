@@ -1,5 +1,5 @@
 {
- "format_version": "0.3",
+ "format_version": "0.4",
  "experiment": {
   "id": "study-synthetic-example",
   "title": "Synthetic example: two small CNNs",
@@ -37,7 +37,7 @@
   },
   "data": {
    "name": "Synthetic sequences",
-   "accession": "not_reported",
+   "accession": "10.5555/example-dataset",
    "input": "100 bp DNA, one-hot (4, 100)",
    "output": "one made-up activity value",
    "examples": {
@@ -242,7 +242,7 @@
    },
    "parameters": 353,
    "inference_speed": {
-    "seq_per_s": 471621.6
+    "examples_per_s": 471621.6
    },
    "code": "class Net(nn.Module):\n    def __init__(self, width=16):\n        super().__init__()\n        self.body = nn.Sequential(nn.Conv1d(4, width, 5, padding=2), nn.ReLU(), nn.AdaptiveAvgPool1d(1), nn.Flatten())\n        self.out = nn.Linear(width, 1)\n\n    def forward(self, x):\n        return self.out(self.body(x))\n\n\ndef build_model():\n    return Net(16)\n"
   },
@@ -375,7 +375,7 @@
    },
    "parameters": 705,
    "inference_speed": {
-    "seq_per_s": 194865.9
+    "examples_per_s": 194865.9
    },
    "code": "class Net(nn.Module):\n    def __init__(self, width=16):\n        super().__init__()\n        self.body = nn.Sequential(nn.Conv1d(4, width, 5, padding=2), nn.ReLU(), nn.AdaptiveAvgPool1d(1), nn.Flatten())\n        self.out = nn.Linear(width, 1)\n\n    def forward(self, x):\n        return self.out(self.body(x))\n\n\ndef build_model():\n    return Net(32)\n"
   }
@@ -411,11 +411,11 @@
    "shuffle": true,
    "definitions": {},
    "augmentation": "none",
+   "init": "random",
    "code": {
     "entry_point": "train",
     "script": "def train(net, loader, valid, settings):\n    opt = torch.optim.Adam(net.parameters(), lr=settings[\"lr\"])\n    best, best_state, bad = float(\"inf\"), None, 0\n    for epoch in range(settings[\"epochs\"]):\n        net.train()\n        for x, y in loader:                      # loader shuffles\n            loss = F.mse_loss(net(x), y)         # mean over examples\n            opt.zero_grad(); loss.backward(); opt.step()\n        score = evaluate(net, valid)             # validation MSE\n        if score < best:\n            best, best_state, bad = score, {k: v.clone() for k, v in net.state_dict().items()}, 0\n        else:\n            bad += 1\n            if bad >= settings[\"patience\"]:\n                break\n    net.load_state_dict(best_state)              # score the best epoch\n    return best\n"
-   },
-   "init": "random"
+   }
   }
  },
  "runs": [

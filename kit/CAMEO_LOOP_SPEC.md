@@ -1,6 +1,6 @@
 # CAMEO entry format: instructions for a model-search loop
 
-Send this file to any loop that trains models: an architecture search, a tuning sweep, a benchmark run. It says what the loop must write so that its results can be entered into CAMEO, a public database of models, how they were trained, and how they performed.
+Send this file to any loop that trains models, in any field: an architecture search, a tuning sweep, a benchmark run. It says what the loop must write so that its results can be entered into CAMEO, a public database of models, how they were trained, and how they performed.
 
 The loop writes one file per experiment, `study.json`. It has four parts.
 
@@ -13,9 +13,16 @@ The loop writes one file per experiment, `study.json`. It has four parts.
 
 A run is the link. It names a model and a recipe by id, and its performance sits inside it, because a score belongs to one model trained one way with one seed.
 
-The file is complete when a reader can rebuild each model, train it the same way, and compare its results with other studies, from the file alone. Datasets and trained weights stay outside the file.
+The file is complete when a reader can rebuild each model, train it the same way, and compare its results with other studies, from the file alone. Datasets and trained weights stay outside the file. The file links to them.
 
-A partial file is still accepted. CAMEO works out a tag from the file itself: Reproducible, Partly reproducible, or Results only. Write what you have, and never fill a gap with a guess.
+A partial file is still accepted. CAMEO gives each entry a star, worked out from the file itself:
+
+- **Gold**: all four parts are complete.
+- **Silver**: model code, a link to the dataset, and for every run its training settings and seed, or a link to the weights it scored.
+- **Bronze**: model code, results and a link to the dataset.
+- **No star**: no link to the dataset, no model code, or only results reported elsewhere.
+
+Write what you have, and never fill a gap with a guess.
 
 ## Record as you go
 
@@ -32,16 +39,24 @@ These cannot be recovered afterwards. Capture them when each run happens.
 | Field | Holds |
 |---|---|
 | `id`, `title`, `summary` | a short slug, a title, one or two sentences |
-| `license`, `created`, `code_url`, `publication` | `MIT` unless the depositor chose another; the date; links |
+| `tags` | optional keywords: the field, the kind of data, the kind of study |
+| `license`, `created` | `MIT` unless the depositor chose another; the date |
+| `code_url`, `publication`, `weights_url` | optional links, each an https address or a DOI: the code, the paper, the trained weights |
 | `depositor` | `name`, `orcid`, `lab`, `institution`, `contact` |
 | `run_by` | who or what ran it: `kind`, `tool`, `model` |
 | `objective` | `goal`, and `optimize`: `{metric, split, direction}` |
 | `data` | `name`, `accession`, `input`, `output`, `examples` (train, valid, test counts), `preprocessing`, `splits` |
+| `data.accession` | the dataset's DOI. If it has none, its accession or an https link. No star without it |
+| `data.benchmark` | optional: the id of the CAMEO benchmark this dataset belongs to |
+| `data.preprocessing` | text, or `{how, code}` with the preprocessing code as text |
+| `datasets` | optional further datasets by id, with the same fields as `data`: for example other benchmarks the models are scored on. `data` itself has the id `main` |
 | `data.splits` | `how` the split was made, plus the `code` that builds it or the split `files` (name → `{url, sha256}`) |
-| `evaluation` | `primary_metric`, `direction`, `selection_split`, `test_policy`, `noise_floor`, and `metrics`: name → how it is computed |
+| `evaluation` | `primary_metric`, `direction`, `selection_split`, `test_policy`, `noise_floor`, and `metrics`: name → how it is computed, or `{definition, direction}` when it is not obvious whether higher is better |
 | `environment` | `python`, `framework`, `packages` (name → version), `training_hardware`, `inference_hardware` |
 | `search` | `method`, `budget`, and `lineages`: lines of work by id, each with `name`, `family`, `parents` |
 | `conclusions` | `best_run`, `findings`, `open_questions` |
+
+Say exactly how the data was prepared. Two studies on one dataset can only be compared when a reader can see that both used the same test set and the same preprocessing. CAMEO shows `examples`, `splits` and `preprocessing` for every study on a benchmark, side by side.
 
 ## `models[]`
 
@@ -50,9 +65,11 @@ These cannot be recovered afterwards. Capture them when each run happens.
 | `id`, `name`, `family` | a stable id, a short name, the kind of model |
 | `parent` | the model it was derived from, or `null` |
 | `inputs`, `outputs` | name → `{kind, shape}` |
-| `code` | the whole model file as text. It defines `build_model()`, which returns the network |
-| `inference_speed` | `{"seq_per_s": n}`: examples per second. See Performance |
+| `code` | the whole model file as text. It defines `build_model()`, which returns the network. If the model does not take one float tensor, it also defines `example_inputs(batch)`, which returns what to call the model with |
+| `inference_speed` | `{"examples_per_s": n}`. See Performance |
 | `layers` | optional layer list, for drawing the model |
+| `base_model` | for a model built on published weights: `{name, link, revision}`, where `link` is an https address or a DOI |
+| `adaptation` | how the base model was adapted, such as `LoRA, rank 8`, `full fine-tune` or `none` |
 
 ## `training{}`
 
@@ -78,7 +95,11 @@ Take these values from the objects the script built (optimizer, scheduler, loade
 | Field | Holds |
 |---|---|
 | `id`, `model`, `training`, `seed` | a stable id, a model id, a recipe id, the seed |
+| `kind` | `train` (from scratch, the default), `finetune` (from existing weights), `evaluate` (no training: existing weights were scored) or `reported` (a number copied from a paper; nothing was run) |
+| `reported_in` | for a `reported` run only: `{citation, doi}` or `{citation, url}`, with optional `where` and `note` |
+| `data` | the id of the dataset it trained on, when that is not `main` |
 | `settings` | only the settings this run set differently from its recipe |
+| `weights` | optional link to the trained weights: `{"url": ...}` or `{"doi": ...}`, with `sha256` if you have it |
 | `history` | `lineage`, `parent` (a run id or `null`), `second_parent` for a crossover (`{"run": id}` or `{"lineage": id}`), `move`, `hypothesis`, `predicted_effect` |
 | `performance` | see below |
 
@@ -95,20 +116,62 @@ Take these values from the objects the script built (optimizer, scheduler, loade
 | `parameters` | trainable parameter count |
 | `training_minutes` | wall-clock minutes from the start of training to its end, validation passes included |
 | `best_epoch`, `epochs_run` | the epoch that was scored; how many ran |
+| `evaluations` | results on further datasets: `[{dataset, split, metrics}]`. A run with no training puts all its results here |
 
 Training time and inference speed depend on the hardware, so each is recorded with its device: the GPU or CPU model, such as `NVIDIA A100`.
 
 - `experiment.environment.training_hardware`: `{device, count, precision}`.
-- `models[].inference_speed.seq_per_s`: a forward pass in evaluation mode, without gradients, at a fixed batch size, after a warm-up, taking the fastest of several timed passes.
+- `models[].inference_speed.examples_per_s`: a forward pass in evaluation mode, without gradients, at a fixed batch size, after a warm-up, taking the fastest of several timed passes.
 - `experiment.environment.inference_hardware`: `{device, threads, batch, precision}` for that measurement.
 - If a run trained on different hardware from the rest, give it its own under `performance.hardware`.
+
+## Fine-tuned models, and models that were only evaluated
+
+Not every run trains from scratch. Say which kind each run is, and link the weights involved.
+
+- **Fine-tuned**: set `kind` to `finetune`, and give the model its `base_model`. The recipe is recorded as for any training.
+- **Evaluated only**: set `kind` to `evaluate`. The run has no recipe, settings, seed or training time. Link the weights that were scored, under `weights`, or under the model's `base_model.link` if a published model was scored as it is.
+- **Several datasets**: list the extra ones under `experiment.datasets`, and put each result under the run's `evaluations`.
+- **Several seeds**: write one run per seed. CAMEO shows their mean and spread.
+
+```json
+"models": [{"id": "plm-lora", "name": "protein_650M_lora_r8", "family": "protein language model",
+            "base_model": {"name": "Example protein model 650M", "link": "https://example.org/models/protein-650m", "revision": "v1"},
+            "adaptation": "LoRA, rank 8", "code": "<the model file, as text>"}],
+"runs": [{"id": "zero-shot", "model": "plm", "kind": "evaluate",
+          "performance": {"status": "done", "score": 0.41, "parameters": 652000000,
+            "evaluations": [{"dataset": "main", "split": "test", "metrics": {"spearman": 0.41}},
+                            {"dataset": "assay2", "split": "test", "metrics": {"spearman": 0.37}}]}},
+         {"id": "lora-s0", "model": "plm-lora", "kind": "finetune", "training": "lora", "seed": 0,
+          "weights": {"doi": "10.5555/example-weights"},
+          "performance": {"status": "done", "score": 0.63, "valid": {"spearman": 0.63}, "parameters": 655000000,
+            "training_minutes": 62, "evaluations": [{"dataset": "main", "split": "test", "metrics": {"spearman": 0.61}}]}}]
+```
+
+## Results reported elsewhere
+
+A baseline from a paper can sit beside your own runs. CAMEO marks it Reported, links it to its source, and gives it no star.
+
+- Set `kind` to `reported`, and say where the number comes from in `reported_in`: a `citation`, and a `doi` or an https `url`. Add `where` for the table or figure.
+- The run has no recipe, settings, seed or training time, and its model needs no `code`.
+- Put the numbers under `test` or `evaluations`. Add `parameters` if the source states it.
+- Copy only numbers the source states for this dataset and metric. Never read one off a figure or estimate it.
+- If the source split or processed the data differently from you, say how in `reported_in.note`.
+
+```json
+"models": [{"id": "prior-cnn", "name": "prior_cnn", "family": "cnn", "parent": null}],
+"runs": [{"id": "reported-cnn", "model": "prior-cnn", "kind": "reported",
+          "reported_in": {"citation": "Example et al. 2025", "doi": "10.5555/example-paper", "where": "Table 2",
+                          "note": "random split; this study splits by sequence identity"},
+          "performance": {"status": "done", "parameters": 4200000, "test": {"spearman": 0.48}}}]
+```
 
 ## Rules
 
 - Never invent a value. Write `"not_reported"` for what the loop does not know.
 - Numbers are numbers. `Infinity` and `NaN` are not allowed: write `null` and list the metric in `diverged`.
 - Keep ids stable. Never renumber.
-- `format_version` is `"0.3"`.
+- `format_version` is `"0.4"`.
 
 ## Example
 
@@ -116,15 +179,15 @@ Copy the shape. Never copy the values.
 
 ```json
 {
- "format_version": "0.3",
+ "format_version": "0.4",
  "experiment": {
-  "id": "study-example", "title": "Example: one small CNN", "license": "MIT", "created": "2026-01-01",
+  "id": "study-example", "title": "Example: one small network", "license": "MIT", "created": "2026-01-01", "tags": ["example"],
   "summary": "Shows the shape of a sufficient file. Nothing here is real.",
   "depositor": {"name": "Example Depositor"},
   "run_by": {"kind": "agent", "tool": "example-loop"},
   "objective": {"goal": "Lowest validation MSE.", "optimize": {"metric": "mse", "split": "valid", "direction": "minimize"}},
-  "data": {"name": "Example sequences", "accession": "not_reported", "input": "100 bp DNA, one-hot (4, 100)",
-           "output": "one activity value", "examples": {"train": 1000, "valid": 200, "test": 200}, "preprocessing": "one-hot A,C,G,T",
+  "data": {"name": "Example dataset", "accession": "10.5555/example-dataset", "input": "a vector of 32 numbers",
+           "output": "one number", "examples": {"train": 1000, "valid": 200, "test": 200}, "preprocessing": "standardised per feature",
            "splits": {"how": "random, seed 0", "code": "<the code that builds the split, as text>"}},
   "evaluation": {"primary_metric": "mse", "direction": "minimize", "selection_split": "valid",
                  "metrics": {"mse": "mean squared error over examples", "pearson": "Pearson r over examples"}},
@@ -134,10 +197,10 @@ Copy the shape. Never copy the values.
   "conclusions": {"best_run": "run-001", "findings": [], "open_questions": []}
  },
  "models": [{
-  "id": "model-1", "name": "small_cnn", "family": "cnn", "parent": null,
-  "inputs": {"x": {"kind": "one-hot DNA", "shape": [4, 100]}}, "outputs": {"y": {"kind": "activity"}},
+  "id": "model-1", "name": "small_mlp", "family": "mlp", "parent": null,
+  "inputs": {"x": {"kind": "feature vector", "shape": [32]}}, "outputs": {"y": {"kind": "one number"}},
   "code": "<the model file, as text; it defines build_model()>",
-  "inference_speed": {"seq_per_s": 5000.0}}],
+  "inference_speed": {"examples_per_s": 5000.0}}],
  "training": {"base": {
   "name": "Adam with early stopping",
   "settings": {"optimizer": "adam", "lr": 0.001, "batch_size": 64, "epochs": 20, "patience": 3, "schedule": "constant"},
@@ -159,23 +222,25 @@ Copy the shape. Never copy the values.
 Before you hand the file over, confirm each of these.
 
 - It is valid JSON with the four parts.
+- `data.accession` has the dataset's DOI, accession or link.
 - Every model has its `code`.
-- Every run names a model and a recipe that exist, and has a `seed`.
+- Every run names a model that exists. A run that trained also names a recipe and has a `seed`. A run that only scored weights links to them. A reported result links to its source.
 - Every recipe has its `script`, and the fields above are filled.
-- Every finished run has `score`, metrics, `parameters` and `training_minutes`.
+- Every finished run of your own has `score`, metrics, `parameters` and `training_minutes`.
 - Every model with a finished run has `inference_speed`.
-- `environment` has versions, and the device for training and for inference. `data.splits` has code or files.
+- `environment` has versions, and the device for training and for inference. `data.splits` has code or files, and `data.preprocessing` says what was done.
 
-If you have the CAMEO kit, it checks all of this:
+The CAMEO kit checks all of this. It is two files, `cameo.py` and `rules.json`, kept in one folder. Both are at https://cameo-db.github.io/kit/.
 
 ```
 python3 cameo.py check study.json
 ```
 
-A complete file gives these two lines. Add `--json` to get every gap with a `fix`. A file with a "no" is still accepted, and is tagged partly reproducible.
+A complete file gives these lines. Add `--json` to get every gap with a `fix`. A file with a "no" is still accepted, with a lower star.
 
 ```
 Sufficient? experiment: yes · model: yes · training: yes · performance: yes
+Star: Gold
 RESULT: ready to stage.
 ```
 

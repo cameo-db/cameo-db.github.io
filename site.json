@@ -1,0 +1,11 @@
+{
+ "repo": "cameo-db/cameo-db.github.io",
+ "live": true,
+ "label": "Early preview",
+ "url": "https://cameo-db.github.io",
+ "doi": "",
+ "cite": {
+  "authors": "Koo P, CAMEO contributors",
+  "bibtex_authors": "Koo, Peter and {CAMEO contributors}"
+ }
+}

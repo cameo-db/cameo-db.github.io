@@ -1,4 +1,23 @@
 [
- {"id": "deepstarr", "title": "DeepSTARR enhancer activity", "dataset": "DeepSTARR UMI-STARR-seq, Drosophila S2", "task": "Regression from 249 bp of DNA",
-  "match": "deepstarr", "metric": "pearson", "split": "test", "metric_label": "Test Pearson r", "direction": "maximize"}
+ {
+  "id": "deepstarr",
+  "title": "DeepSTARR enhancer activity",
+  "dataset": "DeepSTARR UMI-STARR-seq, Drosophila S2",
+  "task": "Regression from 249 bp of DNA",
+  "domain": "Genomics",
+  "task_type": "Regression",
+  "example_unit": "seq",
+  "match": "deepstarr",
+  "metric": "pearson",
+  "split": "test",
+  "metric_label": "Test Pearson r",
+  "direction": "maximize",
+  "description": "Predict the activity of 249 bp enhancer sequences in Drosophila S2 cells, for a developmental and a housekeeping promoter.",
+  "links": [
+   {
+    "label": "Paper",
+    "href": "https://doi.org/10.1038/s41588-022-01048-5"
+   }
+  ]
+ }
 ]

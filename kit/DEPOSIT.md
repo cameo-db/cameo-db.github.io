@@ -26,6 +26,7 @@ The format is in `CAMEO_LOOP_SPEC.md`. Read it first. This file is the procedure
 - License: use the one in `depositor.json`. If it names none, keep the default, MIT, and say so in your report. Pick no other yourself.
 - Record what each run actually used. Take settings from the run's own config or log.
 - One entry per training run, including runs that failed.
+- A number the project quotes from a paper is a `reported` run with its source. Never enter it as a run the project made.
 - Keep the project's ids if it has them.
 
 ## Where values come from
@@ -39,6 +40,7 @@ The format is in `CAMEO_LOOP_SPEC.md`. Read it first. This file is the procedure
 | Settings a run trained with | That run's config or log |
 | Loss, schedule, stopping rule, checkpoint, shuffling, augmentation, starting weights | The training script first. Otherwise any file that states them. Otherwise `not_reported` |
 | Scores, parameter count, training time | Each run's result file. Copy every digit |
+| Baselines quoted from papers | The project's write-up, with the paper it cites. Copy the number as the paper states it |
 | Parents, lines of work, crossovers | The search log |
 | Ideas and predictions behind a run | The search log or proposal notes |
 

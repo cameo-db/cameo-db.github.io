@@ -3,18 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CAMEO benchmark page prototype</title>
+<title>CAMEO</title>
+<meta name="description" content="CAMEO is an open catalog of machine-learning experiments: model architectures, training recipes and results, comparable across studies.">
+<meta name="theme-color" content="#0B6B75">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230B6B75'/%3E%3Cpath d='M21.5 11.5a7 7 0 1 0 0 9' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500&display=swap" rel="stylesheet">
 <style>
 :root{
   /* Layout: benchmark header, then a two-column workbench. Left: linked chart and leaderboard. Right: sticky run inspector. */
-  --paper:#F5F6F8; --surface:#FFFFFF; --ink:#141A24; --ink-2:#465063; --muted:#748093; --line:#DEE2E9; --line-2:#EEF0F4;
+  --paper:#F5F6F8; --surface:#FFFFFF; --ink:#141A24; --ink-2:#465063; --muted:#5E6A7C; --line:#DEE2E9; --line-2:#EEF0F4;
   --accent:#0B6B75; --accent-wash:#E3F1F2;
-  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --other:#A3AAB6;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --other:#A3AAB6;
   --w-fill:#E4F2EE; --w-line:#2F8672; --n-fill:#ECE9F8; --n-line:#6E60C0; --c-fill:#FBEFE3; --c-line:#C27A2C;
-  --warn:#7A4F00; --warn-fill:#FBF1DA; --band:#0B6B7514;
+  --warn:#7A4F00; --warn-fill:#FBF1DA; --band:#0B6B7514; --gold:#A67C00; --silver:#6B7686; --bronze:#9C5A28;
   --q1:#cde2fb; --q2:#9ec5f4; --q3:#5598e7; --q4:#1c5cab; --q5:#0d366b; --qline:#5598e7;
   --font-display:"IBM Plex Serif",Georgia,serif;
   --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -23,21 +26,21 @@
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --paper:#0E1116; --surface:#161A21; --ink:#E7EAF0; --ink-2:#B3BAC6; --muted:#8690A0; --line:#2A303B; --line-2:#1F242D;
+    --paper:#0E1116; --surface:#161A21; --ink:#E7EAF0; --ink-2:#B3BAC6; --muted:#98A2B1; --line:#2A303B; --line-2:#1F242D;
     --accent:#62C6D2; --accent-wash:#14343A;
-    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --other:#5E6675;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --other:#5E6675;
     --w-fill:#13332D; --w-line:#4FBFA4; --n-fill:#272250; --n-line:#9C8FF0; --c-fill:#3A2A14; --c-line:#D99A4E;
-    --warn:#F0C674; --warn-fill:#3A2E12; --band:#62C6D21F;
+    --warn:#F0C674; --warn-fill:#3A2E12; --band:#62C6D21F; --gold:#E0B84A; --silver:#AEB7C4; --bronze:#D08A54;
     --q1:#173a66; --q2:#1c5cab; --q3:#3987e5; --q4:#86b6ef; --q5:#cde2fb; --qline:#256abf;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --paper:#0E1116; --surface:#161A21; --ink:#E7EAF0; --ink-2:#B3BAC6; --muted:#8690A0; --line:#2A303B; --line-2:#1F242D;
+  --paper:#0E1116; --surface:#161A21; --ink:#E7EAF0; --ink-2:#B3BAC6; --muted:#98A2B1; --line:#2A303B; --line-2:#1F242D;
   --accent:#62C6D2; --accent-wash:#14343A;
-  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --other:#5E6675;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --other:#5E6675;
   --w-fill:#13332D; --w-line:#4FBFA4; --n-fill:#272250; --n-line:#9C8FF0; --c-fill:#3A2A14; --c-line:#D99A4E;
-  --warn:#F0C674; --warn-fill:#3A2E12; --band:#62C6D21F;
+  --warn:#F0C674; --warn-fill:#3A2E12; --band:#62C6D21F; --gold:#E0B84A; --silver:#AEB7C4; --bronze:#D08A54;
     --q1:#173a66; --q2:#1c5cab; --q3:#3987e5; --q4:#86b6ef; --q5:#cde2fb; --qline:#256abf;
   color-scheme:dark;
 }
@@ -309,7 +312,81 @@ pre.src{margin:0;max-height:420px;overflow:auto;background:var(--paper);border:1
 .fld.bad input{border-color:var(--warn)}
 .fld .msg{color:var(--warn);min-height:0}
 .fld .hint{font-size:11.5px}
+#modeltable td:nth-child(4){max-width:330px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thsub{font-weight:400;font-size:11.5px;color:var(--muted);white-space:nowrap}
+.pm{color:var(--muted);font-size:12px}
+.lb tr.sel td{background:var(--accent-wash)}
+.links{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.lk{font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--ink-2);text-decoration:none;background:var(--surface)}
+a.lk{color:var(--accent)} a.lk:hover{border-color:var(--accent)}
+.star{white-space:nowrap;font-size:13px;color:var(--ink-2)}
+.star .st{font-size:15px;margin-right:4px}
+.star.gold .st{color:var(--gold)} .star.silver .st{color:var(--silver)} .star.bronze .st{color:var(--bronze)}
+.star.none{color:var(--muted)}
+.repro summary .star{font-size:14px;font-weight:600}
+.lb a.wl{font-size:12px;font-weight:400;color:var(--accent);margin-left:8px}
 a.brand{color:inherit;text-decoration:none}
+#crumbs{padding:12px 0 0;font-size:13.5px} #crumbs:empty{display:none}
+.nav{display:flex;gap:4px}
+.nav a{color:var(--ink-2);text-decoration:none;padding:5px 10px;border-radius:7px;font-size:14.5px}
+.nav a:hover{background:var(--line-2)}
+.nav a[aria-current="page"]{color:var(--accent);background:var(--accent-wash);font-weight:600}
+.tsearch{border:1px solid var(--line);border-radius:7px;padding:5px 10px;font:inherit;font-size:14px;background:var(--surface);color:var(--ink);width:170px;min-height:32px}
+.land{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:40px;align-items:center;padding:36px 0 10px}
+@media (max-width:980px){.land{grid-template-columns:minmax(0,1fr);gap:20px;padding-top:24px}.land h1{font-size:30px}}
+.herofig{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 14px 12px}
+.hf-wait{min-height:240px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px}
+.hf-h{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:4px}
+.hf-h b{color:var(--ink);font-size:14px}
+.herofig .cta{display:inline-block;color:var(--accent);font-size:13.5px;font-weight:600;text-decoration:none;margin-top:6px}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:12px;top:8px;z-index:60;background:var(--surface);padding:6px 10px;border:1px solid var(--line);border-radius:6px}
+#app:focus{outline:none}
+.foot-site{border-top:1px solid var(--line);margin-top:48px;padding:22px 0 32px;color:var(--muted);font-size:13px}
+.foot-site .wrap{display:flex;gap:14px 28px;flex-wrap:wrap;justify-content:space-between;align-items:baseline}
+.foot-site b{color:var(--ink);font-family:var(--font-display);font-weight:500;font-size:15px;margin-right:10px}
+.foot-site nav{display:flex;gap:18px;flex-wrap:wrap}
+.foot-site a{color:var(--ink-2);text-decoration:none} .foot-site a:hover{text-decoration:underline}
+.scrollx{overflow:auto}
+.stats.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:700px){.stats.three{grid-template-columns:minmax(0,1fr)}}
+.thb{border:0;background:none;font:inherit;color:inherit;font-weight:600;cursor:pointer;padding:0;white-space:nowrap}
+.thb:hover{color:var(--ink)}
+.search.sm{max-width:250px;padding:5px 10px;margin-top:0;font-size:13.5px;flex:1 1 170px}
+.lb a.rowlink{font-family:var(--font-mono);font-size:12.5px;font-weight:500}
+.wholink{color:inherit;text-decoration:none} .wholink:hover b{text-decoration:underline}
+h2.q{font-weight:400}
+@media (max-width:520px){.top .wrap{gap:8px 12px}.nav a{padding:5px 7px}.proto{font-size:11.5px}}
+.land h1{font-size:36px;line-height:1.15}
+.lede{font-size:16.5px;color:var(--ink-2);margin:0 0 16px;max-width:740px}
+.count{color:var(--muted);font-size:13.5px;margin:10px 0 0}
+.sec-h a{float:right;text-transform:none;letter-spacing:0;font-weight:500;color:var(--accent);text-decoration:none;font-size:13px}
+.bcard .cta{color:var(--accent);font-size:13.5px;margin-top:10px;font-weight:600}
+.what .bcard h3{font-size:15.5px}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tagb{border:0;cursor:pointer;font:inherit;font-size:12px}
+.flowrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:34px}
+.fstep{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.fstep .n{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:12.5px;font-weight:600;align-items:center;justify-content:center;margin-right:8px}
+.fstep p{margin:8px 0 0;color:var(--ink-2);font-size:13.5px}
+.fstep:not(:last-child)::after{content:"→";position:absolute;right:-26px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:18px}
+@media (max-width:900px){.flowrow{grid-template-columns:1fr;gap:28px}.fstep:not(:last-child)::after{content:"↓";right:auto;left:50%;top:auto;bottom:-25px;transform:translateX(-50%)}.tsearch{display:none}}
+.browse-bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:4px}
+.browse-bar .search{margin-top:0;flex:1 1 280px}
+.facet{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:10px 0 0}
+.facet .fl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-right:4px;min-width:118px}
+.fchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px;font:inherit;font-size:13px;color:var(--ink-2);cursor:pointer}
+.fchip[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent);color:var(--accent);font-weight:600}
+.fchip .n{color:var(--muted);margin-left:6px;font-weight:400}
+#results{margin-top:14px}
+.lb a.plainlink{font-weight:400}
+.about-w{max-width:70ch;padding-bottom:30px}
+.about-s h2{font-size:17px;margin:22px 0 6px}
+.about-s p,.about-s li{color:var(--ink-2);font-size:15.5px;line-height:1.6}
+.about-s ul,.about-s ol{padding-left:20px;margin:6px 0}
+.about-s li{margin:4px 0}
+.about-s a{color:var(--accent)}
+.steps2{padding-left:20px;line-height:1.6}
 .crumbs a{color:inherit;text-decoration:none} .crumbs a:hover{text-decoration:underline}
 .home-h{padding:28px 0 6px}
 .search{width:100%;max-width:520px;border:1px solid var(--line);border-radius:8px;padding:9px 12px;font:inherit;background:var(--surface);color:var(--ink);margin-top:6px}
@@ -372,18 +449,80 @@ pre.cmd{background:var(--paper);border:1px solid var(--line);border-radius:8px;p
 .corr{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
 @media (max-width:1100px){ .form{grid-template-columns:repeat(2,minmax(0,1fr))} }
 @media (max-width:820px){ .editor{grid-template-columns:minmax(0,1fr)} .form{grid-template-columns:minmax(0,1fr)} }
+.vh{position:absolute;left:-9999px}
+a.btn{text-decoration:none;display:inline-block}
+.card.pad{padding:16px 18px}
+.card.pad h2{font-size:15.5px;font-weight:600;margin:0 0 6px}
+.cdot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;flex:none}
+.cmpb{width:24px;height:24px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);cursor:pointer;font:inherit;font-size:14px;line-height:1;padding:0}
+.cmpb:hover{border-color:var(--accent);color:var(--accent)}
+.cmpb[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:600}
+span.cmpb.demo{display:inline-flex;align-items:center;justify-content:center;cursor:default;vertical-align:middle}
+.btn[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent);color:var(--accent);font-weight:600}
+.cmptray{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -6px 24px #0002;padding:10px 0}
+.cmptray .wrap{display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap}
+.cmptray .item{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:2px 4px 2px 10px;font-size:12.5px;max-width:260px}
+.cmptray .item .mono{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmptray .hint{color:var(--muted);font-size:13px}
+.cmptray .sp{margin-left:auto;display:flex;gap:12px;align-items:center}
+.cmptray.full{border-top-color:var(--warn)}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:2px 6px;border-radius:6px}
+.x:hover{color:var(--ink);background:var(--line-2)}
+body.has-tray{padding-bottom:64px}
+.cmp{table-layout:fixed;min-width:560px}
+.cmp thead th{white-space:normal;vertical-align:top;font-weight:400;font-size:13px;color:var(--ink)}
+.cmp .rowh{width:190px;text-align:left;font-weight:400;color:var(--ink-2);font-size:13px;white-space:normal;position:sticky;left:0;background:var(--surface);z-index:1}
+.cmp td{vertical-align:top;overflow-wrap:anywhere}
+.cmp tr.sect th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;padding-top:16px;background:var(--surface)}
+.cmp tr.dif td{font-weight:600}
+.cmp td,.cmp tbody th,.preptable td,#filetable td:nth-child(2){white-space:normal}
+.cmp tbody tr,.preptable tbody tr,#filetable tbody tr{cursor:default}
+.cmp tbody tr.sect:hover{background:none}
+.agents a:not(.btn),.sec .q a,.dialog .q a,.dialog .fine a{color:var(--accent)}
+.lb th.cmpc,.lb td.cmpc{padding-right:0;width:36px}
+.cmp .ne{color:var(--warn);font-weight:700;margin-left:6px}
+.ch1{display:flex;align-items:center;margin-bottom:4px}
+.ch1 b{font-size:14px;font-weight:600}
+.ch1 .x{margin-left:auto}
+.ch .rowlink{overflow-wrap:anywhere}
+.glance{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px 32px;padding:14px 16px 12px}
+.gp h3{font-size:12.5px;font-weight:600;margin:0 0 8px;color:var(--ink-2)}
+.gr{display:grid;grid-template-columns:14px minmax(0,1fr);gap:0 8px;align-items:center;margin:0 0 7px;font-size:12.5px}
+.gr b{font-weight:600}
+.gt{display:flex;align-items:center;gap:8px;min-width:0}
+.gb{height:14px;border-radius:0 4px 4px 0;min-width:2px;flex:none}
+.gv{white-space:nowrap;font-variant-numeric:tabular-nums}
+.gsub{grid-column:2;color:var(--muted);font-size:11.5px}
+.gp .fine{margin-top:4px}
+.legend2 .cdot{margin-right:5px}
+.preptable td{vertical-align:top;min-width:150px}
+.preptable td:first-child{min-width:220px}
+.agents{display:flex;flex-direction:column;gap:16px;max-width:900px;padding-bottom:20px}
+.agents .card + .card{margin-top:0}
+.kitrow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
+.kitrow .btn{padding:6px 12px;font-size:13.5px}
+pre.cmd.wrap{white-space:pre-wrap;overflow-wrap:anywhere}
+.citeb{margin:10px 0 0}
+.citeh{display:flex;align-items:center;justify-content:space-between;font-size:13px}
+.citeh b{font-weight:600}
+button.lk{cursor:pointer;font:inherit;font-size:12.5px;color:var(--accent)} button.lk:hover{border-color:var(--accent)}
+.thsub a{color:var(--accent)}
+@media (max-width:700px){ .cmp .rowh{width:120px} .cmptray .hint{display:none} }
 </style>
 </head>
 <body>
+<a class="skip" href="#app">Skip to content</a>
 <header class="top"><div class="wrap">
   <a class="brand" href="#/" id="homelink">CAMEO</a>
-  <span class="crumbs" id="crumbs" aria-label="Location"></span>
-  <span class="topr"><button class="btn" id="depbtn" type="button">Deposit a study</button><span class="proto">Early preview</span></span>
+  <nav class="nav" aria-label="Site"><a href="#/browse" data-nav="browse">Browse</a><a href="#/browse/benchmarks" data-nav="bench">Benchmarks</a><a href="#/agents" data-nav="agents">For agents</a><a href="#/about" data-nav="about">About</a></nav>
+  <span class="topr"><input class="tsearch" id="tsearch" type="search" placeholder="Search" aria-label="Search the catalog"><button class="btn" id="depbtn" type="button">Deposit a study</button><span class="proto" id="protolabel"></span></span>
 </div></header>
 <div id="banner"></div>
+<nav class="wrap" aria-label="Breadcrumb"><div class="crumbs" id="crumbs"></div></nav>
 <main class="wrap">
-  <div id="app"><div class="loading" role="status">Loading…</div></div>
+  <div id="app" tabindex="-1"><div class="loading" role="status">Loading…</div></div>
 </main>
+<footer class="foot-site"><div class="wrap" id="sitefoot"></div></footer>
 <div aria-live="polite" id="live" style="position:absolute;left:-9999px"></div>
 
 <script>
@@ -419,29 +558,56 @@ const fmtSmall = v => v == null ? "–" : v === 0 ? "0" : String(Number(Number(v
 let META, RUNS, MODELS = null, D = {};
 const byId = {}, modelById = {}, kids = {}, byLin = {};
 const FAMILY_LABEL = {state_space:"State space", gmlp_token_mixer:"gMLP token mixer", conv_recurrent_hybrid:"Convolution + recurrent",
-  gated_dilated_wavenet:"Gated dilated WaveNet", cnn_transformer_hybrid:"CNN + transformer", dilated_residual_cnn:"Dilated residual CNN", baseline:"DeepSTARR baseline family"};
+  gated_dilated_wavenet:"Gated dilated WaveNet", cnn_transformer_hybrid:"CNN + transformer", dilated_residual_cnn:"Dilated residual CNN", baseline:"Baseline family"};
 const pretty = f => FAMILY_LABEL[f] || f.replace(/_/g, " ").replace(/^./, c => c.toUpperCase());
 let SERIES = [];
 const seriesOf = r => (SERIES.find(x => x.fam === r.fam) || SERIES[SERIES.length-1]).key;
-const recSet = r => ((META.recipes || {})[r.recipe] || {}).settings || D;
+const recSet = r => (r.kind === "evaluate" || r.kind === "reported") ? {} : ((META.recipes || {})[r.recipe] || {}).settings || D;
 const setting = (r, k) => (r.hp && k in r.hp) ? r.hp[k] : recSet(r)[k];
 
 /* Every quantity a run has. Any of them can go on either axis. */
 const Q = {}, QGROUPS = [["Accuracy", []], ["Cost", []], ["Search", []], ["Training settings", []]];
 function addQ(group, def){ Q[def.id] = def; QGROUPS.find(g => g[0] === group)[1].push(def.id); }
-const KNOWN = {pearson:["Pearson r (mean of Dev and Hk)","Pearson r","high"], mse:["MSE (mean of Dev and Hk)","MSE","low"],
-  dev_pearson:["Pearson r, developmental","Pearson r (Dev)","high"], hk_pearson:["Pearson r, housekeeping","Pearson r (Hk)","high"],
-  dev_mse:["MSE, developmental","MSE (Dev)","low"], hk_mse:["MSE, housekeeping","MSE (Hk)","low"],
-  dev_r2:["R², developmental","R² (Dev)","high"], hk_r2:["R², housekeeping","R² (Hk)","high"]};
+const BASE = {pearson:["Pearson r","high"], spearman:["Spearman ρ","high"], r2:["R²","high"], accuracy:["Accuracy","high"], acc:["Accuracy","high"], auroc:["AUROC","high"], auprc:["AUPRC","high"], f1:["F1","high"],
+  mse:["MSE","low"], rmse:["RMSE","low"], mae:["MAE","low"], loss:["Loss","low"]};
+/* a label and a direction for any metric name: "pearson", or a part and a metric such as "dev_pearson" */
+function metricInfo(id){
+  const c = id.indexOf(":"), md = isObj((META || {}).evaluation) && isObj(META.evaluation.metrics) ? META.evaluation.metrics[c > 0 ? id.slice(c + 1) : id] : null;
+  let out = metricInfo0(c > 0 ? id.slice(c + 1) : id);
+  if (c > 0){ const ds = (((META || {}).datasets || {})[id.slice(0, c)] || {}).name || id.slice(0, c); out = [out[0] + " on " + ds, out[1] + " · " + ds, out[2]]; }
+  if (isObj(md) && (md.direction === "minimize" || md.direction === "maximize")) out = [out[0], out[1], md.direction === "minimize" ? "low" : "high"];   /* the file's own word wins over a guess from the name */
+  return out;
+}
+function metricInfo0(id){
+  if (BASE[id]) return [BASE[id][0], BASE[id][0], BASE[id][1]];
+  const m = /^(.+)_([a-z0-9]+)$/.exec(id);
+  if (m && BASE[m[2]]){ const n = `${BASE[m[2]][0]} (${m[1].replace(/_/g, " ")})`; return [n, n, BASE[m[2]][1]]; }
+  const n = id.replace(/_/g, " "); return [n, n, /mse|mae|loss|err/i.test(id) ? "low" : "high"];
+}
+let BM = null, UNIT = "examples";
+/* what this study optimised: its own metric, split and direction. Nothing below assumes "lower is better". */
+let OBJ = {metric:"mse", split:"valid", dir:1, label:"Validation MSE", short:"Val MSE"};
+const SPLIT_NAME = {valid:"Validation", test:"Test", train:"Training"};
+const lowerFirst = t => t ? t[0].toLowerCase() + t.slice(1) : t;
+const better = (a, b) => (a - b) * OBJ.dir < 0;
+function setupObjective(){
+  const o = (META.objective || {}).optimize || {}, ev = META.evaluation || {};
+  const raw = String(known(o.metric) ? o.metric : known(ev.primary_metric) ? ev.primary_metric : "score"), split0 = String(known(o.split) ? o.split : known(ev.selection_split) ? ev.selection_split : "valid").toLowerCase();
+  const word = known(o.direction) ? o.direction : ev.direction, stripped = raw.replace(/^(val|valid|validation|test|train)_/i, ""), keys = new Set();
+  for (const r of RUNS) for (const k of Object.keys(r.v || {}).concat(Object.keys(r.t || {}))) keys.add(k);
+  const metric = keys.has(raw) ? raw : stripped, split = /^val/.test(split0) ? "valid" : split0, info = metricInfo(metric), sp = SPLIT_NAME[split] || (split[0].toUpperCase() + split.slice(1));
+  OBJ = {metric, split, dir:word === "maximize" ? -1 : word === "minimize" ? 1 : (info[2] === "low" ? 1 : -1), label:sp + " " + info[1], short:(split === "valid" ? "Val" : sp) + " " + info[1]};
+}
+function applyUnit(){ Q.speed.name = `Inference speed (${UNIT}/s)`; Q.speed.short = unitLabel(UNIT) + "/s"; Q.speed.val = v => fmtInt(v) + " " + UNIT + "/s"; }
 /* the accuracy metrics come from whatever the study's runs report */
 function setupMetrics(){
   const acc = QGROUPS[0][1]; for (const id of acc.splice(0)) delete Q[id];
   const ids = []; for (const r of RUNS) for (const k of Object.keys(r.v||{}).concat(Object.keys(r.t||{}))) if (!ids.includes(k)) ids.push(k);
-  const order = Object.keys(KNOWN), rank = k => order.indexOf(k) < 0 ? 99 : order.indexOf(k); ids.sort((x,y) => rank(x) - rank(y));
-  for (const id of ids){ const k = KNOWN[id] || [id.replace(/_/g," "), id.replace(/_/g," "), /mse|mae|loss|err/i.test(id) ? "low" : "high"];
+  const order = Object.keys(BASE), rank = k => order.indexOf(k) < 0 ? 99 : order.indexOf(k); ids.sort((x,y) => rank(x) - rank(y));
+  for (const id of ids){ const k = metricInfo(id);
     addQ("Accuracy", {id, name:k[0], short:k[1], better:k[2], kind:"acc", split:true, log:false, get:(r, sp) => ((sp === "valid" ? r.v : r.t)||{})[id], val:v => fmt(v,4)}); }
 }
-const YM = () => Q.pearson ? "pearson" : QGROUPS[0][1][0];
+const YM = () => (BM && Q[BM.metric]) ? BM.metric : Q.pearson ? "pearson" : QGROUPS[0][1][0];
 addQ("Cost", {id:"speed", name:"Inference speed (sequences/s)", short:"Seq/s", better:"high", kind:"cost", log:true, get:r => r.speed, val:v => fmtInt(v) + " seq/s"});
 addQ("Cost", {id:"params", name:"Parameters", short:"Parameters", better:"low", kind:"cost", log:true, get:r => r.params, val:fmtInt});
 addQ("Cost", {id:"mins", name:"Training time (minutes)", short:"Train min", better:"low", kind:"cost", log:true, get:r => r.mins, val:v => fmt(v,1) + " min"});
@@ -458,16 +624,21 @@ function resolveAxis(a){
   const q = Q[a.q], log = a.scale === "auto" ? q.log : a.scale === "log";
   const base = (q.split ? SPLIT[a.split] + " " : "") + q.name;
   return {q, a, log, get:r => q.get(r, a.split), short:(q.split ? SPLIT[a.split] + " " : "") + q.short, base,
-    isValMse:q.id === "mse" && a.split === "valid"};
+    isValMse:q.id === OBJ.metric && a.split === (OBJ.split === "test" ? "test" : "valid")};
 }
 const curAxes = () => state.tab === "history" ? {x:resolveAxis(state.hx), y:resolveAxis(state.hy)} : {x:resolveAxis(state.ax.x), y:resolveAxis(state.ax.y)};
 
 let BUNDLED = null, WIRED = false;
 const clone = o => JSON.parse(JSON.stringify(o));
+function siteFoot(){
+  const repo = "https://github.com/" + INDEX.site.repo, a = (href, t, out) => h("a", out ? {href, target:"_blank", rel:"noopener", text:t} : {href, text:t});
+  put(document.getElementById("sitefoot"), h("div",null, h("b",{text:"CAMEO"}), "Catalog of Architecture Metadata and Experimental Outcomes"),
+    h("nav",{"aria-label":"Footer"}, a("#/browse","Browse"), a("#/browse/benchmarks","Benchmarks"), a("#/agents","For agents"), a("#/about","About"), a("#/about/cite","Cite"), a(repo,"GitHub",true)));
+}
 async function load(){
   try{ [RULES, INDEX] = await Promise.all([getJSON("rules.json"), getJSON("index.json")]); }
   catch(e){ document.getElementById("app").replaceChildren(h("div",{class:"err"}, h("b",{text:"The site data did not load. "}), "Reload the page to try again. (" + e.message + ")")); return; }
-  setupFields(); wire(); route();
+  setupFields(); wire(); siteFoot(); { const pl_ = document.getElementById("protolabel"); pl_.textContent = INDEX.site.label || ""; pl_.hidden = !INDEX.site.label; } route();
 }
 /* ================= the site: home -> benchmark -> study =================
    Each page reads one small file: index.json, boards/<benchmark>.json, or studies/<study>.json. */
@@ -475,9 +646,14 @@ let INDEX = null, ROUTE = {view:"home"}, BOARD_MODE = "study";
 const STUDIES = {};
 const getJSON = async f => { const r = await fetch(f); if (!r.ok) throw new Error(f + " returned " + r.status); return r.json(); };
 function parseHash(){
-  const p = decodeURIComponent(location.hash.replace(/^#\/?/, "")).split("/");
-  if (p[0] === "b" && p[1]) return {view:"bench", id:p[1]};
-  if (p[0] === "s" && p[1]) return {view:"study", id:p[1], run:p.slice(2).join("/") || null};
+  const raw = location.hash.replace(/^#\/?/, ""), at = raw.indexOf("?"), path = decodeURIComponent(at < 0 ? raw : raw.slice(0, at)).split("/"), qs = new URLSearchParams(at < 0 ? "" : raw.slice(at + 1));
+  if (path[0] === "b" && path[1]) return {view:"bench", id:path[1]};
+  if (path[0] === "s" && path[1]) return {view:"study", id:path[1], run:path.slice(2).join("/") || null};
+  if (path[0] === "d" && path[1]) return {view:"dep", id:path[1]};
+  if (path[0] === "browse") return {view:"browse", sub:["benchmarks","models"].includes(path[1]) ? path[1] : "studies", has:at >= 0, q:qs.get("q") || "", tags:qs.get("tag") || "", stars:qs.get("star") || ""};
+  if (path[0] === "about") return {view:"about", sub:path[1] || null};
+  if (path[0] === "agents") return {view:"agents"};
+  if (path[0] === "compare") return {view:"compare", items:qs.getAll("r").map(x => { const i = x.indexOf("~"); return i > 0 ? {study:x.slice(0, i), run:x.slice(i + 1)} : null; }).filter(Boolean).slice(0, 4)};
   return {view:"home"};
 }
 function setCrumbs(parts){
@@ -485,38 +661,402 @@ function setCrumbs(parts){
   parts.forEach(([label, href], i) => { if (i) out.push(h("span",{text:"/"})); out.push(href ? h("a",{href,text:label}) : h("b",{text:label})); });
   put(el, out);
 }
-const tagPill = t => h("span",{class:"pill " + RULES.tags[t].cls,title:RULES.tags[t].means,text:RULES.tags[t].label});
+const starPill = lv => { const T = RULES.stars[lv] || RULES.stars.none; return lv === "none" || !RULES.stars[lv] ? h("span",{class:"star none",title:T.means,text:T.label})
+  : h("span",{class:"star " + lv,title:T.label + ": " + T.means}, h("span",{class:"st","aria-hidden":"true",text:"★"}), T.label); };
+function weightLink(w){
+  const v = isObj(w) ? (known(w.url) ? w.url : w.doi) : w; if (!known(v)) return null;
+  const sv = String(v).trim(), doi = /^(?:doi:|https?:\/\/(?:dx\.)?doi\.org\/)?(10\.\d{4,9}\/\S+)$/i.exec(sv);
+  if (doi) return {href:"https://doi.org/" + doi[1], label:"DOI " + doi[1]};
+  if (/^https:\/\/\S+$/.test(sv)) return {href:sv, label:sv.split("/")[2].replace(/^www\./, "")};
+  return null;
+}
 const madeUp = x => x.made_up ? h("span",{class:"pill bad",title:"Every number in this study is made up, so the demo has more than one study",text:"made-up data"}) : null;
 async function route(){
-  const r = parseHash(); ROUTE = r; window.scrollTo(0, 0);
+  const r = parseHash(); ROUTE = r; window.scrollTo(0, 0); closeDialog();
+  document.title = r.view === "browse" ? (r.sub === "benchmarks" ? "Benchmarks" : r.sub === "models" ? "Models" : "Browse") + " · CAMEO" : r.view === "about" ? "About · CAMEO" : "CAMEO";
+  document.querySelectorAll(".nav a").forEach(a => { const k = a.dataset.nav, on = (k === "about" && r.view === "about") || (k === "agents" && r.view === "agents") || (k === "browse" && ((r.view === "browse" && r.sub !== "benchmarks") || r.view === "dep")) || (k === "bench" && (r.view === "bench" || (r.view === "browse" && r.sub === "benchmarks")));
+    if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  renderTray();
   if (r.view === "study"){
     if (ENTRY && ENTRY.id === r.id && ENTRY.status === "published" && document.getElementById("insp")){ if (r.run && byId[r.run] && r.run !== state.sel) select(r.run, true); return; }
     await openStudy(r.id);
   } else if (r.view === "bench") await openBench(r.id);
+  else if (r.view === "browse") openBrowse(r);
+  else if (r.view === "about") openAbout(r.sub);
+  else if (r.view === "agents") openAgents();
+  else if (r.view === "compare") await openCompare(r);
+  else if (r.view === "dep") openDepositor(r.id);
   else openHome();
 }
+const leave = () => { document.getElementById("banner").replaceChildren(); ENTRY = {status:"none", history:[]}; };
+const pl = (v, one, many) => fmtInt(v) + " " + (v === 1 ? one : many);
+const unitLabel = u => !u ? "Examples" : u === "seq" ? "Seq" : u[0].toUpperCase() + u.slice(1);
+const benchCard = b => h("a",{class:"bcard",href:"#/b/" + b.id}, h("h3",{text:b.title}), h("div",{class:"m",text:b.task}),
+  h("div",{class:"big",text:fmt(b.best,3)}), h("div",{class:"m",text:`best ${b.metric_label} · ${pl(b.studies,"study","studies")} · ${fmtInt(b.models)} models`}),
+  h("div",{class:"tags"}, [b.domain, b.task_type].filter(Boolean).map(t => h("span",{class:"pill plain",text:t}))));
+function studyTable(St, full){
+  const heads = full ? ["Study","Depositor","Benchmark","Runs","Models","Star","Added"] : ["Study","Depositor","Benchmark","Runs","Star","Added"];
+  return h("table",{class:"lb"}, h("thead",null, h("tr",null, heads.map(t => h("th",{class:/Runs|Models/.test(t) ? "num" : "",text:t})))),
+    h("tbody",null, St.map(x => h("tr",{class:"go",onclick:e=>{ if (!e.target.closest("a,button")) location.hash = "#/s/" + x.id; }},
+      h("td",null, h("a",{href:"#/s/" + x.id,text:x.title || "Untitled study"}), " ", madeUp(x),
+        full && (x.tags || []).length ? h("div",{class:"tags"}, x.tags.map(t => h("button",{class:"pill plain tagb",title:"Show studies with this tag",text:t,onclick:()=>{ const to = "#/browse?tag=" + encodeURIComponent(t.toLowerCase()); if (location.hash === to) route(); else location.hash = to; }}))) : null),
+      h("td",null, x.depositor ? h("a",{class:"plainlink",href:"#/d/" + encodeURIComponent(x.depositor_slug),title:"All studies by this depositor",text:x.depositor}) : "–", x.lab ? " · " + x.lab : ""), h("td",null, x.benchmark ? [h("a",{class:"plainlink",href:"#/b/" + x.benchmark,text:x.benchmark_title}), (x.benchmarks || []).length > 1 ? h("span",{class:"by",title:"On " + x.benchmarks.length + " benchmarks",text:" +" + (x.benchmarks.length - 1)}) : null] : "–"),
+      h("td",{class:"num"}, fmtInt(x.runs), x.reported ? h("div",{class:"thsub",title:"Results copied from papers, not run by the depositor",text:`+${x.reported} reported`}) : null), full ? h("td",{class:"num",text:fmtInt(x.models)}) : null, h("td",null, starPill(x.star)), h("td",{text:x.created || ""})))));
+}
+/* ---------- landing: what this is, what you can do with it, how it works ---------- */
 function openHome(){
-  document.getElementById("banner").replaceChildren(); setCrumbs([["Benchmarks", null]]); ENTRY = {status:"none", history:[]};
-  const q = h("input",{class:"search",type:"search",id:"homeq",placeholder:"Search benchmarks, studies, depositors…","aria-label":"Search"});
-  const bwrap = h("div",{class:"grid"}), swrap = h("div",{class:"card",style:"overflow:auto"});
-  const draw = () => {
-    const k = q.value.trim().toLowerCase(), hit = (...v) => !k || v.filter(Boolean).join(" ").toLowerCase().includes(k);
-    const B = INDEX.benchmarks.filter(b => hit(b.title, b.dataset, b.task)), St = INDEX.studies.filter(x => hit(x.title, x.depositor, x.lab, x.benchmark_title));
-    put(bwrap, B.length ? B.map(b => h("a",{class:"bcard",href:"#/b/" + b.id}, h("h3",{text:b.title}), h("div",{class:"m",text:b.task}),
-      h("div",{class:"big",text:fmt(b.best,3)}), h("div",{class:"m",text:`best ${b.metric_label} · ${b.studies} ${b.studies === 1 ? "study" : "studies"} · ${fmtInt(b.models)} models`}))) : h("p",{class:"q",text:"No benchmark matches."}));
-    put(swrap, St.length ? h("table",{class:"lb"}, h("thead",null, h("tr",null, ["Study","Depositor","Benchmark","Runs","Reproducibility","Added"].map((t, i) => h("th",{class:i === 3 ? "num" : "",text:t})))),
-      h("tbody",null, St.map(x => h("tr",{class:"go",onclick:()=>{ location.hash = "#/s/" + x.id; }},
-        h("td",null, h("a",{href:"#/s/" + x.id,text:x.title || "Untitled study"}), " ", madeUp(x)), h("td",{text:[x.depositor, x.lab].filter(Boolean).join(" · ")}), h("td",{text:x.benchmark_title}),
-        h("td",{class:"num",text:fmtInt(x.runs)}), h("td",null, tagPill(x.tag)), h("td",{text:x.created || ""}))))) : h("p",{class:"q",style:"padding:14px 16px",text:"No study matches."}));
-  };
-  q.addEventListener("input", draw);
-  put(document.getElementById("app"), h("section",{class:"home-h"}, h("div",{class:"eyebrow",text:"CAMEO"}), h("h1",{text:"Models, how they were trained, and how they performed"}), q),
-    h("div",{class:"sec-h",text:"Benchmarks"}), bwrap, h("div",{class:"sec-h",text:"Studies"}), swrap);
+  leave(); setCrumbs([]); const T = INDEX.totals;
+  const q = h("input",{class:"search",type:"search",id:"homeq",placeholder:"Search studies, benchmarks, model families, depositors…","aria-label":"Search the catalog"});
+  q.addEventListener("keydown", e => { if (e.key === "Enter") location.hash = "#/browse?q=" + encodeURIComponent(q.value.trim()); });
+  const what = [["Find what has been tried","Search by task, dataset, model family or depositor, and filter by tag.","#/browse","Browse studies"],
+    ["Compare across studies","One leaderboard per benchmark. Pick any runs to see their results, data, training and model side by side.","#/browse/benchmarks","See benchmarks"],
+    ["Rebuild any model","Open a run to get its model code, settings and training recipe. Each entry carries a star for how complete it is.",INDEX.studies[0] ? "#/s/" + INDEX.studies[0].id : "#/browse","Open a study"],
+    ["Deposit your own","Give your training loop, or an agent, one instructions file. Check the output and add it. Your name stays on every result.","#/agents","Get the instructions"]];
+  const steps = [["Run experiments","A person or an agentic loop trains models, in any field."],["Write one file",null],
+    ["Check and deposit","A checker says what is missing. The file is added by pull request. Partial entries are welcome."],["Use it","Browse, compare on leaderboards, and rebuild any run."]];
+  const fb = INDEX.benchmarks.slice().sort((a, c) => c.models - a.models)[0];
+  const fig = fb ? h("div",{class:"herofig",id:"herofig"}, h("div",{class:"hf-h"}, h("b",{text:fb.title}), h("span",{text:`${fmtInt(fb.models)} models from ${pl(fb.studies,"study","studies")}`})), h("div",{class:"hf-wait",text:"Loading the chart…"})) : null;
+  put(document.getElementById("app"),
+    h("section",{class:"land"}, h("div",{class:"land-t"}, h("div",{class:"eyebrow",text:"Catalog of Architecture Metadata and Experimental Outcomes"}),
+      h("h1",{text:"See what has been tried, compare results across studies, and rebuild any model."}),
+      h("p",{class:"lede",text:"CAMEO is an open catalog of machine-learning experiments in any field. Each entry is one file that holds the models, how they were trained and what they scored, deposited by the people and agents who ran them."}),
+      q, h("p",{class:"count",id:"totals",text:[pl(T.studies,"study","studies"), pl(T.benchmarks,"benchmark","benchmarks"), pl(T.models,"model","models"), pl(T.runs,"training run","training runs")].join(" · ")})), fig),
+    h("h2",{class:"sec-h",text:"What you can do"}), h("div",{class:"grid what"}, what.map(([t, d, href, cta]) => h("a",{class:"bcard",href}, h("h3",{text:t}), h("div",{class:"m",text:d}), h("div",{class:"cta",text:cta + " →"})))),
+    h("h2",{class:"sec-h",text:"How it works"}),
+    h("div",{class:"flowrow"}, steps.map(([t, d], i) => h("div",{class:"fstep"}, h("span",{class:"n","aria-hidden":"true",text:String(i + 1)}), h("b",{text:t}),
+      d ? h("p",{text:d}) : [h("p",null, h("span",{class:"mono",text:"study.json"}), " has four parts:"), h("div",{class:"tags"}, ["experiment","models","training","runs"].map(x => h("span",{class:"pill tie",text:x})))]))),
+    h("h2",{class:"sec-h"}, "Benchmarks", h("a",{href:"#/browse/benchmarks",text:"All benchmarks"})),
+    INDEX.benchmarks.length ? h("div",{class:"grid"}, INDEX.benchmarks.slice(0, 6).map(b => benchCard(b))) : h("p",{class:"q",text:"No benchmarks yet."}),
+    h("h2",{class:"sec-h"}, "Recent studies", h("a",{href:"#/browse",text:"Browse all"})),
+    INDEX.studies.length ? h("div",{class:"card scrollx",tabindex:"0",role:"region","aria-label":"Recent studies"}, studyTable(INDEX.studies.slice(0, 5), false)) : h("p",{class:"q",text:"No studies yet. Use Deposit a study to add the first."}));
+  /* a real chart from the catalog, so the first screen shows what is inside */
+  if (fb) getJSON("boards/" + fb.id + ".json").then(B => {
+    if (ROUTE.view !== "home" || !document.body.contains(fig)) return;
+    const st = INDEX.studies.filter(x => (x.benchmarks || [x.benchmark]).includes(fb.id)), col = {}; st.forEach((x, i) => { col[x.id] = `var(--s${(i % 3) + 1})`; });
+    const ch = boardChart(B, col, Math.max(320, fig.clientWidth - 30), 240); if (!ch){ fig.remove(); return; }
+    put(fig, fig.firstChild, st.length > 1 ? h("div",{class:"legend2",style:"margin:0 0 4px;font-size:12.5px"}, st.map(x => h("span",null, h("span",{class:"dot",style:"background:" + col[x.id]}), x.title || "Untitled study"))) : null,
+      ch, h("a",{class:"cta",href:"#/b/" + fb.id,text:"Open the leaderboard →"}));
+  }).catch(() => { fig.remove(); });
+}
+/* ---------- browse: search, tags, filters ---------- */
+const BROWSE = {q:"", tags:new Set(), repro:new Set(), sub:"studies", more:false};
+let MODELS_ALL = null;
+/* under a model's name: how it got its weights, when that is not plain training */
+const howLine = r => r.kind === "reported" ? h("div",{class:"thsub",title:(r.reported || {}).note || ""}, "Reported in ", srcEl(r.reported), (r.reported || {}).where ? ", " + r.reported.where : "", (r.reported || {}).note ? " · see note" : "") : (r.kind && r.kind !== "train") || r.base ? h("div",{class:"thsub",text:[r.kind && r.kind !== "train" ? RULES.kinds[r.kind] : null, r.base ? "from " + r.base : null].filter(Boolean).join(" · ")}) : null;
+function openBrowse(r){
+  leave(); setCrumbs([]); BROWSE.sub = r.sub;
+  if (r.has){ BROWSE.q = r.q; BROWSE.tags = new Set(r.tags.split(",").filter(Boolean).map(t => t.toLowerCase())); BROWSE.repro = new Set(r.stars.split(",").filter(t => RULES.stars[t])); }
+  const q = h("input",{class:"search",type:"search",id:"browseq",value:BROWSE.q,placeholder:"Search by title, depositor, dataset, model family, tag…","aria-label":"Search"});
+  q.addEventListener("input", () => { BROWSE.q = q.value; BROWSE.more = false; drawBrowse(); });
+  put(document.getElementById("app"), h("section",{class:"home-h"}, h("h1",{text:"Browse"}),
+      h("div",{class:"browse-bar"}, h("div",{class:"seg"}, [["studies","Studies","#/browse"],["models","Models","#/browse/models"],["benchmarks","Benchmarks","#/browse/benchmarks"]].map(([v, t, href]) => h("button",{"aria-pressed":String(BROWSE.sub === v),text:t,onclick:()=>{ location.hash = href; }}))), q)),
+    h("div",{id:"facets"}), h("div",{id:"results"}));
+  drawBrowse();
+}
+function drawBrowse(){
+  const fac = document.getElementById("facets"), res = document.getElementById("results"); if (!fac || !res) return;
+  { const qs = new URLSearchParams(); if (BROWSE.q.trim()) qs.set("q", BROWSE.q.trim()); if (BROWSE.sub === "studies" && BROWSE.tags.size) qs.set("tag", [...BROWSE.tags].join(",")); if (BROWSE.sub === "studies" && BROWSE.repro.size) qs.set("star", [...BROWSE.repro].join(","));
+    const to = "#/browse" + (BROWSE.sub === "studies" ? "" : "/" + BROWSE.sub) + (qs.toString() ? "?" + qs.toString() : ""); if (location.hash !== to) try{ history.replaceState(null, "", to); }catch(e){} }   /* filters live in the address, so a view can be shared */
+  const words = BROWSE.q.trim().toLowerCase().split(/\s+/).filter(Boolean), hit = (...v) => { const text = v.flat().filter(Boolean).join(" ").toLowerCase(); return words.every(w => text.includes(w)); };
+  if (BROWSE.sub === "benchmarks"){
+    const B = INDEX.benchmarks.filter(b => hit(b.title, b.dataset, b.task, b.domain, b.task_type));
+    put(fac); put(res, h("h2",{class:"q",id:"nres",text:pl(B.length,"benchmark","benchmarks")}), B.length ? h("div",{class:"grid"}, B.map(benchCard)) : h("p",{class:"q",text:"Nothing matches."})); return; }
+  if (BROWSE.sub === "models"){
+    put(fac);
+    if (!MODELS_ALL){ put(res, h("p",{class:"q",text:"Loading the models…"}));
+      getJSON("models.json").then(m => { MODELS_ALL = m; if (ROUTE.view === "browse" && BROWSE.sub === "models") drawBrowse(); }).catch(e => put(res, h("div",{class:"err",text:"The model list did not load. (" + e.message + ")"}))); return; }
+    const M = MODELS_ALL.filter(r => hit(r.name, r.family, r.base, r.study_title, r.depositor, r.benchmark_title, r.kind ? RULES.kinds[r.kind] : null, (r.reported || {}).citation)), shown = M.slice(0, BROWSE.more ? M.length : 50);
+    put(res, h("h2",{class:"q",id:"nres",text:pl(M.length,"model on a leaderboard","models on leaderboards")}), M.length ? h("div",{class:"card scrollx",tabindex:"0",role:"region","aria-label":"Models"}, h("table",{class:"lb",id:"modeltable"},
+        h("thead",null, h("tr",null, h("th",{class:"cmpc"}, h("span",{class:"vh",text:"Compare"})), ["Model","Family","Study","Benchmark","Result","Parameters","Star"].map(t => h("th",{class:/Result|Parameters/.test(t) ? "num" : "",text:t})))),
+        h("tbody",null, shown.map(r => h("tr",{class:"go",onclick:e=>{ if (!e.target.closest("a,button")) location.hash = "#/s/" + r.study + "/" + r.run; }},
+          h("td",{class:"cmpc"}, cmpBtn(r.study, r.run, r.name)), h("td",null, h("a",{class:"rowlink",href:"#/s/" + r.study + "/" + r.run,text:r.name}), howLine(r)),
+          h("td",{text:known(r.family) ? pretty(String(r.family)) : "–"}),
+          h("td",null, r.study_title || "Untitled study", h("span",{class:"by",text:" · " + (r.depositor || "")}), " ", madeUp(r)),
+          h("td",null, h("a",{class:"plainlink",href:"#/b/" + r.benchmark,text:r.benchmark_title})),
+          h("td",{class:"num",title:r.n > 1 ? `mean of ${r.n} seeds` : ""}, fmt(r.metric,3), r.sd != null ? h("span",{class:"pm",text:" ±" + fmt(r.sd,3)}) : null, h("div",{class:"thsub",text:r.metric_label})),
+          h("td",{class:"num",text:fmtInt(r.params)}), h("td",null, r.kind === "reported" ? repStar() : starPill(r.star))))))) : h("p",{class:"q",text:"Nothing matches."}),
+      M.length > shown.length ? h("button",{class:"linkish",style:"margin:10px 0",text:`Show all ${M.length} models`,onclick:()=>{ BROWSE.more = true; drawBrowse(); }}) : null);
+    return; }
+  const all = INDEX.studies, cnt = {}; for (const x of all) for (const t of (x.tags || [])) cnt[t] = (cnt[t] || 0) + 1;
+  const St = all.filter(x => hit(x.title, x.summary, x.depositor, x.lab, x.benchmark_title, x.tags, x.families, x.bases) && [...BROWSE.tags].every(t => (x.tags || []).some(y => y.toLowerCase() === t)) && (!BROWSE.repro.size || BROWSE.repro.has(x.star)));
+  const chip = (label, on, fn, n) => h("button",{class:"fchip","aria-pressed":String(on),onclick:()=>{ fn(); drawBrowse(); }}, label, h("span",{class:"n",text:String(n)}));
+  const tog = (set, v) => () => { if (set.has(v)) set.delete(v); else set.add(v); };
+  put(fac, h("div",{class:"facet"}, h("span",{class:"fl",text:"Star"}), Object.keys(RULES.stars).map(t => chip(RULES.stars[t].label, BROWSE.repro.has(t), tog(BROWSE.repro, t), all.filter(x => x.star === t).length))),
+    Object.keys(cnt).length ? h("div",{class:"facet"}, h("span",{class:"fl",text:"Tags"}), Object.keys(cnt).sort((a, c) => cnt[c] - cnt[a] || a.localeCompare(c)).map(t => chip(t, BROWSE.tags.has(t.toLowerCase()), tog(BROWSE.tags, t.toLowerCase()), cnt[t]))) : null,
+    (BROWSE.tags.size || BROWSE.repro.size || words.length) ? h("button",{class:"linkish",style:"font-size:13px;margin-top:8px",text:"Clear filters",onclick:()=>{ BROWSE.tags.clear(); BROWSE.repro.clear(); BROWSE.q = ""; const i = document.getElementById("browseq"); if (i) i.value = ""; drawBrowse(); }}) : null);
+  put(res, h("h2",{class:"q",id:"nres",text:pl(St.length,"study","studies")}), St.length ? h("div",{class:"card scrollx",tabindex:"0",role:"region","aria-label":"Studies"}, studyTable(St, true)) : h("p",{class:"q",text:"Nothing matches. Try fewer filters."}));
+}
+/* ---------- a depositor's page: who they are, and everything they have deposited ---------- */
+function openDepositor(slug){
+  leave(); const d = (INDEX.depositors || []).find(x => x.slug === slug), app = document.getElementById("app");
+  if (!d){ setCrumbs([["Browse","#/browse"]]); put(app, h("div",{class:"err",text:"No such depositor."})); return; }
+  document.title = d.name + " · CAMEO"; setCrumbs([["Browse","#/browse"],[d.name,null]]);
+  const st = INDEX.studies.filter(x => d.studies.includes(x.id)), stars = ["gold","silver","bronze"].map(k => [k, st.filter(x => x.star === k).length]).filter(x => x[1]);
+  const tile = (k, v, sub) => h("div",{class:"stat"}, h("span",{class:"k",text:k}), h("b",{text:v}), h("span",{class:"s",text:sub || ""}));
+  put(app, h("section",{class:"hero2"}, h("div",{class:"eyebrow",text:"Depositor"}), h("h1",{text:d.name}),
+      h("p",{class:"sub",text:[d.lab, d.institution].filter(Boolean).join(" · ")}),
+      /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/.test(d.orcid || "") ? h("div",{class:"links"}, h("a",{class:"lk",href:"https://orcid.org/" + d.orcid,target:"_blank",rel:"noopener",text:"ORCID " + d.orcid + " ↗"})) : null),
+    h("div",{class:"stats three"}, tile("Studies", String(st.length), stars.map(([k, n]) => `${n} ${RULES.stars[k].label.toLowerCase()}`).join(" · ")), tile("Models", fmtInt(d.models)), tile("Training runs", fmtInt(d.runs))),
+    h("h2",{class:"sec-h",text:"Studies"}), h("div",{class:"card scrollx",tabindex:"0",role:"region","aria-label":"Studies by this depositor"}, studyTable(st, true)));
+}
+/* ---------- about ---------- */
+function openAbout(sub){
+  leave(); setCrumbs([]); const repo = "https://github.com/" + INDEX.site.repo, cs = citeSite();
+  const sec = (t, ...kids_) => h("section",{class:"about-s"}, h("h2",{text:t}), kids_), p = (...k) => h("p",null, k), a = (href, text) => h("a",{href,target:"_blank",rel:"noopener",text}), inl = (href, text) => h("a",{href,text});
+  const cite = sec("How to cite", p("To credit one study, use Cite on its page. That citation names the depositor. To cite the catalog as a whole:"), citeBlock("Citation", cs.text), citeBlock("BibTeX", cs.bib),
+    cs.doi ? h("p",null, "DOI: ", a("https://doi.org/" + cs.doi, cs.doi), ".") : p("The catalog has no DOI yet. Until it does, cite its address and the date you used it.")); cite.id = "cite";
+  put(document.getElementById("app"), h("section",{class:"home-h"}, h("div",{class:"eyebrow",text:"About"}), h("h1",{text:"What CAMEO is, and how to add to it"})),
+    h("div",{class:"about-w"},
+      sec("What it is", p("CAMEO is the Catalog of Architecture Metadata and Experimental Outcomes, an open record of machine-learning experiments. It keeps the models, how each was trained and what each scored together, so that results can be compared across studies and any model can be rebuilt. It is not tied to one field."),
+        p("CAMEO is a record, not a referee. It shows what each depositor reported. It does not re-run, re-score or re-measure anything.")),
+      sec("What an entry holds", p("An entry is one file with four parts."), h("ul",null,
+        h("li",null, h("b",{text:"Experiment. "}), "What was studied, by whom, on what data, and in what software and hardware environment."),
+        h("li",null, h("b",{text:"Models. "}), "Each architecture, with its code and its inference speed."),
+        h("li",null, h("b",{text:"Training. "}), "Each training recipe: settings, loss, schedule, stopping rule and the training script."),
+        h("li",null, h("b",{text:"Runs. "}), "Each training run: which model, which recipe, which seed, where it came from, and how it performed.")), p("An entry can also link to its dataset, code, paper and trained weights, by DOI or web address.")),
+      sec("Stars", p("Partial entries are welcome. Each entry gets a star, worked out from the file itself, so a star cannot be claimed."),
+        h("ul",null, Object.keys(RULES.stars).map(k => h("li",null, starPill(k), ". ", RULES.stars[k].means)))),
+      sec("Benchmarks and leaderboards", p("A benchmark is a dataset, a test set and a metric. Every study on the same benchmark shares one leaderboard. Each model is listed with the configuration its own study chose on validation. When it was run with several seeds, the leaderboard shows the mean and the spread."),
+        p("Studies can split and process the same dataset differently. Each benchmark page lists how every study prepared the data, and Compare puts any runs side by side. Speed and training time are shown with their hardware and are not ranked across studies."),
+        p("An entry can also list results reported in a paper. They are marked Reported, link to their source, and carry no star, because the depositor did not run them.")),
+      sec("How to deposit", h("ol",null,
+        h("li",null, "Give your training loop, or an agent, the instructions file from ", inl("#/agents", "For agents"), "."),
+        h("li",null, "Check the file with the ", a(repo + "/tree/main/kit", "kit"), ": ", h("span",{class:"mono",text:"python3 cameo.py check study.json"}), "."),
+        h("li",null, "Use ", h("b",{text:"Deposit a study"}), " at the top of this page to preview it, then add the file to the ", a(repo + "/tree/main/studies", "studies folder"), " by pull request.")),
+        p("A check runs on every pull request. A new depositor's first entry is also looked at by a maintainer.")),
+      sec("Credit and licenses", p("The depositor's name stays on the study, on every leaderboard row and on every run. Entries carry an open license: MIT unless the depositor chooses another from the list.")),
+      cite,
+      sec("Where it lives", p("The whole catalog is a public repository, ", a(repo, INDEX.site.repo), ". The study files there are the database, and anyone can download them. ", inl("#/agents", "For agents"), " lists the data files."))));
+  if (sub === "cite") cite.scrollIntoView();
+}
+/* ================= compare: runs from any studies, side by side =================
+   The selection lives in the address (#/compare?r=study~run&r=...), so a comparison can be shared. */
+const CMP = {sel:[], diff:false}, CMP_MAX = 4, CMPD = {};
+const cmpHas = (study, run) => CMP.sel.some(x => x.study === study && x.run === run);
+const cmpHref = () => "#/compare" + (CMP.sel.length ? "?" + CMP.sel.map(x => "r=" + encodeURIComponent(x.study + "~" + x.run)).join("&") : "");
+function cmpToggle(study, run, name){
+  const i = CMP.sel.findIndex(x => x.study === study && x.run === run), live = document.getElementById("live");
+  if (i >= 0){ CMP.sel.splice(i, 1); live.textContent = "Removed " + name + " from compare"; }
+  else if (CMP.sel.length >= CMP_MAX){ live.textContent = `Compare holds ${CMP_MAX} runs. Remove one first.`; const t = document.getElementById("cmptray"); if (t){ t.classList.add("full"); setTimeout(() => t.classList.remove("full"), 900); } return; }
+  else { CMP.sel.push({study, run, name}); live.textContent = "Added " + name + " to compare"; }
+  renderTray();
+}
+function cmpBtn(study, run, name, wide){
+  const b = h("button",{class:wide ? "btn sm" : "cmpb",type:"button"});
+  b._paint = () => { const on = cmpHas(study, run); b.setAttribute("aria-pressed", String(on)); b.textContent = wide ? (on ? "✓ In compare" : "+ Compare") : (on ? "✓" : "+");
+    b.title = on ? "Remove from compare" : "Add to compare, to see runs side by side"; if (!wide) b.setAttribute("aria-label", on ? "Remove " + name + " from compare" : "Add " + name + " to compare"); };
+  b.addEventListener("click", e => { e.stopPropagation(); cmpToggle(study, run, name); }); b._paint(); return b;
+}
+function renderTray(){
+  let t = document.getElementById("cmptray"); const hide = !CMP.sel.length || ROUTE.view === "compare";
+  document.body.classList.toggle("has-tray", !hide);
+  if (hide){ if (t) t.remove(); }
+  else {
+    if (!t){ t = h("div",{class:"cmptray",id:"cmptray",role:"region","aria-label":"Runs to compare"}); document.body.append(t); }
+    const n = CMP.sel.length;
+    put(t, h("div",{class:"wrap"}, h("b",{text:"Compare"}),
+      CMP.sel.map((x, i) => h("span",{class:"item"}, h("span",{class:"cdot",style:`background:var(--s${i + 1})`}), h("span",{class:"mono",text:x.name}),
+        h("button",{class:"x",type:"button","aria-label":"Remove " + x.name + " from compare",title:"Remove",text:"×",onclick:()=>cmpToggle(x.study, x.run, x.name)}))),
+      h("span",{class:"hint",text:n < 2 ? "Add one more run" : n >= CMP_MAX ? `${CMP_MAX} runs is the most` : ""}),
+      h("span",{class:"sp"}, h("button",{class:"linkish",type:"button",text:"Clear",onclick:()=>{ CMP.sel = []; renderTray(); }}),
+        n >= 2 ? h("a",{class:"btn pri",id:"cmpgo",href:cmpHref(),text:`Compare ${n} runs`}) : h("button",{class:"btn pri",id:"cmpgo",type:"button",disabled:true,text:"Compare"}))));
+  }
+  document.querySelectorAll(".cmpb, #cmpinsp").forEach(b => { if (b._paint) b._paint(); });
+}
+const textOf = (v, key) => { const t = isObj(v) ? v[key || "how"] : v; return known(t) && typeof t !== "object" ? String(t) : null; };
+const exLine = ex => { const e = isObj(ex) ? ex : {}, ks = ["train","valid","test"].filter(k => typeof e[k] === "number"); return ks.length ? ks.map(k => fmtInt(e[k]) + " " + (k === "valid" ? "validation" : k)).join(" · ") : null; };
+async function openCompare(r){
+  leave(); setCrumbs([["Browse","#/browse"],["Compare",null]]); document.title = "Compare · CAMEO"; const app = document.getElementById("app");
+  /* the address decides what is shown, so a shared link opens the same comparison */
+  CMP.sel = r.items.map(x => { const old = CMP.sel.find(y => y.study === x.study && y.run === x.run); return {study:x.study, run:x.run, name:old ? old.name : x.run}; });
+  renderTray();
+  const head = sub => h("section",{class:"home-h"}, h("h1",{text:"Compare"}), h("p",{class:"sub",text:sub}));
+  if (!CMP.sel.length){
+    put(app, head("Up to four runs side by side, from one study or several."),
+      h("div",{class:"card pad"}, h("p",{class:"q",style:"font-size:15px"}, "Nothing is selected yet. Use the ", h("span",{class:"cmpb demo","aria-hidden":"true",text:"+"}), " button on a leaderboard row, in the Models list, or on a run's panel."),
+        h("p",{class:"q",style:"margin:0;font-size:15px"}, h("a",{href:"#/browse/benchmarks",text:"See the benchmarks"}), " · ", h("a",{href:"#/browse/models",text:"Browse models"})))); return; }
+  put(app, h("div",{class:"loading",role:"status",text:"Loading the runs…"}));
+  const failed = {};
+  await Promise.all([...new Set(CMP.sel.map(x => x.study))].filter(id => INDEX.studies.some(q => q.id === id)).map(async id => { if (CMPD[id]) return;
+    try{ if (!STUDIES[id]) STUDIES[id] = toInternal(await getJSON("studies/" + id + ".json")); const S = clone(STUDIES[id]); CMPD[id] = {S, F:fromStudy(S)}; }catch(e){ failed[id] = e.message; } }));
+  if (ROUTE.view !== "compare") return;
+  const cols = CMP.sel.map((x, i) => { const d = CMPD[x.study], meta = INDEX.studies.find(q => q.id === x.study), base = {i, letter:"ABCD"[i], color:`var(--s${i + 1})`, sel:x, meta};
+    if (!d || !meta) return Object.assign(base, {error:meta ? "This study did not load." : "This study is not in the catalog."});
+    const run = d.F.runs.find(q => q.id === x.run); if (!run) return Object.assign(base, {error:"This run is not in the study."});
+    const none = run.kind === "evaluate" || run.kind === "reported", rec = none ? {} : (d.F.meta.recipes[run.recipe] || {}), raw = d.S.trials.find(t => t.id === x.run) || {}, ev = d.F.meta.evaluation || {};
+    const ds = d.F.meta.datasets[known(raw.data) ? raw.data : "main"] || {}; x.name = run.name;
+    return Object.assign(base, {run, none, rec, ds, M:d.F.meta, mdl:d.F.models.find(m => m.id === run.model) || {}, set:none ? {} : Object.assign({}, rec.settings || {}, run.hp || {}),
+      trainDev:known((ev.training_context || {}).device) ? String(ev.training_context.device) : null, speedDev:known((ev.speed_context || {}).device) ? String(ev.speed_context.device) : null, unit:(benchOfDataset(ds) || {}).example_unit || "examples"}); });
+  const good = cols.filter(c => !c.error), nSt = new Set(good.map(c => c.sel.study)).size;
+  /* rows: a label, one value per run, and whether the runs differ on it */
+  const R = [], sec = t => R.push({sec:t});
+  const add = (label, f, el) => { const vals = cols.map(c => c.error ? null : f(c)); if (vals.every(v => v == null || v === "")) return;
+    R.push({label, vals, els:el ? cols.map(c => c.error ? null : el(c)) : null, diff:new Set(good.map(c => { const v = f(c); return v == null ? "" : String(v); })).size > 1}); };
+  const order = Object.keys(BASE), rk = k => { const i = order.indexOf(k.split(":").pop()); return i < 0 ? 99 : i; };
+  const keys = w => { const out = []; for (const c of good) for (const k of Object.keys(c.run[w] || {})) if (c.run[w][k] != null && !out.includes(k)) out.push(k); return out.sort((a, b) => rk(a) - rk(b)); };
+  const dsName = id => { for (const c of good){ const d = c.M.datasets[id]; if (d && known(d.name)) return String(d.name); } return id; };
+  const mlabel = k => { const c = k.indexOf(":"); return c > 0 ? metricInfo0(k.slice(c + 1))[0] + " on " + dsName(k.slice(0, c)) : metricInfo0(k)[0]; };
+  sec("Results");
+  for (const k of keys("t")) add("Test " + mlabel(k), c => c.run.t[k] != null ? fmt(c.run.t[k], 4) : null);
+  for (const k of keys("v")) add("Validation " + mlabel(k), c => (c.run.v || {})[k] != null ? fmt(c.run.v[k], 4) : null);
+  if (good.some(c => c.run.reported)) add("Where the number comes from", c => c.run.reported ? "reported: " + (c.run.reported.citation || "") : "run in this study", c => c.run.reported ? h("span",null, "Reported in ", srcEl(c.run.reported), c.run.reported.where ? ", " + c.run.reported.where : "", c.run.reported.note ? [". ", c.run.reported.note] : null) : "Run in this study");
+  sec("Size and cost");
+  add("Parameters", c => c.run.params != null ? fmtInt(c.run.params) : null);
+  add("Training time", c => c.run.mins != null ? dur(c.run.mins) : null);
+  add("Trained on", c => c.none ? null : c.trainDev);
+  add("Inference speed", c => c.run.speed != null ? fmtInt(c.run.speed) + " " + c.unit + "/s" : null);
+  add("Speed measured on", c => c.run.speed != null ? c.speedDev : null);
+  add("Best epoch", c => c.run.bestEp != null ? c.run.bestEp + (c.run.ep != null ? " of " + c.run.ep : "") : null);
+  add("Seed", c => known(c.run.seed) ? String(c.run.seed) : null);
+  sec("Data");
+  add("Dataset", c => known(c.ds.name) ? String(c.ds.name) : null, c => { const acc = ["doi","accession","url"].map(k => c.ds[k]).find(known), L = weightLink(acc);
+    return h("span",null, known(c.ds.name) ? String(c.ds.name) : "not named", L ? [" · ", h("a",{href:L.href,target:"_blank",rel:"noopener",text:L.label})] : known(acc) ? " · " + acc : null); });
+  add("Examples", c => exLine(c.ds.examples));
+  add("Split", c => textOf(c.ds.splits));
+  add("Split shared in the entry", c => c.run.reported ? null : splitShared(c.ds) ? "yes" : "no");
+  add("Preprocessing", c => textOf(c.ds.preprocessing));
+  add("Input", c => known(c.ds.input) ? String(c.ds.input) : null); add("Output", c => known(c.ds.output) ? String(c.ds.output) : null);
+  sec("Training");
+  add("How", c => RULES.kinds[c.run.kind] || null);
+  add("Recipe", c => c.none ? null : c.M.recipesImplied ? "study defaults" : String(c.rec.name || c.run.recipe || ""));
+  const lossOf = c => { const l = isObj(c.rec.loss) ? c.rec.loss : {}; return known(l.kind) ? String(l.kind) : known(c.set.loss) ? showV(c.set.loss) : null; };
+  const listed = SET_GROUPS.flatMap(g => g[1]).filter(x => x[0] !== "loss"), names = new Set(listed.map(x => x[0]).concat(["loss"])), extra = [];
+  for (const c of good) for (const k of Object.keys(c.set)) if (!names.has(k) && !extra.includes(k)) extra.push(k);
+  for (const [k, label] of listed.concat(extra.sort().map(k => [k, k.replace(/_/g, " ")]))) add(label, c => c.set[k] === undefined ? null : showV(c.set[k]));
+  add("Loss", lossOf);
+  add("Loss reduction", c => known((c.rec.loss || {}).reduction) ? String(c.rec.loss.reduction) : null);
+  add("Stopping rule", c => c.rec.early_stopping === false ? "none: trains to the last epoch" : isObj(c.rec.early_stopping) && hasKnown(c.rec.early_stopping) ? showV(c.rec.early_stopping) : null);
+  add("Weights scored", c => known(c.rec.checkpoint) ? showV(c.rec.checkpoint) : null);
+  add("Shuffled batches", c => typeof c.rec.shuffle === "boolean" ? showV(c.rec.shuffle) : null);
+  add("Augmentation", c => known(c.rec.augmentation) ? showV(c.rec.augmentation) : null);
+  add("Training code", c => c.none ? null : known(pathGet(c.rec, "source.code")) ? "stored" : "not stored");
+  add("Trained weights", c => c.run.weights ? c.run.weights.label : null, c => c.run.weights ? h("a",{href:c.run.weights.href,target:"_blank",rel:"noopener",text:c.run.weights.label}) : null);
+  sec("Model");
+  add("Family", c => known(c.run.fam) && c.run.fam !== "unknown" ? pretty(String(c.run.fam)) : null);
+  add("Base model", c => c.mdl.base ? (c.mdl.base.name || (c.mdl.base.link || {}).label || "") + (c.mdl.adaptation ? " · " + c.mdl.adaptation : "") : null);
+  add("Model input", c => [ioFull((c.mdl.io || {}).inputs), ioShape((c.mdl.io || {}).inputs)].filter(Boolean).join(" · ") || null);
+  add("Model output", c => [ioFull((c.mdl.io || {}).outputs), ioShape((c.mdl.io || {}).outputs)].filter(Boolean).join(" · ") || null);
+  add("Layers", c => { if (!c.mdl.tree) return null; const e = Object.entries(leafCounts(c.mdl.tree, 1, {})).sort((a, b) => b[1] - a[1]); return e.slice(0, 5).map(([k, n]) => `${k} ×${n}`).join(", ") + (e.length > 5 ? `, +${e.length - 5} more kinds` : ""); });
+  add("Model code", c => c.mdl.src ? (n_ => `stored · ${n_} line${n_ === 1 ? "" : "s"}`)(c.mdl.src.split("\n").length) : "not stored");
+
+  const headCell = c => h("div",{class:"ch"},
+    h("div",{class:"ch1"}, h("span",{class:"cdot",style:"background:" + c.color}), h("b",{text:c.letter}),
+      h("button",{class:"x",type:"button","aria-label":"Remove " + c.sel.name + " from the comparison",title:"Remove",text:"×",onclick:()=>{ CMP.sel.splice(c.i, 1); location.hash = cmpHref(); }})),
+    c.error ? h("div",{class:"thsub",style:"white-space:normal",text:c.error + " (" + c.sel.study + " / " + c.sel.run + ")"}) : [h("a",{class:"rowlink",href:"#/s/" + c.sel.study + "/" + encodeURIComponent(c.sel.run),text:c.run.name}),
+      h("div",{class:"thsub",style:"white-space:normal"}, h("a",{class:"plainlink",href:"#/s/" + c.sel.study,text:c.meta.title || "Untitled study"}), c.meta.depositor ? " · " + c.meta.depositor : ""),
+      h("div",{style:"margin-top:4px"}, c.run.reported ? h("span",{class:"star none",title:"Copied from a paper or other source. Not run by the depositor.",text:"Reported"}) : starPill(c.meta.star), " ", madeUp(c.meta))]);
+  const tbox = h("div",{class:"scrollx",tabindex:"0",role:"region","aria-label":"Runs side by side"}), dchip = h("button",{class:"fchip",type:"button",id:"cmpdiff",text:"Only rows that differ",onclick:()=>{ CMP.diff = !CMP.diff; draw(); }});
+  function draw(){
+    dchip.setAttribute("aria-pressed", String(CMP.diff));
+    let rows = R.filter(x => x.sec || !CMP.diff || x.diff); rows = rows.filter((x, i) => !x.sec || (rows[i + 1] && !rows[i + 1].sec));
+    put(tbox, h("table",{class:"lb cmp",id:"cmptable"},
+      h("thead",null, h("tr",null, h("td",{class:"rowh"}), cols.map(c => h("th",{scope:"col"}, headCell(c))))),
+      h("tbody",null, rows.length ? rows.map(x => x.sec ? h("tr",{class:"sect"}, h("th",{colspan:String(cols.length + 1),scope:"colgroup",text:x.sec}))
+        : h("tr",{class:x.diff && good.length > 1 ? "dif" : ""}, h("th",{class:"rowh",scope:"row"}, x.label, x.diff && good.length > 1 ? [h("span",{class:"ne","aria-hidden":"true",title:"The runs differ here",text:"≠"}), h("span",{class:"vh",text:" (differs)"})] : null),
+          cols.map((c, i) => h("td",null, c.error ? "" : (x.els && x.els[i]) || (x.vals[i] == null || x.vals[i] === "" ? "–" : String(x.vals[i]))))))
+        : h("tr",null, h("td",{colspan:String(cols.length + 1),class:"q",text:"These runs do not differ on anything recorded."})))));
+  }
+  /* at a glance: one small panel per quantity, each on its own scale from zero */
+  const panels = [], panel = (title, f, show, dev, mixed) => { const rows = good.map(c => ({c, v:f(c)})).filter(x => typeof x.v === "number" && isFinite(x.v) && x.v >= 0); if (rows.length < 2) return;
+    const max = Math.max(...rows.map(x => x.v)) || 1, devs = dev ? new Set(rows.map(x => dev(x.c) || "not recorded")) : null;
+    panels.push(h("div",{class:"gp",role:"group","aria-label":title}, h("h3",{text:title}),
+      rows.map(x => h("div",{class:"gr",title:`${x.c.letter} · ${x.c.run.name}: ${show(x.v, x.c)}`}, h("b",{text:x.c.letter}),
+        h("div",{class:"gt"}, h("span",{class:"gb",style:`width:calc((100% - 132px) * ${(x.v / max).toFixed(4)});background:${x.c.color}`}), h("span",{class:"gv",text:show(x.v, x.c)})),
+        devs && devs.size > 1 ? h("div",{class:"gsub",text:dev(x.c) || "device not recorded"}) : null)),
+      devs ? h("p",{class:"fine",text:devs.size > 1 ? mixed : [...devs][0] === "not recorded" ? "Device not recorded." : "All on " + [...devs][0] + "."}) : null)); };
+  for (const k of keys("t").filter(k => good.filter(c => c.run.t[k] != null).length > 1).slice(0, 2)) panel("Test " + mlabel(k) + (metricInfo0(k.split(":").pop())[2] === "low" ? " · lower is better" : " · higher is better"), c => c.run.t[k], v => fmt(v, 3));
+  panel("Parameters", c => c.run.params, v => fmtInt(v));
+  panel("Training time", c => c.run.mins, v => dur(v), c => c.trainDev, "Different hardware: read these as each study reported them, not as a ranking.");
+  panel("Inference speed", c => c.run.speed, (v, c) => fmtInt(v) + " " + c.unit + "/s", c => c.speedDev, "Different hardware: read these as each study reported them, not as a ranking.");
+  const link = (known(INDEX.site.url) && INDEX.site.live ? String(INDEX.site.url).replace(/\/+$/, "") + "/" : location.href.split("#")[0]) + cmpHref();
+  put(app, head(`${pl(cols.length,"run","runs")} from ${pl(nSt,"study","studies")}`),
+    nSt > 1 ? h("div",{class:"warnline",id:"cmpwarn",style:"margin:0 0 14px;font-size:13.5px",text:"These runs come from different studies. Each study prepared its data in its own way, so read the Data rows before comparing results."}) : null,
+    panels.length ? h("section",{class:"card"}, h("div",{class:"card-h"}, h("h2",{text:"At a glance"}),
+        h("span",{class:"legend2"}, good.map(c => h("span",null, h("span",{class:"cdot",style:"background:" + c.color}), h("b",{text:c.letter}), " ", h("span",{class:"mono",text:c.run.name}))))), h("div",{class:"glance",id:"glance"}, panels)) : null,
+    h("section",{class:"card"}, h("div",{class:"card-h"}, h("h2",{text:"Side by side"}), good.length > 1 ? dchip : null,
+        h("span",{class:"sp",style:"margin-left:auto;display:flex;gap:8px"}, h("button",{class:"btn sm",type:"button",text:"Copy link",title:"A link that opens this comparison",onclick:e=>copyText(link, e.currentTarget)}), cols.length < CMP_MAX ? h("a",{class:"btn sm",href:"#/browse/models",text:"Add a run"}) : null)), tbox,
+      h("p",{class:"fine",style:"padding:0 16px 12px",text:"Every value is what the depositor recorded. CAMEO does not re-run or re-measure anything. A dash means the entry does not say."})),
+    good.filter(c => c.mdl.src).map(c => h("details",{class:"about",style:"margin:14px 0 0"}, h("summary",{text:`Model code · ${c.letter} · ${c.run.name}`}), h("pre",{class:"src",tabindex:"0",text:c.mdl.src}))));
   draw();
 }
-function boardChart(B, col, W){
+
+/* ================= for agents: the instructions file, a prompt, and the data files ================= */
+const siteBase = () => known((INDEX.site || {}).url) ? String(INDEX.site.url).replace(/\/+$/, "") + "/" : location.href.split("#")[0].replace(/[^/]*$/, "");
+const KITF = "kit/CAMEO_LOOP_SPEC.md"; let SPEC_TEXT = null;
+const getText = async f => { const r = await fetch(f); if (!r.ok) throw new Error(f + " returned " + r.status); return r.text(); };
+const agentPrompt = () => `Record every model you train as a CAMEO entry, so the results can go into the CAMEO catalog.
+
+1. Read the format: ${siteBase()}${KITF}
+2. Write one file, study.json, with four parts: experiment, models, training, runs. Record each run when it finishes. Never invent a value: write "not_reported" for anything you do not know.
+3. Check the file. Put ${siteBase()}kit/cameo.py and ${siteBase()}kit/rules.json in one folder, then run: python3 cameo.py check study.json
+4. Fix everything the check marks as needed. Then tell me the star it reports and what is still missing.`;
+function openAgents(){
+  leave(); setCrumbs([]); document.title = "For agents · CAMEO";
+  const fb = INDEX.benchmarks[0], fs_ = INDEX.studies[0], dl = (href, text, pri) => h("a",{class:"btn" + (pri ? " pri" : ""),href,download:href.split("/").pop(),text});
+  if (SPEC_TEXT == null) getText(KITF).then(t => { SPEC_TEXT = t; }).catch(() => {});
+  const copySpec = h("button",{class:"btn",type:"button",id:"copyspec",text:"Copy the instructions",onclick:e=>{ const b = e.currentTarget; if (SPEC_TEXT != null){ copyText(SPEC_TEXT, b); return; }
+    getText(KITF).then(t => { SPEC_TEXT = t; copyText(t, b); }).catch(() => { b.textContent = "The file did not load"; }); }});
+  const pre = h("pre",{class:"src",tabindex:"0",id:"spectext",text:"Loading…"}), view = h("details",{class:"rbd",id:"specview"}, h("summary",{text:"Read the instructions here"}), pre);
+  view.addEventListener("toggle", () => { if (!view.open || view._done) return; (SPEC_TEXT != null ? Promise.resolve(SPEC_TEXT) : getText(KITF)).then(t => { SPEC_TEXT = t; pre.textContent = t; view._done = true; }).catch(e => { pre.textContent = "The file did not load. (" + e.message + ")"; }); });
+  /* a preview copy of the site may not carry the zip; say so instead of offering a dead download */
+  const kit = dl("kit/cameo-agent-kit.zip", "Download the kit (.zip)");
+  fetch("kit/cameo-agent-kit.zip", {method:"HEAD"}).then(r => { if (!r.ok) throw 0; }).catch(() => kit.replaceWith(h("span",{class:"btn",id:"nokit",style:"opacity:.6;cursor:default",text:"The kit (.zip) is on the live site"})));
+  const files = [["index.json","index.json","Every study, benchmark and depositor, with counts and stars. Start here."],
+    ["models.json","models.json","Every model on every leaderboard, one row each: result, parameters, speed, training time and study."],
+    ["boards/<benchmark id>.json", fb ? "boards/" + fb.id + ".json" : null, "One leaderboard, and how each study on it prepared the data."],
+    ["studies/<study id>.json", fs_ ? "studies/" + fs_.id + ".json" : null, "One whole entry, in the format the instructions describe."],
+    ["kit/rules.json","kit/rules.json","The checks, the open licenses, and what each star means."],
+    ["llms.txt","llms.txt","This list as plain text, for agents that look for it."]];
+  const card = (t, ...k) => h("section",{class:"card pad"}, h("h2",{text:t}), k);
+  put(document.getElementById("app"), h("section",{class:"home-h"}, h("div",{class:"eyebrow",text:"For agents"}), h("h1",{text:"Give your training loop the format"}),
+      h("p",{class:"lede",text:"One file tells a model-search loop, or any coding agent, how to write its results as a CAMEO entry. Hand it over before a search starts, or afterwards to convert a finished project."})),
+    h("div",{class:"agents"},
+      card("1. The instructions", h("p",{class:"q",text:"The format, the rules and a full example, in one file an agent can read."}),
+        h("div",{class:"kitrow"}, dl(KITF, "Download CAMEO_LOOP_SPEC.md", true), copySpec, kit),
+        h("p",{class:"fine",text:"The kit adds the checker (cameo.py), its rules, a complete example entry, and a guide for converting a finished project."}), view),
+      card("2. A prompt to paste", h("p",{class:"q",text:"For an agent that can read web pages. For one that cannot, attach the instructions file instead."}),
+        h("pre",{class:"cmd wrap",id:"agentprompt",tabindex:"0",text:agentPrompt()}), h("button",{class:"btn",type:"button",id:"copyprompt",text:"Copy the prompt",onclick:e=>copyText(agentPrompt(), e.currentTarget)})),
+      card("3. Check, then deposit", h("ol",{class:"steps2",style:"margin:0"},
+        h("li",null, "The agent runs ", h("span",{class:"mono",text:"python3 cameo.py check study.json"}), ". It lists what is needed, what is worth adding, and the star the entry would get."),
+        h("li",null, "Use ", h("b",{text:"Deposit a study"}), " at the top of this page to preview the entry."),
+        h("li",null, "Add the file by pull request. ", h("a",{href:"#/about",text:"How deposits work"}), "."))),
+      h("section",{class:"card"}, h("div",{class:"card-h"}, h("h2",{text:"Read the catalog"}), h("span",{class:"q",style:"margin:0",text:"Everything the site shows is also a plain file."})),
+        h("div",{class:"scrollx",tabindex:"0",role:"region","aria-label":"Data files"}, h("table",{class:"lb",id:"filetable"}, h("thead",null, h("tr",null, h("th",{text:"File"}), h("th",{text:"What it holds"}), h("th",null, h("span",{class:"vh",text:"Open"})))),
+          h("tbody",null, files.map(([name, href, what]) => h("tr",null, h("td",null, h("span",{class:"mono",text:name})), h("td",{text:what}), h("td",null, href ? h("a",{class:"plainlink",href,target:"_blank",rel:"noopener",text:name.includes("<") ? "Open an example" : "Open"}) : "")))))),
+        h("p",{class:"fine",style:"padding:0 16px 12px"}, "Address: ", h("span",{class:"mono",text:siteBase() + "index.json"}), ". No sign-in. The files are rebuilt whenever a study is added."))));
+}
+
+/* ================= how to cite: a study, or the whole catalog ================= */
+const bx = t => String(t).replace(/([&%#_$])/g, "\\$1");
+function citeSite(){
+  const doi = known(INDEX.site.doi) ? String(INDEX.site.doi).replace(/^(doi:|https?:\/\/(dx\.)?doi\.org\/)/i, "") : null, yr = new Date().getFullYear(), base = siteBase();
+  const who = isObj(INDEX.site.cite) ? INDEX.site.cite : {};   /* site.json says who is credited for the catalog as a whole */
+  return {doi, text:`${known(who.authors) ? who.authors : "CAMEO contributors"} (${yr}). CAMEO: Catalog of Architecture Metadata and Experimental Outcomes. ${doi ? "https://doi.org/" + doi : base + " (accessed " + today() + ")"}`,
+    bib:`@misc{cameo,\n  author = {${known(who.bibtex_authors) ? who.bibtex_authors : "{CAMEO contributors}"}},\n  title = {CAMEO: Catalog of Architecture Metadata and Experimental Outcomes},\n  year = {${yr}},\n${doi ? "  doi = {" + doi + "},\n" : ""}  url = {${base}},\n  note = {Accessed ${today()}}\n}`};
+}
+function citeStudy(){
+  const m = META, id = ENTRY.id, who = known((m.contributor || {}).name) ? String(m.contributor.name) : "Depositor not named", title = blank(m.study.title) ? "Untitled study" : String(m.study.title);
+  const yr = /^\d{4}/.test(String(m.study.created || "")) ? String(m.study.created).slice(0, 4) : String(new Date().getFullYear()), url = siteBase() + "#/s/" + id;
+  return {text:`${who} (${yr}). ${title}. CAMEO entry ${id}. ${url}`,
+    bib:`@misc{cameo_${id.replace(/[^A-Za-z0-9]+/g, "_")},\n  author = {${bx(who)}},\n  title = {${bx(title)}},\n  year = {${yr}},\n  howpublished = {CAMEO: Catalog of Architecture Metadata and Experimental Outcomes, entry ${bx(id)}},\n  url = {${url}}\n}`};
+}
+const citeBlock = (label, text) => h("div",{class:"citeb"}, h("div",{class:"citeh"}, h("b",{text:label}), h("button",{class:"btn sm",type:"button",text:"Copy",onclick:e=>copyText(text, e.currentTarget)})), h("pre",{class:"cmd wrap",tabindex:"0",text}));
+function openCite(){
+  const c = citeStudy(), PL = weightLink(pathGet(ENTRY.raw, "study.publication"));
+  openDialog(dlg => put(dlg, h("h2",{text:"Cite this study"}), h("p",{class:"steps",text:"Credit goes to the depositor."}),
+    citeBlock("Citation", c.text), citeBlock("BibTeX", c.bib),
+    PL ? h("p",{class:"q",style:"margin-top:10px"}, "This study has a paper. Cite it as well: ", h("a",{href:PL.href,target:"_blank",rel:"noopener",text:PL.label}), ".") : null,
+    h("p",{class:"fine"}, "Using several studies? ", h("a",{href:"#/about/cite",onclick:closeDialog,text:"Cite the catalog"}), "."),
+    h("div",{class:"foot"}, h("button",{class:"btn",type:"button",text:"Close",onclick:closeDialog}))));
+}
+
+function downloadStudy(reason){   /* the staged entry as a file, for the pull request */
+  const sid = pathGet(ENTRY.raw, "study.id"), name = (known(sid) ? String(sid) : "study").replace(/[^A-Za-z0-9._-]+/g, "-") + ".json";
+  const a = h("a",{href:URL.createObjectURL(new Blob([exportText(reason)],{type:"application/json"})),download:name}); document.body.append(a); a.click(); a.remove(); return name;
+}
+function boardChart(B, col, W, H0){
   const pts = B.rows.filter(r => r.metric != null && r.params > 0); if (pts.length < 2) return null;
-  const H = 320, m = {l:52, r:16, t:12, b:42}, xs = pts.map(p => Math.log10(p.params)), ys = pts.map(p => p.metric), srt = ys.slice().sort((a, c) => a - c);
+  const H = H0 || 320, m = {l:52, r:16, t:12, b:42}, xs = pts.map(p => Math.log10(p.params)), ys = pts.map(p => p.metric), srt = ys.slice().sort((a, c) => a - c);
   let x0 = Math.floor(Math.min(...xs)), x1 = Math.ceil(Math.max(...xs)); if (x0 === x1) x1 = x0 + 1;
   /* a few very low runs would flatten everything else, so the axis covers the main body and the rest sit on the bottom edge */
   const yhi = srt[srt.length-1], q = srt[Math.floor(srt.length * 0.08)], ylo = pts.length > 10 ? Math.max(srt[0], q - (yhi - q) * 0.6) : srt[0];
@@ -526,52 +1066,97 @@ function boardChart(B, col, W){
   const lab = e => e >= 6 ? Math.pow(10, e - 6) + "M" : e >= 3 ? Math.pow(10, e - 3) + "k" : String(Math.pow(10, e));
   for (let e = x0; e <= x1; e++){ const x = X(Math.pow(10, e)); svg.append(s("line",{x1:x,x2:x,y1:m.t,y2:H-m.b,stroke:"var(--line-2)"}), s("text",{x,y:H-m.b+16,"text-anchor":"middle","font-size":11,fill:"var(--muted)"}, lab(e))); }
   for (let v = y0; v <= y1 + 1e-9; v += step){ const y = Y(v); svg.append(s("line",{x1:m.l,x2:W-m.r,y1:y,y2:y,stroke:"var(--line-2)"}), s("text",{x:m.l-8,y:y+4,"text-anchor":"end","font-size":11,fill:"var(--muted)"}, v.toFixed(step < 0.01 ? 3 : 2))); }
-  let low = 0;
+  let low = 0, nrep = 0;
   svg.append(s("text",{x:(m.l+W-m.r)/2,y:H-6,"text-anchor":"middle","font-size":12,fill:"var(--ink-2)"}, "Parameters, log scale"),
     s("text",{x:14,y:(m.t+H-m.b)/2,"text-anchor":"middle","font-size":12,fill:"var(--ink-2)",transform:`rotate(-90 14 ${(m.t+H-m.b)/2})`}, B.benchmark.metric_label + " ↑ better"));
   for (const p of pts){ const under = p.metric < y0; if (under) low++;
-    const c = s("circle",{cx:X(p.params),cy:Y(Math.max(p.metric, y0)),r:4.5,fill:under ? "none" : col[p.study],"fill-opacity":.8,stroke:under ? col[p.study] : "var(--surface)","stroke-width":under ? 1.5 : 1,style:"cursor:pointer"},
-      s("title",null, `${p.name} · ${p.study_title} · ${fmt(p.metric,3)} · ${fmtInt(p.params)} parameters`));
+    const tt = s("title",null, `${p.name} · ${p.study_title} · ${fmt(p.metric,3)} · ${fmtInt(p.params)} parameters` + (p.kind === "reported" ? " · reported in " + ((p.reported || {}).citation || "its source") : "")), cx = X(p.params), cy = Y(Math.max(p.metric, y0));
+    if (p.kind === "reported") nrep++;
+    const c = p.kind === "reported" ? s("rect",{x:cx-4.5,y:cy-4.5,width:9,height:9,fill:"var(--surface)",stroke:col[p.study] || "var(--other)","stroke-width":2,style:"cursor:pointer"}, tt)
+      : s("circle",{cx,cy,r:4.5,fill:under ? "none" : col[p.study],"fill-opacity":.8,stroke:under ? col[p.study] : "var(--surface)","stroke-width":under ? 1.5 : 1,style:"cursor:pointer"}, tt);
     c.addEventListener("click", () => { location.hash = "#/s/" + p.study + "/" + p.run; }); svg.append(c); }
-  svg.dataset.low = low;
+  svg.dataset.low = low; svg.dataset.rep = nrep;
   return svg;
 }
+const BOARD = {mode:"study", key:"metric", dir:-1, q:"", all:false, rep:true};
+const dur = m => m == null ? "–" : m < 120 ? fmt(m, m < 10 ? 1 : 0) + " min" : m < 2880 ? fmt(m / 60, 1) + " h" : fmt(m / 1440, 1) + " d";
+function saveText(text, name, type){ const a = h("a",{href:URL.createObjectURL(new Blob([text],{type})),download:name}); document.body.append(a); a.click(); a.remove(); }
+function csvOf(B){
+  const cols = ["rank","model","family","how","base_model","study","depositor","run",B.benchmark.metric,"spread_over_seeds","seeds","study_objective","parameters","examples_per_s","speed_device","training_minutes","training_device","star","reported_in","source"];
+  const esc = v => v == null ? "" : /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
+  return [cols.join(",")].concat(B.rows.map((r, i) => [i + 1, r.name, r.family, r.kind, r.base, r.study_title, r.depositor, r.run, r.metric, r.sd, r.n, r.score, r.params, r.speed, r.speed_device, r.minutes, r.train_device, r.kind === "reported" ? "" : r.star, (r.reported || {}).citation, ((r.reported || {}).link || {}).href].map(esc).join(","))).join("\n") + "\n";
+}
 async function openBench(id){
-  const app = document.getElementById("app"), b = INDEX.benchmarks.find(x => x.id === id); document.getElementById("banner").replaceChildren(); ENTRY = {status:"none", history:[]};
-  if (!b){ setCrumbs([["Benchmarks","#/"]]); put(app, h("div",{class:"err",text:"No such benchmark."})); return; }
-  setCrumbs([["Benchmarks","#/"],[b.title,null]]); put(app, h("div",{class:"loading",role:"status",text:"Loading the leaderboard…"}));
+  const app = document.getElementById("app"), b = INDEX.benchmarks.find(x => x.id === id); leave();
+  if (!b){ setCrumbs([["Benchmarks","#/browse/benchmarks"]]); put(app, h("div",{class:"err",text:"No such benchmark."})); return; }
+  document.title = b.title + " · CAMEO"; setCrumbs([["Benchmarks","#/browse/benchmarks"],[b.title,null]]); put(app, h("div",{class:"loading",role:"status",text:"Loading the leaderboard…"}));
   let B; try{ B = await getJSON("boards/" + id + ".json"); }catch(e){ put(app, h("div",{class:"err"}, h("b",{text:"The leaderboard did not load. "}), "Reload the page to try again. (" + e.message + ")")); return; }
   if (ROUTE.view !== "bench" || ROUTE.id !== id) return;
-  const studies = INDEX.studies.filter(x => x.benchmark === id), col = {}; studies.forEach((x, i) => { col[x.id] = `var(--s${(i % 3) + 1})`; });
-  const tbox = h("div",{style:"overflow:auto"}), seg = h("div",{class:"seg"}), cnt = h("span",{class:"q",style:"margin:0"});
-  const draw = () => {
-    const rows = BOARD_MODE === "study" ? studies.map(x => B.rows.find(r => r.study === x.id)).filter(Boolean).sort((a, c) => (c.metric ?? -1e9) - (a.metric ?? -1e9)) : B.rows, shown = rows.slice(0, state.boardAll ? rows.length : 15);
-    put(seg, [["study","Best per study"],["model","Every model"]].map(([v, t]) => h("button",{"aria-pressed":String(BOARD_MODE === v),text:t,onclick:()=>{ BOARD_MODE = v; state.boardAll = false; draw(); }})));
-    cnt.textContent = `${rows.length} row${rows.length === 1 ? "" : "s"}`;
-    put(tbox, h("table",{class:"lb",id:"board"}, h("thead",null, h("tr",null, [["#",""],["Model",""],["Study",""],[b.metric_label,"num"],["Parameters","num"],["Seq/s","num"],["Train min","num"],["Reproducibility",""]].map(([t, c]) => h("th",{class:c,text:t})))),
-      h("tbody",null, shown.map((r, i) => h("tr",{class:"go",onclick:()=>{ location.hash = "#/s/" + r.study + "/" + r.run; }},
-        h("td",{text:String(i + 1)}), h("td",null, h("span",{class:"mono",text:r.name})),
+  const studies = INDEX.studies.filter(x => (x.benchmarks || [x.benchmark]).includes(id)), col = {}; studies.forEach((x, i) => { col[x.id] = `var(--s${(i % 3) + 1})`; });
+  const better = b.direction === "minimize" ? 1 : -1, RANK = {gold:0, silver:1, bronze:2, none:3}, nRep = B.rows.filter(r => r.kind === "reported").length; BOARD.key = "metric"; BOARD.dir = better; BOARD.all = false; BOARD.rep = true;
+  const repChip = nRep ? h("button",{class:"fchip",type:"button",id:"repchip",title:"Show or hide results copied from papers",onclick:()=>{ BOARD.rep = !BOARD.rep; BOARD.all = false; draw(); }}, "Reported results", h("span",{class:"n",text:String(nRep)})) : null;
+  const tbox = h("div",{class:"scrollx",tabindex:"0",role:"region","aria-label":"Leaderboard"}), seg = h("div",{class:"seg"}), cnt = h("span",{class:"q",style:"margin:0"});
+  const fq = h("input",{class:"search sm",type:"search",id:"boardq",value:BOARD.q,placeholder:"Filter by model, family, study…","aria-label":"Filter the leaderboard"});
+  fq.addEventListener("input", () => { BOARD.q = fq.value; BOARD.all = false; draw(); });
+  const COLS = [["name","Model",""],["family","Family",""],["study_title","Study",""],["metric",b.metric_label,"num"],["params","Parameters","num"],["speed",unitLabel(b.example_unit) + "/s","num"],["minutes","Training time","num"],["star","Star",""]];
+  function draw(){
+    const words = BOARD.q.trim().toLowerCase().split(/\s+/).filter(Boolean), hit = r => { const t = [r.name, r.family, r.base, r.study_title, r.depositor, (r.reported || {}).citation].filter(Boolean).join(" ").toLowerCase(); return words.every(w => t.includes(w)); };
+    const pool = BOARD.rep ? B.rows : B.rows.filter(r => r.kind !== "reported"); if (repChip) repChip.setAttribute("aria-pressed", String(BOARD.rep));
+    /* B.rows is best first. A study's own best run stands for it; a result it only quotes from a paper does so only when it ran nothing itself. */
+    const rows = (BOARD.mode === "study" ? studies.map(x => pool.find(r => r.study === x.id && r.kind !== "reported") || pool.find(r => r.study === x.id)).filter(Boolean) : pool.slice()).filter(hit);
+    const val = r => BOARD.key === "star" ? (r.kind === "reported" ? 4 : RANK[r.star]) : r[BOARD.key];
+    rows.sort((a, c) => { const x = val(a), y = val(c); if (x == null || y == null) return (x == null) - (y == null); return (typeof x === "number" && typeof y === "number" ? x - y : String(x).localeCompare(String(y))) * BOARD.dir; });
+    const shown = rows.slice(0, BOARD.all ? rows.length : 15);
+    put(seg, [["study","Best per study"],["model","Every model"]].map(([v, t]) => h("button",{"aria-pressed":String(BOARD.mode === v),text:t,onclick:()=>{ BOARD.mode = v; BOARD.all = false; draw(); }})));
+    cnt.textContent = pl(rows.length, "row", "rows");
+    const th = ([k, t, c]) => { const on = BOARD.key === k;
+      return h("th",{class:c,"aria-sort":on ? (BOARD.dir > 0 ? "ascending" : "descending") : "none"}, h("button",{class:"thb",title:"Sort by " + t.toLowerCase(),onclick:()=>{
+        if (on) BOARD.dir = -BOARD.dir; else { BOARD.key = k; BOARD.dir = k === "metric" ? better : k === "speed" ? -1 : 1; } draw(); }}, t, on ? (BOARD.dir > 0 ? " ↑" : " ↓") : "")); };
+    put(tbox, rows.length ? h("table",{class:"lb",id:"board"}, h("thead",null, h("tr",null, h("th",{class:"cmpc"}, h("span",{class:"vh",text:"Compare"})), h("th",{class:"num",text:"#"}), COLS.map(th))),
+      h("tbody",null, shown.map((r, i) => h("tr",{class:"go",onclick:e=>{ if (!e.target.closest("a,button")) location.hash = "#/s/" + r.study + "/" + r.run; }},
+        h("td",{class:"cmpc"}, cmpBtn(r.study, r.run, r.name)), h("td",{class:"num",text:String(i + 1)}),
+        h("td",null, h("a",{class:"rowlink",href:"#/s/" + r.study + "/" + r.run,text:r.name}), r.weights ? h("a",{class:"wl",href:r.weights.href,target:"_blank",rel:"noopener",title:"Trained weights: " + r.weights.label,text:"weights"}) : null, howLine(r)),
+        h("td",{text:known(r.family) ? pretty(String(r.family)) : "–"}),
         h("td",null, h("span",{class:"dot",style:"background:" + col[r.study]}), r.study_title || "Untitled study", h("span",{class:"by",text:" · " + (r.depositor || "")}), " ", madeUp(r)),
-        h("td",{class:"num",text:fmt(r.metric,3)}), h("td",{class:"num",text:fmtInt(r.params)}),
+        h("td",{class:"num",title:r.n > 1 ? `mean of ${r.n} seeds` : ""}, fmt(r.metric,3), r.sd != null ? h("span",{class:"pm",text:" ±" + fmt(r.sd,3)}) : null), h("td",{class:"num",text:fmtInt(r.params)}),
         h("td",{class:"num",title:r.speed_device ? "Measured on " + r.speed_device : "",text:r.speed ? fmtInt(r.speed) : "–"}),
-        h("td",{class:"num",title:r.train_device ? "Trained on " + r.train_device : "Training device not recorded",text:r.minutes == null ? "–" : fmt(r.minutes,1)}), h("td",null, tagPill(r.tag)))))),
-      rows.length > shown.length ? h("button",{class:"linkish",style:"margin:10px 16px",text:`Show all ${rows.length} rows`,onclick:()=>{ state.boardAll = true; draw(); }}) : null);
-  };
-  const cbox = h("div",{style:"padding:8px 12px"});
+        h("td",{class:"num",title:r.train_device ? "Trained on " + r.train_device : "Training device not recorded",text:dur(r.minutes)}), h("td",null, r.kind === "reported" ? repStar() : starPill(r.star)))))) : h("p",{class:"q",style:"padding:14px 16px",text:"No model matches."}),
+      rows.length > shown.length ? h("button",{class:"linkish",style:"margin:10px 16px",text:`Show all ${rows.length} rows`,onclick:()=>{ BOARD.all = true; draw(); }}) : null);
+  }
+  const cbox = h("div",{style:"padding:8px 12px"}), ext = (href, text) => h("a",{class:"lk",href,target:"_blank",rel:"noopener",text:text + " ↗"});
+  const topRep = B.rows.slice().sort((x, y) => (x.metric - y.metric) * better).find(r => r.kind === "reported");
+  /* the same dataset can be split and processed differently by each study; show the facts next to the numbers */
+  const P = B.prep || [], tests = [...new Set(P.map(q => (q.examples || {}).test).filter(v => typeof v === "number"))];
+  const prepCard = !P.length ? null : h("section",{class:"card",id:"prep"}, h("div",{class:"card-h"}, h("h2",{text:"How each study prepared the data"})),
+    h("p",{class:"q",style:"padding:10px 16px 0;margin:0;font-size:14px",text:P.length > 1 ? "Studies can split and process the same dataset in different ways. Read this before comparing rows from different studies." : "A study that wants to be compared with this one should prepare the data the same way."}),
+    tests.length > 1 ? h("div",{class:"warnline",id:"prepwarn",style:"margin:10px 16px 0",text:`The test sets are not the same size (${tests.map(fmtInt).join(", ")} examples), so these studies did not score on the same data.`}) : null,
+    h("div",{class:"scrollx",tabindex:"0",role:"region","aria-label":"Data preparation by study"}, h("table",{class:"lb preptable",id:"preptable"},
+      h("thead",null, h("tr",null, ["Study","Dataset","Examples","Split","Preprocessing"].map(t => h("th",{text:t})))),
+      h("tbody",null, P.map(q => h("tr",null,
+        h("td",null, h("span",{class:"dot",style:"background:" + (col[q.study] || "var(--other)")}), h("a",{href:"#/s/" + q.study,text:q.study_title || "Untitled study"}), " ", madeUp(q), h("div",{class:"thsub",text:q.depositor || ""})),
+        h("td",null, q.dataset || "not named", h("div",{class:"thsub",style:"white-space:normal"}, q.link ? h("a",{href:q.link.href,target:"_blank",rel:"noopener",text:q.link.label}) : q.accession ? q.accession : "no link")),
+        h("td",{text:exLine(q.examples) || "not recorded"}),
+        h("td",null, q.split || "not recorded", h("div",{class:"thsub",style:"white-space:normal",text:q.only_reported ? "as the cited sources describe it" : q.split_shared ? "the split is shared in the entry" : "the split itself is not shared"})),
+        h("td",null, q.preprocessing || "not recorded", q.preprocessing_code ? h("div",{class:"thsub",text:"code is in the entry"}) : null)))))));
   put(app, h("section",{class:"hero2"}, h("div",{class:"eyebrow",text:"Benchmark"}), h("h1",{text:b.title}),
-      h("p",{class:"sub",text:`${b.dataset} · ${b.task} · ranked by ${b.metric_label}`})),
-    h("div",{class:"stats",style:"grid-template-columns:repeat(3,minmax(0,1fr))"},
-      h("div",{class:"stat"}, h("span",{class:"k",text:"Best " + b.metric_label}), h("b",{text:fmt(b.best,3)}), h("span",{class:"s",text:b.best_by ? "from " + b.best_by : ""})),
+      h("p",{class:"sub",text:`${b.dataset} · ${b.task} · ranked by ${b.metric_label}`}),
+      b.description ? h("p",{class:"lede",style:"margin:10px 0 0;font-size:15px",text:b.description}) : null,
+      (b.links || []).length ? h("div",{class:"links"}, b.links.filter(l => /^https:\/\//.test(l.href || "")).map(l => ext(l.href, l.label))) : null),
+    h("div",{class:"stats three"},
+      h("div",{class:"stat"}, h("span",{class:"k",text:"Best " + b.metric_label + (b.best_reported ? " (reported)" : "")}), h("b",{text:fmt(b.best,3)}),
+        h("span",{class:"s",text:[b.best_by ? (b.best_reported ? "listed by " : "from ") + b.best_by : null, !b.best_reported && topRep ? `${fmt(topRep.metric,3)} is the highest reported elsewhere` : null].filter(Boolean).join(" · ")})),
       h("div",{class:"stat"}, h("span",{class:"k",text:"Studies"}), h("b",{text:String(b.studies)}), h("span",{class:"s",text:studies.map(x => x.depositor).filter((v, i, a) => v && a.indexOf(v) === i).join(", ")})),
-      h("div",{class:"stat"}, h("span",{class:"k",text:"Models"}), h("b",{text:fmtInt(b.models)}), h("span",{class:"s",text:"best run of each architecture"}))),
+      h("div",{class:"stat"}, h("span",{class:"k",text:"Models"}), h("b",{text:fmtInt(b.models)}), h("span",{class:"s",text:"best run of each architecture" + (nRep ? ` · ${nRep} reported elsewhere` : "")}))),
     h("section",{class:"card"}, h("div",{class:"card-h"}, h("h2",{text:"Accuracy against size"}),
         h("span",{class:"legend2"}, studies.map(x => h("a",{href:"#/s/" + x.id}, h("span",{class:"dot",style:"background:" + col[x.id]}), x.title || "Untitled study")))), cbox),
-    h("section",{class:"card"}, h("div",{class:"card-h"}, h("h2",{text:"Leaderboard"}), seg, cnt), tbox,
-      h("p",{class:"fine",style:"padding:0 16px 12px",text:"Each model is listed with the run its own study chose on validation. Speed and training time come from each study's own hardware, so they are shown but not ranked across studies. Hover for the device."})));
+    h("section",{class:"card"}, h("div",{class:"card-h"}, h("h2",{text:"Leaderboard"}), seg, repChip, fq, cnt,
+        h("span",{class:"sp"}, h("button",{class:"btn sm",id:"csvbtn",title:"Every model on this benchmark, as a spreadsheet file",text:"Download CSV",onclick:()=>saveText(csvOf(B), id + "-leaderboard.csv", "text/csv")}))), tbox,
+      h("p",{class:"fine",style:"padding:0 16px 12px",text:"Each model is listed with the configuration its own study chose on validation. Repeated seeds show as a mean and spread. Speed and training time come from each study's own hardware: sort by them, but compare only within one device. Hover for the device." + (nRep ? " Rows marked Reported were copied from a paper and were not run by the depositor." : "") + " Use + to put runs side by side."})),
+    prepCard);
   draw();
-  const chart = boardChart(B, col, Math.max(640, cbox.clientWidth - 24));
+  const chart = boardChart(B, col, Math.max(320, cbox.clientWidth - 24));
   if (!chart) cbox.parentNode.remove();
-  else { cbox.append(chart); if (+chart.dataset.low) cbox.append(h("p",{class:"fine",text:`${chart.dataset.low} model${+chart.dataset.low === 1 ? "" : "s"} scored below the axis and sit${+chart.dataset.low === 1 ? "s" : ""} on the bottom edge as open circles.`})); }
+  else { cbox.append(chart); if (+chart.dataset.rep) cbox.append(h("p",{class:"fine",text:"Open squares are results reported elsewhere, not run by the depositor."})); if (+chart.dataset.low) cbox.append(h("p",{class:"fine",text:`${chart.dataset.low} model${+chart.dataset.low === 1 ? "" : "s"} scored below the axis and sit${+chart.dataset.low === 1 ? "s" : ""} on the bottom edge as open circles.`})); }
 }
 async function openStudy(id){
   const app = document.getElementById("app"), meta = INDEX.studies.find(x => x.id === id);
@@ -581,23 +1166,24 @@ async function openStudy(id){
     catch(e){ put(app, h("div",{class:"err"}, h("b",{text:"The study did not load. "}), "Reload the page to try again. (" + e.message + ")")); return; } }
   if (ROUTE.view !== "study" || ROUTE.id !== id) return;
   const S0 = clone(STUDIES[id]), c = fromStudy(S0);
-  setCrumbs([["Benchmarks","#/"],[meta.benchmark_title,"#/b/" + meta.benchmark],[meta.title || "Untitled study",null]]);
-  init(c.meta, c.runs, c.models, {status:"published", version:1, history:[{v:1, date:meta.created || today(), reason:"First deposit", nd:0, nr:0}], raw:S0, bundled:true, example:false, madeUp:!!meta.made_up, id, fileName:"study.json"});
+  setCrumbs(meta.benchmark ? [["Benchmarks","#/browse/benchmarks"],[meta.benchmark_title,"#/b/" + meta.benchmark],[meta.title || "Untitled study",null]] : [["Browse","#/browse"],[meta.title || "Untitled study",null]]); document.title = (meta.title || "Untitled study") + " · CAMEO";
+  init(c.meta, c.runs, c.models, {status:"published", version:1, history:[{v:1, date:meta.created || today(), reason:"First deposit", nd:0, nr:0}], raw:S0, bundled:true, example:!INDEX.site.live && !meta.made_up, madeUp:!!meta.made_up, id, fileName:"study.json"});
 }
 
 /* Everything the page shows is read from one study file: the example, or one the depositor drops. */
 function stageStudy(S, extra){
   if (isObj(S.study) && !known(S.study.license)) S.study.license = RULES.license_default;
-  ROUTE = {view:"study", id:null}; setCrumbs([["Benchmarks","#/"],["Your staged study",null]]);
+  ROUTE = {view:"study", id:null}; setCrumbs([["Benchmarks","#/browse/benchmarks"],["Your staged study",null]]); document.title = "Staged study · CAMEO";
   const c = fromStudy(S); init(c.meta, c.runs, c.models, Object.assign({status:"staged-new", version:0, history:[], raw:S}, extra || {}));
 }
 /* Show a study: the bundled one, or a file the depositor just dropped. */
 function init(meta, runs, models, entry){
-  META = meta; RUNS = runs; ENTRY = entry; TIE = null; D = (META.search && META.search.defaults) || {};
+  META = meta; RUNS = runs; ENTRY = entry; TIE = null;
+  { const dsn = String((META.dataset || {}).name || "").toLowerCase(); BM = ((INDEX || {}).benchmarks || []).find(b => b.match && dsn.includes(b.match)) || null; UNIT = (BM && BM.example_unit) || "examples"; applyUnit(); } D = (META.search && META.search.defaults) || {};
   for (const o of [byId, modelById, kids, byLin]) for (const k of Object.keys(o)) delete o[k];
   for (const r of RUNS){ byId[r.id] = r; (byLin[r.lin] = byLin[r.lin] || []).push(r); if (r.parent) (kids[r.parent] = kids[r.parent] || []).push(r.id); }
   MODELS = models; if (models) for (const x of models) modelById[x.id] = x;
-  setupMetrics();
+  setupMetrics(); setupObjective();
   const cnt = {}; for (const r of RUNS) if (r.status === "done" && r.fam !== "baseline") cnt[r.fam] = (cnt[r.fam]||0)+1;
   const top = Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,3);
   SERIES = top.map((f,i)=>({key:"s"+(i+1), fam:f, label:pretty(f), color:`var(--s${i+1})`}));
@@ -606,16 +1192,16 @@ function init(meta, runs, models, entry){
   if (!META.summary) META.summary = {};
   refreshBest();
   const hash = (ROUTE.view === "study" && ROUTE.run) || "";
-  state.sel = byId[hash] ? hash : META.summary.best_trial;
+  state.sel = byId[hash] ? hash : (META.summary.best_trial || (RUNS[0] ? RUNS[0].id : null));
   const acc = QGROUPS[0][1];
   state.ax = {x:blankAxis(RUNS.some(r => r.speed) ? "speed" : "params"), y:blankAxis(YM())};
-  state.hx = blankAxis("order"); state.hy = blankAxis(Q.mse ? "mse" : acc[0], "valid");
-  state.tab = "compare"; state.rowsAll = false; state.mode = "family"; state.sort = {key:"score", dir:1}; state.hidden = new Set(); state.q = ""; state.corrOpen = false;
+  state.hx = blankAxis("order"); state.hy = blankAxis(Q[OBJ.metric] ? OBJ.metric : acc[0], OBJ.split === "test" ? "test" : "valid");
+  state.tab = (RUNS.some(r => (r.evals || []).length) && Object.keys(META.datasets || {}).length > 1) ? "datasets" : "compare"; state.dsSort = null; state.rowsAll = false; state.mode = "family"; state.sort = RUNS.some(r => r.score != null) ? {key:"score", dir:OBJ.dir} : {key:"tp", dir:-1}; state.hidden = new Set(); state.q = ""; state.corrOpen = false;
   for (const f of FIELDS) f._other = false;
   snapshot(); state.editorOpen = staged() && checklist().block.length > 0;
   build(); wire();
 }
-function refreshBest(){ const d = done(); META.summary.best_trial = d.length ? d.reduce((a,b) => b.score < a.score ? b : a).id : (RUNS[0] ? RUNS[0].id : null); }
+function refreshBest(){ const d = done(); META.summary.best_trial = d.length ? d.reduce((a,b) => better(b.score, a.score) ? b : a).id : null; }
 function wire(){
   if (WIRED) return; WIRED = true;
   let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (document.getElementById("plot")) drawMain(); }, 80); });
@@ -627,10 +1213,14 @@ function wire(){
     else if (e.key === "Escape" && typing && !document.getElementById("overlay")){ document.activeElement.blur(); }
   });
   document.getElementById("depbtn").addEventListener("click", openDeposit);
+  document.getElementById("tsearch").addEventListener("keydown", e => { if (e.key !== "Enter") return; const v = e.target.value.trim(), to = "#/browse?q=" + encodeURIComponent(v); BROWSE.q = v; e.target.value = ""; if (location.hash === to) route(); else location.hash = to; });
 }
 
 /* ---------- derived ---------- */
-const done = () => RUNS.filter(r => r.status === "done" && r.score != null);
+const done = () => RUNS.filter(r => r.status === "done" && r.score != null && r.kind !== "reported");
+const withResult = () => RUNS.filter(r => r.status === "done" && (r.score != null || r.kind === "reported"));   /* the study's own scored runs, plus results reported elsewhere */
+const repStar = () => h("span",{class:"star none",title:"Copied from a paper or other source. Not run by the depositor, so it carries no star.",text:"Reported"});
+const srcEl = rp => rp ? (rp.link ? h("a",{href:rp.link.href,target:"_blank",rel:"noopener",text:rp.citation || rp.link.label}) : h("span",{text:rp.citation || "a source with no link"})) : null;
 function visible(){
   const q = state.q.trim().toLowerCase();
   return RUNS.filter(r => {
@@ -643,11 +1233,11 @@ function visible(){
 let TIE = null;
 function tieInfo(){
   if (TIE) return TIE;
-  const d = done(), best = d.length ? Math.min(...d.map(r=>r.score)) : null;
+  const d = done(), best = d.length ? d.map(r=>r.score).reduce((a,b) => better(b, a) ? b : a) : null;
   const nf = (META.evaluation && typeof META.evaluation.noise_floor === "number") ? META.evaluation.noise_floor : 0;
-  return TIE = {best, nf, n:d.filter(r=>r.score <= best + nf).length, total:d.length};
+  return TIE = {best, nf, n:d.filter(r=>(r.score - best) * OBJ.dir <= nf).length, total:d.length};
 }
-const isTie = r => { const t = tieInfo(); return r.score != null && r.score <= t.best + t.nf; };
+const isTie = r => { const t = tieInfo(); return r.score != null && (r.score - t.best) * OBJ.dir <= t.nf; };
 /* A crossover's second parent is recorded per line of work, not per run: take the other line's latest run before the child. */
 function secondParent(r){
   const latest = o => { const before = byLin[o].filter(x => x.n < r.n); return {lin:o, run:before.length ? before[before.length-1] : byLin[o][0]}; };
@@ -672,27 +1262,30 @@ function build(){
   refreshBest();
   const m = META, ds = m.dataset || {}, c = m.contributor || {}, cn = m.counts, ti = tieInfo(), ex = ds.examples || {}, rb = c.run_by || {};
   const base = RUNS.find(r => r.purpose === "baseline" && r.score != null), best = byId[m.summary.best_trial], ym = YM();
-  const initials = (c.name || "?").split(/\s+/).map(w=>w[0]).join("").slice(0,2);
+  const initials = (c.name || "?").split(/\s+/).map(w=>w[0]).join("").slice(0,2), reps = RUNS.filter(r => r.kind === "reported"), nOwn = RUNS.length - reps.length;
   const KIND = {architecture_search:"Architecture search"};
   const stat = (label, big, sub) => h("div",{class:"stat"}, h("span",{class:"k",text:label}), h("b",{text:big}), h("span",{class:"s",text:sub}));
-  const pct = base && ti.best != null ? Math.round((1 - ti.best/base.score)*100) : null;
+  const gain = base && base.score && ti.best != null ? (base.score - ti.best) * OBJ.dir / Math.abs(base.score) : null, pct = gain == null ? null : Math.round(Math.abs(gain) * 100);
   const last = ENTRY.history[ENTRY.history.length-1];
   const where = ENTRY.status === "published" ? (ENTRY.madeUp ? "Made-up data, for the demo" : (ENTRY.example && ENTRY.version === 1) ? "Example entry" : `Version ${ENTRY.version} · published ${last.date}`) : ENTRY.status === "submitted" ? "Submitted, waiting for approval"
     : ENTRY.status === "staged-edit" ? `Editing version ${ENTRY.version}` : "Staged, not published";
   /* the study at a glance: what it is, who deposited it, four numbers */
   const hero = h("section",{class:"hero2"},
     h("div",{class:"hrow"},
-      h("div",null, h("div",{class:"eyebrow",text:"Benchmark"}), h("h1",{text:m.benchmark_title || ds.name || "Benchmark"}),
-        h("p",{class:"sub"}, h("b",{id:"studyline",style:"color:var(--ink);font-weight:600",text:blank(m.study.title) ? "Untitled study" : m.study.title}),
-          ` · ${KIND[(m.objective||{}).kind] || "Study"} · ${cn.runs} runs · ${cn.models} architectures · ${cn.families} families`), reproTag()),
+      h("div",null, h("div",{class:"eyebrow",text:BM ? "Study · " + BM.title : "Study"}), h("h1",{id:"studyline",text:blank(m.study.title) ? "Untitled study" : m.study.title}),
+        h("p",{class:"sub",text:[KIND[(m.objective||{}).kind] || "Study", nOwn || !reps.length ? pl(nOwn,"run","runs") : null, reps.length ? pl(reps.length,"reported result","reported results") : null, pl(cn.models,"architecture","architectures"), pl(cn.families,"family","families")].filter(Boolean).join(" · ")}), reproTag(), linksRow()),
       h("div",{class:"whobox"},
         h("div",{class:"who","aria-label":"Deposited by"}, h("div",{class:"avatar",text:initials,"aria-hidden":"true"}),
-          h("div",null, h("b",{text:c.name || "Depositor not named"}), h("span",{text:[c.lab, c.institution].filter(x => !blank(x)).join(" · ")}), h("span",{class:"dep",text:where}))),
+          h("div",null, c.name ? (dep_ => dep_ ? h("a",{class:"wholink",href:"#/d/" + encodeURIComponent(dep_.slug),title:"All studies by this depositor"}, h("b",{text:c.name})) : h("b",{text:c.name}))(((INDEX || {}).depositors || []).find(x => ENTRY.id && x.studies.includes(ENTRY.id))) : h("b",{text:"Depositor not named"}), h("span",{text:[c.lab, c.institution].filter(x => !blank(x)).join(" · ")}), h("span",{class:"dep",text:where}))),
         ENTRY.status === "published" ? h("button",{class:"linkish",style:"font-size:12.5px",text:"Edit entry",onclick:startEdit}) : null)),
-    h("div",{class:"stats"},
-      stat("Best validation MSE", fmt(ti.best,3), pct != null ? `${pct}% below the baseline (${fmt(base.score,3)})` : "no baseline run in the file"),
+    !nOwn && reps.length ? h("div",{class:"stats three"},
+      stat("Reported results", String(reps.length), "copied from where they were published"),
+      stat("Sources", String(new Set(reps.map(r => r.reported.link ? r.reported.link.href : r.reported.citation)).size), "each result links to its source"),
+      (top => stat("Highest reported test " + Q[ym].short, top ? fmt(top.t[ym],3) : "–", top ? top.name : "no test value in the file"))(reps.filter(r => (r.t||{})[ym] != null).sort((a, b) => (b.t[ym] - a.t[ym]) * (Q[ym].better === "low" ? -1 : 1))[0]))
+    : h("div",{class:"stats"},
+      stat("Best " + lowerFirst(OBJ.label), fmt(ti.best,3), pct != null ? (gain >= 0 ? `${pct}% ${OBJ.dir > 0 ? "below" : "above"} the baseline (${fmt(base.score,3)})` : `baseline ${fmt(base.score,3)}`) : "no baseline run in the file"),
       stat(`Its test ${Q[ym].short}`, best ? fmt((best.t||{})[ym],3) : "–", base ? `baseline ${fmt((base.t||{})[ym],3)}` : ""),
-      stat("Runs with a result", `${ti.total} of ${cn.runs}`, `${cn.runs - ti.total} gave no result`),
+      stat("Runs with a result", `${ti.total} of ${nOwn}`, `${nOwn - ti.total} gave no result` + (reps.length ? ` · ${reps.length} more reported elsewhere` : "")),
       stat("Tied with the best", String(ti.n), ti.nf ? `within the noise floor (${fmt(ti.nf,3)})` : "no noise floor in the file")));
   const parts = [hero];
   if (staged() && state.editorOpen) parts.push(editorCard());
@@ -703,7 +1296,7 @@ function build(){
     parts.push(h("div",{class:"brief"}, ftext, fbtn));
   }
   const row = (k, ...v) => [h("dt",{text:k}), h("dd",null, ...v)];
-  const missing = FIELDS.filter(x => !fval(x)).map(x => x.todo.replace(/^(a|an|the|your) /, "")).concat(notInDeposit());
+  const missing = FIELDS.filter(x => !fval(x) && x.level !== "optional").map(x => x.todo.replace(/^(a|an|the|your) /, "")).concat(notInDeposit());
   parts.push(h("details",{class:"about"}, h("summary",{text:"About this study"}),
     h("dl",{class:"about-grid"},
       blank(m.study.question) ? null : row("Summary", m.study.question),
@@ -711,8 +1304,8 @@ function build(){
       row("Data", ds.name || "not named"),
       row("Input and output", `${ds.input || "not described"}. Output: ${ds.output || "not described"}.`),
       ex.train != null ? row("Examples", `${fmtInt(ex.train)} train, ${fmtInt(ex.valid)} validation, ${fmtInt(ex.test)} test`) : null,
-      row("How models were chosen", `Validation MSE, lower is better. ${(m.evaluation||{}).test_policy || ""}`),
-      ti.nf ? row("Noise floor", `${fmt(ti.nf,3)} validation MSE, with one seed per run. How it was estimated: ${(m.evaluation||{}).noise_floor_method || "not described"}.`) : null,
+      row("How models were chosen", `${OBJ.label}, ${OBJ.dir > 0 ? "lower" : "higher"} is better. ${(m.evaluation||{}).test_policy || ""}`),
+      ti.nf ? row("Noise floor", `${fmt(ti.nf,3)} ${lowerFirst(OBJ.label)}. How it was estimated: ${(m.evaluation||{}).noise_floor_method || "not described"}.`) : null,
       (m.search||{}).method ? row("Method", m.search.method) : null,
       rb.tool ? row("Run by", `The ${rb.tool} agent (${rb.model}), supervised by ${rb.supervised_by}.`) : null,
       blank(m.study.license) ? null : row("Metadata license", m.study.license),
@@ -749,17 +1342,19 @@ function setCap(items, notes){
   if (state.notes && notes.length) kids_.push(h("div",{class:"notes"}, notes.map(t => h("p",{text:t}))));
   document.getElementById("cap").replaceChildren(...kids_);
 }
-const TABS = [["compare","Compare"],["history","Search history"],["lineage","Lineage"]];
+const TABS = [["compare","Compare"],["datasets","By dataset"],["history","Search history"],["lineage","Lineage"]];
 function renderTabs(){
-  document.getElementById("tabs").replaceChildren(...TABS.map(([k,t]) =>
+  /* search history and lineage only mean something when runs descend from one another */
+  const hasPar = RUNS.some(r => r.parent), hasEv = RUNS.some(r => (r.evals || []).length), tabs = TABS.filter(t => t[0] === "compare" || (t[0] === "datasets" ? hasEv : hasPar)); if (!tabs.some(t => t[0] === state.tab)) state.tab = "compare";
+  document.getElementById("tabs").replaceChildren(...tabs.map(([k,t]) =>
     h("button",{class:"tab",role:"tab","aria-selected":String(state.tab===k),text:t,onclick:()=>{ state.tab = k; renderTabs(); renderControls(); drawMain(); }})));
 }
 const redraw = () => { renderControls(); drawMain(); };
 const PRESETS = [
   ["Accuracy vs speed", ()=>{ state.ax = {x:blankAxis("speed"), y:blankAxis(YM())}; }],
   ["Accuracy vs size", ()=>{ state.ax = {x:blankAxis("params"), y:blankAxis(YM())}; }],
-  ["Validation vs test", ()=>{ const k = Q.mse ? "mse" : YM(); state.ax = {x:blankAxis(k,"valid"), y:blankAxis(k,"test")}; }],
-  ["Learning rate vs result", ()=>{ state.ax = {x:blankAxis("lr"), y:blankAxis(Q.mse ? "mse" : YM(),"valid")}; }],
+  ["Validation vs test", ()=>{ const k = Q[OBJ.metric] ? OBJ.metric : YM(); state.ax = {x:blankAxis(k,"valid"), y:blankAxis(k,"test")}; }],
+  ["Learning rate vs result", ()=>{ state.ax = {x:blankAxis("lr"), y:blankAxis(Q[OBJ.metric] ? OBJ.metric : YM(),"valid")}; }],
 ];
 function axisPicker(a, title, groups){
   const sel = h("select",{"aria-label":title + " quantity", onchange:e=>{ a.q = e.target.value; a.min = a.max = null; a.scale = "auto"; a.label = ""; redraw(); }},
@@ -781,6 +1376,7 @@ function axisEditor(a, title){
 function frontApplies(AX){ const k = [AX.x.q.kind, AX.y.q.kind]; return k.includes("cost") && k.includes("acc"); }
 function renderControls(){
   const box = document.getElementById("controls"), rows = [];
+  if (state.tab === "datasets"){ box.replaceChildren(); return; }
   const seg = (label, opts, cur, on) => h("div",{class:"seg",role:"group","aria-label":label}, opts.map(([v,t]) => h("button",{"aria-pressed":String(cur===v),text:t,onclick:()=>on(v)})));
   if (state.tab === "lineage"){
     rows.push(h("div",{class:"controls"},
@@ -814,7 +1410,7 @@ function swatch(sr, size){
   return g;
 }
 function renderLegend(){
-  const cnt = {}; for (const r of done()) cnt[seriesOf(r)] = (cnt[seriesOf(r)]||0)+1;
+  const cnt = {}; for (const r of withResult()) cnt[seriesOf(r)] = (cnt[seriesOf(r)]||0)+1;
   document.getElementById("legend").replaceChildren(...SERIES.map(sr =>
     h("button",{class:"chip","aria-pressed":String(!state.hidden.has(sr.key)),title:"Show or hide these runs",onclick:()=>{
       state.hidden.has(sr.key) ? state.hidden.delete(sr.key) : state.hidden.add(sr.key); renderLegend(); drawMain(); renderTable(); }},
@@ -876,16 +1472,18 @@ const dirOf = q => q.better === "high" ? 1 : q.better === "low" ? -1 : 0;
 
 /* ---------- the chart ---------- */
 let HIT = [], TIPFN = null;
-function drawMain(){ if (state.tab === "lineage") drawLineage(); else drawScatter(); }
+function drawMain(){ const pb = document.getElementById("plot"); if (pb){ pb.tabIndex = 0; pb.setAttribute("role","region"); pb.setAttribute("aria-label","Chart"); }
+  document.getElementById("legend").hidden = state.tab === "datasets";
+  if (state.tab === "datasets") drawDatasets(); else if (state.tab === "lineage") drawLineage(); else drawScatter(); }
 function emptyPlot(msg){
-  const box = document.getElementById("plot"), W = Math.max(640, box.clientWidth - 16);
+  const box = document.getElementById("plot"), W = Math.max(340, box.clientWidth - 16);
   box.replaceChildren(s("svg",{width:W,height:150,viewBox:`0 0 ${W} 150`}, s("text",{x:W/2,y:78,"text-anchor":"middle"}, msg)));
   document.getElementById("cap").replaceChildren(); HIT = [];
 }
 function drawScatter(){
   const box = document.getElementById("plot"); if (!box) return;
   const hist = state.tab === "history", AX = curAxes();
-  const W = Math.max(640, box.clientWidth - 16), H = 480, m = {l:66, r:28, t:34, b:52}, iw = W-m.l-m.r, ih = H-m.t-m.b;
+  const W = Math.max(340, box.clientWidth - 16), H = 480, m = {l:66, r:28, t:34, b:52}, iw = W-m.l-m.r, ih = H-m.t-m.b;
   const vis = visible();
   let pts = vis.filter(r => r.status === "done").map(r => ({r, x:AX.x.get(r), y:AX.y.get(r)})).filter(p => p.x != null && p.y != null);
   const okLog = (A, v) => !A.log || v > 0 || (A.q.zero && v === 0), before = pts.length;
@@ -964,7 +1562,7 @@ function drawScatter(){
   }
 
   /* runs with no result, on a rail in the history view */
-  const fails = hist ? vis.filter(r => r.status !== "done" || r.score == null) : [], rail = [];
+  const fails = hist ? vis.filter(r => r.kind !== "reported" && (r.status !== "done" || r.score == null)) : [], rail = [];
   for (const r of fails){ const px = sx(r.n), py = m.t+ih-8; if (px < m.l || px > W-m.r) continue; rail.push({r, px, py, fail:true});
     svg.append(s("path",{d:`M${px-3} ${py-3} L${px+3} ${py+3} M${px+3} ${py-3} L${px-3} ${py+3}`,stroke:"var(--muted)","stroke-width":1.5,"stroke-linecap":"round"})); }
 
@@ -986,6 +1584,7 @@ function drawScatter(){
     if (p.ox || p.oy){ const rot = p.oy === "low" ? 180 : p.oy === "high" ? 0 : p.ox === "low" ? 270 : 90;
       marks.append(s("path",{d:`M${p.px} ${p.py-5} L${p.px+4.5} ${p.py+3.5} L${p.px-4.5} ${p.py+3.5} Z`,transform:`rotate(${rot} ${p.px} ${p.py})`,fill:"var(--surface)",stroke:sr.color,"stroke-width":1.5})); continue; }
     if (p.r.id === bestId) continue;
+    if (p.r.kind === "reported"){ marks.append(s("rect",{x:p.px-4.5,y:p.py-4.5,width:9,height:9,fill:"var(--surface)",stroke:sr.color,"stroke-width":2})); continue; }
     if (key === "base") marks.append(s("rect",{x:p.px-4.2,y:p.py-4.2,width:8.4,height:8.4,transform:`rotate(45 ${p.px} ${p.py})`,fill:"var(--surface)",stroke:sr.color,"stroke-width":1.8}));
     else marks.append(s("circle",{cx:p.px,cy:p.py,r:key==="other"?3.6:4.6,fill:sr.color,"fill-opacity":key==="other"?0.7:1,stroke:"var(--surface)","stroke-width":1.5}));
   }
@@ -1007,7 +1606,7 @@ function drawScatter(){
     return [h("b",{text:r.name}), h("div",{text:pretty(r.fam) + " · run " + r.n}),
       p.fail ? h("div",{text:"No result (" + r.status + ")"}) : row(AX.y.short, AX.y.q.val(AX.y.get(r))),
       p.fail ? null : row(AX.x.short, AX.x.q.val(AX.x.get(r))),
-      (!p.fail && !AX.x.isValMse && !AX.y.isValMse) ? row("Validation MSE", fmt(r.score,4)) : null]; };
+      r.kind === "reported" ? h("div",{text:"Reported elsewhere" + (r.reported.citation ? ": " + r.reported.citation : "")}) : (!p.fail && !AX.x.isValMse && !AX.y.isValMse) ? row(OBJ.label, fmt(r.score,4)) : null]; };
   const pos = e => { const b = svg.getBoundingClientRect(); return [e.clientX-b.left, e.clientY-b.top]; };
   const near = e => { const [mx,my] = pos(e); let best = null, bd = 30*30; for (const p of HIT){ const d = (p.px-mx)**2 + (p.py-my)**2; if (d < bd){ bd = d; best = p; } } return best; };
   let drag = null;
@@ -1040,10 +1639,11 @@ function drawScatter(){
   if (hist && frontShown) notes.push(`The line is the best ${AX.y.short} so far. Crosses along the bottom are runs that gave no result.`);
   if (!hist && frontShown) notes.push("The line is the Pareto front: no run beats it on both axes at once.");
   if (eqLine) notes.push("Dashed line: validation and test agree.");
-  if (AX.y.isValMse || AX.x.isValMse) notes.push(`Shaded band: within the study's noise floor of the best (${fmt(ti.nf,3)} validation MSE).`);
+  if (AX.y.isValMse || AX.x.isValMse) notes.push(`Shaded band: within the study's noise floor of the best (${fmt(ti.nf,3)} ${lowerFirst(OBJ.label)}).`);
   if (AX.x.q.kind === "setting" || AX.y.q.kind === "setting") notes.push("Settings show the value each run trained with: its own, or the study default when the run did not change it.");
   if (usesSpeed) notes.push(`Inference speed is not in the deposit. It was measured for this prototype on a ${c.threads}-thread CPU at batch ${c.batch}, ${c.precision}, one forward pass per sequence. A GPU can rank models differently.`);
   if ((AX.x.q.split && AX.x.a.split === "test") || (AX.y.q.split && AX.y.a.split === "test")) notes.push("Models were chosen on validation data. Test scores were never used to choose.");
+  if (shown.some(p => p.r.kind === "reported")){ items.push("Open squares: results reported elsewhere"); notes.push("Open squares are results copied from a paper or other source. They were not run in this study, and the data may have been prepared differently."); }
   notes.push("Hollow triangles are far outliers pinned to the edge. Drag on the chart to zoom; double-click to reset.");
   setCap(items, notes);
 }
@@ -1060,9 +1660,10 @@ function showTip(p){
 
 /* ---------- lineage: one lane per line of work, links for branches and crossovers ---------- */
 function qualityBin(r){
-  if (r.score == null) return 0; const ti = tieInfo(), base = (RUNS.find(x => x.purpose === "baseline")||{}).score || ti.best + 0.3;
-  if (r.score <= ti.best + ti.nf) return 5; if (r.score > base) return 1;
-  const d = (base - (ti.best + ti.nf))/3; return r.score <= ti.best + ti.nf + d ? 4 : r.score <= ti.best + ti.nf + 2*d ? 3 : 2;
+  if (r.score == null) return 0; const ti = tieInfo(), k = OBJ.dir, s = r.score * k, best = ti.best * k, b0 = (RUNS.find(x => x.purpose === "baseline")||{}).score;
+  const base = b0 != null ? b0 * k : best + 0.3 * Math.max(Math.abs(ti.best), 1e-9);   /* work on "lower is better" by flipping the sign when the study maximises */
+  if (s <= best + ti.nf) return 5; if (s > base) return 1;
+  const d = (base - (best + ti.nf))/3; return s <= best + ti.nf + d ? 4 : s <= best + ti.nf + 2*d ? 3 : 2;
 }
 function drawLineage(){
   const box = document.getElementById("plot"); if (!box) return;
@@ -1122,7 +1723,7 @@ function drawLineage(){
   TIPFN = p => { const r = p.r, lin = META.lineages[r.lin], sp = secondParent(r), row = (k,v) => h("div",{class:"row"}, h("span",{text:k}), h("span",{text:v}));
     return [h("b",{text:r.name}), h("div",{text:"Run " + r.n + " · " + (OPS[r.op] || MOVE[r.move] || r.move || "")}), h("div",{text:"Line: " + (lin ? lin.name : r.lin)}),
       sp ? h("div",{text:"Second parent line: " + META.lineages[sp.lin].name}) : null,
-      p.fail ? h("div",{text:"No result"}) : row("Validation MSE", fmt(r.score,4))]; };
+      p.fail ? h("div",{text:"No result"}) : row(OBJ.label, fmt(r.score,4))]; };
   const near = e => { const b = svg.getBoundingClientRect(), mx = e.clientX-b.left, my = e.clientY-b.top; let best = null, bd = 13*13; for (const p of HIT){ const d = (p.px-mx)**2 + (p.py-my)**2; if (d < bd){ bd = d; best = p; } } return best; };
   svg.addEventListener("mousemove", e => { const p = near(e); svg.style.cursor = p ? "pointer" : "default"; showTip(p); });
   svg.addEventListener("mouseleave", () => showTip(null));
@@ -1131,7 +1732,7 @@ function drawLineage(){
   const nx = RUNS.filter(r => r.op === "crossover").length;
   setCap([`${ids.length} of ${Object.keys(byLin).length} lines of work`, `${nx} crossovers`,
       focus ? `Highlighted: the ${anc.runs.size - 1} earlier run${anc.runs.size === 2 ? "" : "s"} the selected run descends from` : null],
-    ["Each row is one line of work, ordered by when it started. Each mark is a run, placed at its turn in the search and shaded by its validation MSE.",
+    ["Each row is one line of work, ordered by when it started. Each mark is a run, placed at its turn in the search and shaded by its " + lowerFirst(OBJ.label) + ".",
      "Curves show where a line branched from. A crossover has a second, dashed curve from its other parent line.",
      "The deposit records a crossover's second parent per line, not per run, so the dashed curve starts at that line's most recent run. This view needs the separate search-tree file; study.json alone holds one parent per run."]);
 }
@@ -1141,9 +1742,9 @@ const COLS = [
   {key:"tie", label:""},
   {key:"name", label:"Model", get:r=>r.name},
   {key:"fam", label:"Family", get:r=>pretty(r.fam)},
-  {key:"score", label:"Val MSE", num:true, get:r=>r.score, show:r=>fmt(r.score,4), first:1},
+  {key:"score", get label(){ return OBJ.short; }, num:true, get:r=>r.score, show:r=>fmt(r.score,4), get first(){ return OBJ.dir; }},
   {key:"tp", label:"Test r", num:true, get:r=>(r.t||{})[YM()], show:r=>fmt((r.t||{})[YM()],3), first:-1},
-  {key:"speed", label:"Seq/s", num:true, get:r=>r.speed, show:r=>fmtInt(r.speed), first:-1},
+  {key:"speed", get label(){ return Q.speed.short; }, num:true, get:r=>r.speed, show:r=>fmtInt(r.speed), first:-1},
   {key:"params", label:"Parameters", num:true, get:r=>r.params, show:r=>fmtInt(r.params), first:1},
   {key:"mins", label:"Train min", num:true, get:r=>r.mins, show:r=>fmt(r.mins,1), first:1},
 ];
@@ -1155,18 +1756,20 @@ function tableRows(){
   const vis = visible(); let rows;
   if (state.mode === "all") rows = vis.map(r => ({r, k:1}));
   else { const key = state.mode === "family" ? "fam" : "model", g = {};
-    for (const r of vis){ if (r.status !== "done" || r.score == null) continue; const e = g[r[key]] || (g[r[key]] = {r, k:0}); e.k++; if (r.score < e.r.score) e.r = r; }
+    for (const r of vis){ if (r.status !== "done" || (r.score == null && r.kind !== "reported")) continue; const e = g[r[key]] || (g[r[key]] = {r, k:0}); e.k++; if (r.score != null && r.kind !== "reported" && (e.r.kind === "reported" || e.r.score == null || better(r.score, e.r.score))) e.r = r; }
     rows = Object.values(g); }
   const col = COLS.find(c => c.key === state.sort.key), dir = state.sort.dir;
   rows.sort((a,b) => { const x = col.get(a.r), y = col.get(b.r); if (x == null && y == null) return a.r.n - b.r.n; if (x == null) return 1; if (y == null) return -1;
     return (typeof x === "string" ? x.localeCompare(y) : x - y) * dir || a.r.n - b.r.n; });
   return rows;
 }
+const tcols = () => RUNS.some(r => r.score != null) ? COLS : COLS.filter(c => c.key !== "score");
 function renderTable(){
   const t = document.getElementById("tbl"), all = tableRows(), ti = tieInfo(), LIMIT = 10;
   const rows = state.rowsAll ? all : all.slice(0, LIMIT);
-  document.getElementById("tnote").replaceChildren(h("b",{text:`${ti.n} of ${ti.total} scored runs are tied with the best`}), h("span",{class:"m",text:` · within the noise floor, one seed per run`}));
-  const head = h("thead",null, h("tr",null, COLS.map(c => {
+  document.getElementById("tnote").replaceChildren(...(ti.total ? [h("b",{text:`${ti.n} of ${ti.total} scored runs are tied with the best`}), h("span",{class:"m",text:` · within the noise floor, one seed per run`})]
+    : [h("span",{class:"m",text:RUNS.some(r => r.kind === "reported") ? "These results were reported elsewhere. Nothing was run in this study." : "No run has a score yet."})]));
+  const head = h("thead",null, h("tr",null, tcols().map(c => {
     if (!c.get) return h("th",{scope:"col"}, h("span",{style:"position:absolute;left:-9999px",text:"Standing"}));
     const on = state.sort.key === c.key;
     return h("th",{scope:"col",class:c.num?"r":"","aria-sort":on ? (state.sort.dir>0?"ascending":"descending") : "none"},
@@ -1177,11 +1780,11 @@ function renderTable(){
       onclick:()=>select(r.id), onmouseenter:()=>hoverFromTable(r.id), onmouseleave:()=>hoverFromTable(null),
       onkeydown:e=>{ if (e.key==="Enter"||e.key===" "){ e.preventDefault(); select(r.id); }
         else if (e.key==="ArrowDown"||e.key==="ArrowUp"){ e.preventDefault(); const n = e.key==="ArrowDown" ? tr.nextElementSibling : tr.previousElementSibling; if (n){ n.focus(); select(n.dataset.id, true); } } }},
-      h("td",null, r.status !== "done" ? h("span",{class:"pill bad",text:"no result"}) : isTie(r) ? h("span",{class:"pill tie",text:"tied"}) : "",
+      h("td",null, r.kind === "reported" ? h("span",{class:"pill plain",title:"Copied from " + (r.reported.citation || "its source") + ". Not run in this study.",text:"reported"}) : r.status !== "done" ? h("span",{class:"pill bad",text:"no result"}) : isTie(r) ? h("span",{class:"pill tie",text:"tied"}) : "",
         isRevised(r) ? h("span",{class:"pill rev",style:"margin-left:4px",title:revisedNote(r),text:"revised"}) : null),
       h("td",{class:"name",title:r.name}, r.name),
       h("td",{class:"fam",title:pretty(r.fam)}, h("span",{class:"dot",style:`background:${sr.color}`}), pretty(r.fam), (state.mode==="family" && k>1) ? h("span",{style:"color:var(--muted)",text:` · ${k} runs`}) : ""),
-      COLS.slice(3).map(c => h("td",{class:"r"}, r.status !== "done" && c.key !== "speed" && c.key !== "params" ? "–" : c.show(r))));
+      tcols().slice(3).map(c => h("td",{class:"r"}, r.status !== "done" && c.key !== "speed" && c.key !== "params" ? "–" : c.show(r))));
     return tr; }));
   t.replaceChildren(head, body);
   document.getElementById("twrap").className = "tablewrap" + (state.rowsAll ? " all" : "");
@@ -1205,8 +1808,8 @@ function select(id, quiet){
 const SET_GROUPS = [
   ["Optimizer", [["optimizer","Optimizer"],["lr","Learning rate"],["momentum","Momentum"],["weight_decay","Weight decay"],["beta1","Beta 1"],["beta2","Beta 2"],["adam_eps","Epsilon"],["grad_clip","Gradient clip"]]],
   ["Schedule and length", [["schedule","Schedule"],["pct_start","Warm-up share"],["epochs","Max epochs"],["patience","Patience"]]],
-  ["Batch and loss", [["batch_size","Batch size"],["loss","Loss"],["dev_weight","Dev weight"],["hk_weight","Hk weight"]]],
-  ["Numerics and evaluation", [["precision","Precision"],["amp","Mixed precision"],["rc_average","Reverse-complement averaging"],["framework","Framework"]]],
+  ["Batch and loss", [["batch_size","Batch size"],["loss","Loss"]]],
+  ["Numerics and evaluation", [["precision","Precision"],["amp","Mixed precision"],["framework","Framework"]]],
 ];
 const CLS = {improved:"better than its parent", worse:"worse than its parent", no_change:"no clear change from its parent", baseline:"the starting point", invalid_bug:"failed to run"};
 const MOVE = {settings_move:"Changed settings only", structural_change:"Changed the structure", new_approach:"New kind of model", composition:"Combined two lines", baseline:"Baseline"};
@@ -1214,21 +1817,29 @@ function renderInspector(){
   const box = document.getElementById("insp"); if (!box) return;
   const r = byId[state.sel]; if (!r){ box.replaceChildren(h("div",{class:"loading",text:"Select a point or a row to inspect a run."})); return; }
   const lin = META.lineages[r.lin], par = r.parent ? byId[r.parent] : null, ch = (kids[r.id]||[]).map(i => byId[i]);
-  const okRun = r.status === "done";
+  const okRun = r.status === "done", rp = r.reported;
   const head = h("div",{class:"insp-h"},
     h("div",{class:"k",text:`Run ${r.n} of ${RUNS.length} · ${r.id}`}),
     h("h2",{text:r.name}),
     h("div",{class:"pills"},
       h("span",{class:"pill plain",text:pretty(r.fam)}),
       r.move ? h("span",{class:"pill plain",text:MOVE[r.move] || pretty(String(r.move))}) : null,
-      okRun ? (isTie(r) ? h("span",{class:"pill tie",text:"tied with the best"}) : null) : h("span",{class:"pill bad",text:"no result"}),
-      isRevised(r) ? h("span",{class:"pill rev",text:"revised"}) : null));
+      r.kind && r.kind !== "train" ? h("span",{class:"pill plain",text:RULES.kinds[r.kind]}) : null,
+      okRun ? (isTie(r) && !rp ? h("span",{class:"pill tie",text:"tied with the best"}) : null) : h("span",{class:"pill bad",text:"no result"}),
+      isRevised(r) ? h("span",{class:"pill rev",text:"revised"}) : null),
+    ENTRY.status === "published" && ENTRY.id ? h("div",{style:"margin-top:10px"}, (b_ => { b_.id = "cmpinsp"; return b_; })(cmpBtn(ENTRY.id, r.id, r.name, true))) : null);
   const metric = (k, v, key) => h("div",{class:"metric" + (key ? " obj" : "")}, h("span",{text:k}), h("b",{text:v}));
   /* four numbers first; the rest on request */
-  const mets = h("div",{class:"sec"}, h("h3",{text:"Results"}),
+  const mets = rp ? h("div",{class:"sec"}, h("h3",{text:"Results"}),
+      h("p",{class:"q"}, "Copied from ", srcEl(rp), rp.where ? ", " + rp.where : "", ". It was not run in this study."),
+      rp.note ? h("p",{class:"q"}, h("b",{text:"Depositor's note. "}), rp.note) : null,
+      h("div",{class:"metrics two"}, r.score != null ? metric(OBJ.label, fmt(r.score,4)) : null, Object.keys(r.t||{}).filter(k => Q[k] && r.t[k] != null).map(k => metric("Test " + Q[k].short, fmt(r.t[k],3))),
+        Object.keys(r.v||{}).filter(k => Q[k] && r.v[k] != null).map(k => metric("Validation " + Q[k].short, fmt(r.v[k],3))), metric("Parameters", fmtInt(r.params))),
+      rp.note ? null : h("p",{class:"fine",text:"The source may have prepared the data differently from this study. Check before comparing."}))
+    : h("div",{class:"sec"}, h("h3",{text:"Results"}),
     okRun ? [h("div",{class:"metrics two"},
-        metric("Validation MSE (objective)", fmt(r.score,4), true), metric("Test " + Q[YM()].short, fmt((r.t||{})[YM()],3)),
-        metric("Inference speed", r.speed ? fmtInt(r.speed) + " seq/s" : "–"), metric("Parameters", fmtInt(r.params))),
+        metric(OBJ.label + " (objective)", fmt(r.score,4), true), metric("Test " + Q[YM()].short, fmt((r.t||{})[YM()],3)),
+        metric("Inference speed", r.speed ? fmtInt(r.speed) + " " + UNIT + "/s" : "–"), metric("Parameters", fmtInt(r.params))),
       isRevised(r) ? h("p",{class:"fine",text:revisedNote(r)}) : null,
       state.moreRes ? h("div",{class:"metrics"},
         Object.keys(r.t||{}).filter(k => k !== YM() && Q[k]).map(k => metric("Test " + Q[k].short, r.diverged.includes(k) ? "diverged" : fmt(r.t[k],4))),
@@ -1277,7 +1888,8 @@ function renderInspector(){
   const itabs = h("div",{class:"tabs itabs",role:"tablist","aria-label":"Run details"},
     [["summary","Summary"],["settings","Training"],["model","Model"]].map(([v,t]) =>
       h("button",{class:"tab",role:"tab","aria-selected":String(state.itab===v),text:t,onclick:()=>{state.itab=v; renderInspector();}})));
-  box.replaceChildren(head, itabs, ...(state.itab === "summary" ? [mets, why] : state.itab === "settings" ? [settings, rebuildSection(r)] : [modelSection(r)]));
+  box.replaceChildren(head, itabs, ...(state.itab === "summary" ? (rp ? [mets] : [mets, why]) : state.itab === "settings" ? (rp ? [h("div",{class:"sec"}, h("h3",{text:"Training"}), h("p",{class:"q"}, "This result was reported elsewhere, so the entry holds no training details. See ", srcEl(rp), "."))]
+    : [r.kind === "evaluate" ? h("div",{class:"sec"}, h("h3",{text:"Training"}), h("p",{class:"q",text:"This run did no training. It scored existing weights."})) : settings, rebuildSection(r)]) : [modelSection(r)]));
 }
 function expandable(label, text){
   const p = h("p",{class:"q clamp"}, h("b",{text:label}), text);
@@ -1337,6 +1949,7 @@ function modelSection(r){
   sec.append(h("h3",null, "Model", tabs));
   if (MODELS === null){ sec.append(h("p",{class:"q",text:"Loading the model…"})); return sec; }
   if (!mdl){ sec.append(h("p",{class:"q",text:"The model record did not load."})); return sec; }
+  if (!mdl.src && !mdl.tree){ sec.append(h("p",{class:"q",text:"No code is stored for this model." + (r.reported ? " It is described in the source this result was copied from." : "")})); return sec; }
   if (state.mtab === "source"){
     sec.append(h("pre",{class:"src",tabindex:"0",text:mdl.src}), h("p",{class:"fine",text:`${mdl.src.split("\n").length} lines of code, stored in the deposit as text.`}));
     return sec;
@@ -1378,7 +1991,7 @@ const pathGet = (o, p) => p.split(".").reduce((a, k) => (a == null ? undefined :
 const pathSet = (o, p, v) => { const ks = p.split("."); let a = o; for (const k of ks.slice(0,-1)) a = isObj(a[k]) ? a[k] : (a[k] = {}); a[ks[ks.length-1]] = v; };
 const showV = v => v === false ? "no" : v === true ? "yes" : (v && typeof v === "object") ? JSON.stringify(v).replace(/["{}\[\]]/g, "").replace(/,/g, ", ").replace(/:/g, ": ") : String(v);
 const FIELD_UI = {title:{wide:true, ph:"A short name for this study"}, question:{wide:true, area:true, ph:"One or two sentences on what was studied"},
-  license:{hint:"Covers the whole entry, code included."}, orcid:{ph:"0000-0000-0000-0000"}, code_url:{ph:"https://…"},
+  license:{hint:"Covers the whole entry, code included."}, orcid:{ph:"0000-0000-0000-0000"}, code_url:{ph:"https://…  or  10.5281/…"}, weights_url:{ph:"https://…  or  10.5281/…"},
   publication:{ph:"10.1101/…  or  https://…"}, accession:{ph:"for example a Zenodo or GEO id"}};
 const LIC_ID = /^[A-Za-z0-9][A-Za-z0-9.+-]*$/, LINK = /^https:\/\/\S+$/;
 function setupFields(){
@@ -1389,9 +2002,9 @@ function setupFields(){
 }
 /* On disk a study has four parts: experiment, models, training, runs. The page works on an older, flatter layout
    (study, contributor, dataset, recipes, trials ...), so files are converted on the way in and out. Same mapping as cameo.py. */
-const GROUPS = ["depositor","run_by","objective","data","evaluation","environment","search","conclusions"], HISTORY = ["lineage","parent_trial","second_parent","move","purpose","hypothesis","predicted_effect"];
+const GROUPS = ["depositor","run_by","objective","data","datasets","evaluation","environment","search","conclusions"], HISTORY = ["lineage","parent_trial","second_parent","move","purpose","hypothesis","predicted_effect"];
 const SRCP = "custom_ops.model_source.reference_implementation", HW = [["training_hardware","training_context"],["inference_hardware","speed_context"]];
-const OLD_TOP = ["format_version","study","contributor","objective","dataset","evaluation","environment","search","lineages","summary","recipes","models","trials"];
+const OLD_TOP = ["format_version","study","contributor","objective","dataset","datasets","evaluation","environment","search","lineages","summary","recipes","models","trials"];
 const D_ = v => isObj(v) ? Object.assign({}, v) : {};
 const isNew = S => isObj(S) && isObj(S.experiment) && "runs" in S;
 function toInternal(S){
@@ -1406,6 +2019,7 @@ function toInternal(S){
   if (Object.keys(env).length) out.environment = env;
   if ("objective" in E) out.objective = E.objective;
   if ("data" in E) out.dataset = E.data;
+  if ("datasets" in E) out.datasets = E.datasets;
   if ("lineages" in search){ out.lineages = search.lineages; delete search.lineages; }
   if (Object.keys(search).length) out.search = search;
   if ("conclusions" in E){ const c = D_(E.conclusions); if ("best_run" in c){ c.best_trial = c.best_run; delete c.best_run; } out.summary = c; }
@@ -1413,11 +2027,12 @@ function toInternal(S){
   for (const [rid, r0] of Object.entries(D_(S.training))){ const r = D_(r0);
     if ("code" in r){ const c = r.code; delete r.code; if (isObj(c) && "script" in c){ c.code = c.script; delete c.script; } r.source = c; }
     recipes[rid] = r; }
-  const models = (Array.isArray(S.models) ? S.models : []).map(m0 => { const m = D_(m0); if ("code" in m){ const c = m.code; delete m.code; pathSet(m, SRCP, c); } return m; });
+  const models = (Array.isArray(S.models) ? S.models : []).map(m0 => { const m = D_(m0); if ("code" in m){ const c = m.code; delete m.code; pathSet(m, SRCP, c); }
+    const sp = m.inference_speed; if (isObj(sp) && "examples_per_s" in sp){ sp.seq_per_s = sp.examples_per_s; delete sp.examples_per_s; } return m; });
   const trials = (Array.isArray(S.runs) ? S.runs : []).map(r0 => { const r = D_(r0), t = {};
     for (const k in r) if (!["training","settings","history","performance"].includes(k)) t[k] = r[k];
     if ("training" in r) t.recipe = r.training;
-    t.training = D_(r.settings);
+    if ("settings" in r) t.training = D_(r.settings);
     for (const [k, v] of Object.entries(D_(r.history))){ if (k === "second_parent" && isObj(v) && "run" in v){ v.trial = v.run; delete v.run; } t[k === "parent" ? "parent_trial" : k] = v; }
     if ("performance" in r){ const p = r.performance; if (isObj(p) && "training_minutes" in p){ p.runtime_minutes = p.training_minutes; delete p.training_minutes; } t.result = p; }
     return t; });
@@ -1431,6 +2046,7 @@ function toExternal(S){
   const con = D_(S.contributor), runBy = con.run_by; delete con.run_by; E.depositor = con; if (runBy !== undefined) E.run_by = runBy;
   if ("objective" in S) E.objective = S.objective;
   if ("dataset" in S) E.data = S.dataset;
+  if ("datasets" in S) E.datasets = S.datasets;
   const ev = D_(S.evaluation), env = D_(S.environment), search = D_(S.search);
   for (const [a, b] of HW) if (b in ev){ env[a] = ev[b]; delete ev[b]; }
   E.evaluation = ev; E.environment = env;
@@ -1440,14 +2056,16 @@ function toExternal(S){
   if ("summary" in S){ const c = D_(S.summary); if ("best_trial" in c){ c.best_run = c.best_trial; delete c.best_trial; } E.conclusions = c; }
   const training = {};
   for (const [rid, r0] of Object.entries(recipes)){ const r = D_(r0); if ("source" in r){ const c = r.source; delete r.source; if (isObj(c) && "code" in c){ c.script = c.code; delete c.code; } r.code = c; } training[rid] = r; }
+  if (implied && (Array.isArray(S.trials) ? S.trials : []).filter(isObj).every(noTraining)) for (const k of Object.keys(training)) delete training[k];   /* nothing was trained, so there is no recipe to write */
   const models = (Array.isArray(S.models) ? S.models : []).map(m0 => { const m = D_(m0), src = pathGet(m, SRCP);
     if (src !== undefined && src !== null){ const ms = m.custom_ops.model_source; delete ms.reference_implementation; if (!Object.keys(ms).length) delete m.custom_ops.model_source; if (!Object.keys(m.custom_ops).length) delete m.custom_ops; m.code = src; }
+    const sp = m.inference_speed; if (isObj(sp) && "seq_per_s" in sp){ sp.examples_per_s = sp.seq_per_s; delete sp.seq_per_s; }
     return m; });
   const runs = (Array.isArray(S.trials) ? S.trials : []).map(t0 => { const t = D_(t0), r = {};
     for (const k of ["id","model","model_args"]) if (k in t) r[k] = t[k];
-    r.training = recipeId(t, recipes); if ("seed" in t) r.seed = t.seed; r.settings = D_(t.training);
+    const rid = recipeId(t, recipes); if (rid != null) r.training = rid; if ("seed" in t) r.seed = t.seed; if ("training" in t) r.settings = D_(t.training);
     const hist = {}; for (const k of HISTORY) if (k in t){ const v = t[k]; if (k === "second_parent" && isObj(v) && "trial" in v){ v.run = v.trial; delete v.trial; } hist[k === "parent_trial" ? "parent" : k] = v; }
-    r.history = hist;
+    if (Object.keys(hist).length) r.history = hist;
     if ("result" in t){ const p = t.result; if (isObj(p) && "runtime_minutes" in p){ p.training_minutes = p.runtime_minutes; delete p.runtime_minutes; } r.performance = p; }
     for (const k in t) if (!(k in r) && !HISTORY.includes(k) && !["recipe","training","result"].includes(k)) r[k] = t[k];
     return r; });
@@ -1459,7 +2077,19 @@ function recipesOf(S){
   if (isObj(S.recipes) && Object.keys(S.recipes).length) return {recipes:S.recipes, implied:false};
   return {recipes:{base:{settings:(S.search || {}).training_defaults || {}}}, implied:true};
 }
-const recipeId = (t, recipes) => known(t.recipe) ? t.recipe : Object.keys(recipes)[0];
+/* how a run got its result: train (from scratch), finetune (from existing weights), evaluate (no training), or reported (copied from a paper; not run in this study) */
+const kindOf = t => (typeof t.kind === "string" && RULES.kinds[t.kind]) ? t.kind : "train";
+const noTraining = t => kindOf(t) === "evaluate" || kindOf(t) === "reported";
+const recipeId = (t, recipes) => known(t.recipe) ? t.recipe : (noTraining(t) || !Object.keys(recipes).length) ? null : Object.keys(recipes)[0];
+/* where a reported result comes from: a DOI or an https address */
+const sourceLink = t => { const s_ = t.reported_in, v = isObj(s_) ? (known(s_.doi) ? s_.doi : s_.url) : s_; return known(v) && new RegExp("^" + RULES.link_pattern + "$").test(String(v).trim()) ? String(v).trim() : null; };
+const hasMetric = t => { const r = isObj(t.result) ? t.result : {}, num = v => typeof v === "number" && isFinite(v);
+  return num(r.score) || [r.valid, r.test].concat((Array.isArray(r.evaluations) ? r.evaluations : []).filter(isObj).map(e => e.metrics)).some(m => isObj(m) && Object.values(m).some(num)); };
+const datasetsOf = S => { const d = {}; if (isObj(S.dataset)) d.main = S.dataset; if (isObj(S.datasets)) for (const k in S.datasets) if (isObj(S.datasets[k])) d[k] = S.datasets[k]; return d; };
+const linked = ds => ["doi","accession","url"].some(k => known(ds[k]));
+const splitShared = ds => isObj(ds.splits) && (known(ds.splits.code) || hasKnown(ds.splits.files));
+const weightsGiven = (t, m) => { const w = t.weights; if ((isObj(w) && (known(w.url) || known(w.doi))) || (typeof w === "string" && known(w))) return true; return kindOf(t) === "evaluate" && isObj(m.base_model) && known(m.base_model.link); };
+const baseGiven = (m, rec) => (isObj(m.base_model) && known(m.base_model.link)) || (isObj((rec || {}).init) && known(rec.init.from));
 const resolvedSet = (t, rec) => Object.assign({}, (rec || {}).settings || {}, t.training || {});
 const isCross = t => t.operation === "crossover" || t.move === "composition" || known(t.second_parent) || (t.notes || []).some(n => n && typeof n.text === "string" && n.text.includes("crossover)"));
 /* what a faithful re-implementation of training still needs, for these runs */
@@ -1482,7 +2112,7 @@ function recipeMissing(rec, trials){
   if (!known(rec.augmentation)) need("augmentation");
   if (!known(rec.init)) need("init");
   const defs = isObj(rec.definitions) ? rec.definitions : {};
-  for (const name of RULES.defined_settings) if (used.some(u => u[name] === true) && !known(defs[name])) need("definition", {name});
+  for (const name of [...new Set(used.flatMap(u => Object.keys(u).filter(k => u[k] === true)))].sort()) if (!known(defs[name])) need("definition", {name});
   return miss;
 }
 const rebuildLevel = (rec, miss) => known(pathGet(rec, "source.code")) ? "exact" : miss.length ? "partial" : "faithful";
@@ -1493,7 +2123,7 @@ function checkStudy(S){
   const models = S.models, trials = S.trials, count = (arr, fn) => arr.filter(fn).length; let n;
   if (String(S.format_version) !== RULES.format_version) add("format", {found:S.format_version, want:RULES.format_version});
   for (const f of FIELDS){ const v = pathGet(S, f.path), item = {id:f.id, field:f.id, fix:f.fix};
-    if (!known(v)){ item.message = "Add " + f.todo; rep[f.need ? "blocking" : "suggested"].push(item); }
+    if (!known(v)){ if (f.level !== "optional"){ item.message = "Add " + f.todo; rep[f.need ? "blocking" : "suggested"].push(item); } }
     else if (f.test && f.test(String(v))){ item.message = f.label + ": " + f.test(String(v)); rep.blocking.push(item); } }
   if (!known(pathGet(S, "contributor.name"))) add("depositor-name");
   if (!known(pathGet(S, "dataset.name"))) add("dataset-name");
@@ -1504,28 +2134,38 @@ function checkStudy(S){
   if ((n = count(trials, t => known(t.parent_trial) && !tids.has(t.parent_trial)))) add("dangling-parent", {n});
   const {recipes, implied} = recipesOf(S);
   if ((n = count(trials, t => known(t.recipe) && !(t.recipe in recipes)))) add("dangling-recipe", {n});
-  const res = t => isObj(t.result) ? t.result : {}, isNum = v => typeof v === "number" && isFinite(v), scored = count(trials, t => isNum(res(t).score));
+  const res = t => isObj(t.result) ? t.result : {}, isNum = v => typeof v === "number" && isFinite(v), isScored = t => isNum(res(t).score) || (kindOf(t) === "reported" && hasMetric(t)), scored = count(trials, isScored);
   if (!scored) add("no-scored");
-  if ((n = count(trials, t => res(t).status === "done" && !isNum(res(t).score)))) add("done-no-score", {n});
+  if ((n = count(trials, t => res(t).status === "done" && !isScored(t)))) add("done-no-score", {n});
   if ((n = count(trials, t => !RULES.statuses.includes(res(t).status)))) add("bad-status", {n, allowed:RULES.statuses.join(", ")});
+  if ((n = count(trials, t => known(t.kind) && kindOf(t) !== t.kind))) add("bad-kind", {n, allowed:Object.keys(RULES.kinds).join(", ")});
+  if ((n = count(trials, t => kindOf(t) === "reported" && !sourceLink(t)))) add("reported-source", {n});
+  const DS = datasetsOf(S), refs = trials.filter(t => known(t.data)).map(t => t.data).concat(trials.flatMap(t => (Array.isArray(res(t).evaluations) ? res(t).evaluations : []).filter(e => isObj(e) && known(e.dataset)).map(e => e.dataset)));
+  if ((n = count(refs, r => !(r in DS)))) add("dangling-dataset", {n});
   const lin = isObj(S.lineages) ? S.lineages : {};
   const spOk = sp => isObj(sp) && ((known(sp.trial) && tids.has(sp.trial)) || (known(sp.lineage) && (sp.lineage in lin || trials.some(t => t.lineage === sp.lineage))));
   if ((n = count(trials, t => known(t.second_parent) && !spOk(t.second_parent)))) add("dangling-second-parent", {n});
   if ((n = count(models, m => known(m.parent) && !mids.has(m.parent)))) add("dangling-model-parent", {n});
   if (Object.keys(lin).length && (n = count(trials, t => known(t.lineage) && !(t.lineage in lin)))) add("dangling-lineage", {n});
-  const doneT = trials.filter(t => res(t).status === "done"), doneM = new Set(doneT.map(t => t.model)), hasSpeed = m => known((m.inference_speed || {}).seq_per_s);
-  if ((n = count(models, m => !known(pathGet(m, "custom_ops.model_source.reference_implementation"))))) add("model-source", {n});
-  if ((n = count(doneT, t => !known(res(t).parameters)))) add("parameters", {n});
-  if ((n = count(doneT, t => !known(res(t).runtime_minutes)))) add("runtime", {n});
-  if ((n = count(doneT, t => !(hasKnown(res(t).valid) || hasKnown(res(t).test))))) add("metrics", {n});
-  if ((n = count(doneT, t => !known(t.seed)))) add("seed", {n});
-  if (!hasKnown(S.environment)) add("environment");
-  const spl = pathGet(S, "dataset.splits"); if (!(isObj(spl) && (known(spl.code) || hasKnown(spl.files)))) add("data-split");
-  if (!known(D_(pathGet(S, "evaluation.training_context")).device)) add("training-context");
+  const doneT = trials.filter(t => res(t).status === "done"), own = doneT.filter(t => kindOf(t) !== "reported"), doneM = new Set(own.map(t => t.model)), hasSpeed = m => known((m.inference_speed || {}).seq_per_s);
+  const trained = own.filter(t => kindOf(t) !== "evaluate"), mby = Object.fromEntries(models.map(m => [m.id, m])), repOnly = doneT.length > 0 && !own.length;
+  /* a model needs code unless every run of it is a reported result */
+  const needCode = models.filter(m => !trials.some(t => t.model === m.id) || trials.some(t => t.model === m.id && kindOf(t) !== "reported")), hasCode = m => known(pathGet(m, "custom_ops.model_source.reference_implementation"));
+  if ((n = count(needCode, m => !hasCode(m)))) add("model-source", {n});
+  if ((n = count(own, t => !known(res(t).parameters)))) add("parameters", {n});
+  if ((n = count(trained, t => !known(res(t).runtime_minutes)))) add("runtime", {n});
+  if ((n = count(doneT, t => !(hasKnown(res(t).valid) || hasKnown(res(t).test) || hasKnown(res(t).evaluations))))) add("metrics", {n});
+  if ((n = count(trained, t => !known(t.seed)))) add("seed", {n});
+  if (!hasKnown(S.environment) && !repOnly) add("environment");
+  const used = [...new Set(trained.map(t => known(t.data) ? t.data : "main"))], hasSplit = used.every(k => !(k in DS) || splitShared(DS[k])); if (!hasSplit) add("data-split");
+  const noLink = Object.keys(DS).filter(k => k !== "main" && !linked(DS[k])).sort(), hasLink = linked(DS.main || {}) && !noLink.length; if (noLink.length) add("dataset-link", {n:noLink.length, ids:noLink.join(", ")});
+  const nBase = count(doneT, t => kindOf(t) === "finetune" && !baseGiven(mby[t.model] || {}, isObj(recipes[recipeId(t, recipes)]) ? recipes[recipeId(t, recipes)] : {})); if (nBase) add("base-weights", {n:nBase});
+  const nEvalW = count(doneT, t => kindOf(t) === "evaluate" && !weightsGiven(t, mby[t.model] || {})); if (nEvalW) add("eval-weights", {n:nEvalW});
+  if (trained.length && !known(D_(pathGet(S, "evaluation.training_context")).device)) add("training-context");
   const anySpeed = models.some(hasSpeed);
-  if (!anySpeed) add("speed"); else if ((n = count(models, m => doneM.has(m.id) && !hasSpeed(m)))) add("speed-some", {n});
+  if (!anySpeed){ if (!repOnly) add("speed"); } else if ((n = count(models, m => doneM.has(m.id) && !hasSpeed(m)))) add("speed-some", {n});
   if (anySpeed && !known(D_(pathGet(S, "evaluation.speed_context")).device)) add("speed-context");
-  if (!models.some(m => known(m.layers))) add("layers");
+  if (!models.some(m => known(m.layers)) && !repOnly) add("layers");
   const two = t => known(t.second_parent) || ((lin[t.lineage] || {}).parents || []).length > 1;
   if (trials.some(t => isCross(t) && !two(t))) add("crossover");
   for (const [rid, rec0] of Object.entries(recipes)){ const rec = isObj(rec0) ? rec0 : {}, mine = trials.filter(t => recipeId(t, recipes) === rid), miss = recipeMissing(rec, mine), code = known(pathGet(rec, "source.code"));
@@ -1533,37 +2173,81 @@ function checkStudy(S){
     if (miss.length && mine.length) add("recipe", {recipe:rid, runs:mine.length, n:miss.length});
     if (mine.length && !code) add("recipe-source", {recipe:rid, runs:mine.length}); }
   /* the four parts, and the tag shown on the entry; computed from the file, never declared by it */
-  { const nCode = count(models, m => known(pathGet(m, "custom_ops.model_source.reference_implementation"))), nSeed = count(doneT, t => !known(t.seed)),
-      bad = count(doneT, t => !known(res(t).parameters) || !known(res(t).runtime_minutes) || !(hasKnown(res(t).valid) || hasKnown(res(t).test))) + count(models, m => doneM.has(m.id) && !hasSpeed(m));
+  { const nCode = count(needCode, hasCode), nSeed = count(trained, t => !known(t.seed));
+    const bad = count(own, t => !known(res(t).parameters)) + count(doneT, t => !(hasKnown(res(t).valid) || hasKnown(res(t).test) || hasKnown(res(t).evaluations))) + count(trained, t => !known(res(t).runtime_minutes)) + count(models, m => doneM.has(m.id) && !hasSpeed(m));
     rep.sufficient = {
-      experiment:{ok:known(pathGet(S, "contributor.name")) && known(pathGet(S, "dataset.name")) && isObj(spl) && (known(spl.code) || hasKnown(spl.files)) && hasKnown(S.environment)},
-      model:{ok:models.length > 0 && nCode === models.length},
-      training:{ok:Object.keys(rep.reproduce).length > 0 && !nSeed && Object.values(rep.reproduce).every(r => !r.runs || r.level !== "partial")},
-      performance:{ok:doneT.length > 0 && !bad && known(D_(pathGet(S, "evaluation.training_context")).device) && known(D_(pathGet(S, "evaluation.speed_context")).device)}};
-    const missing = ["experiment","model","training"].filter(k => !rep.sufficient[k].ok), tag = !missing.length ? "reproducible" : nCode === 0 ? "results-only" : "partial";
-    rep.reproducibility = {tag, label:RULES.tags[tag].label, missing}; }
+      experiment:{ok:known(pathGet(S, "contributor.name")) && known(pathGet(S, "dataset.name")) && hasLink && hasSplit && hasKnown(S.environment)},
+      model:{ok:needCode.length > 0 && nCode === needCode.length},
+      training:{ok:own.length > 0 && !(nSeed || nBase || nEvalW) && Object.values(rep.reproduce).every(r => !r.runs || r.level !== "partial")},
+      performance:{ok:own.length > 0 && !bad && (known(D_(pathGet(S, "evaluation.training_context")).device) || !trained.length) && known(D_(pathGet(S, "evaluation.speed_context")).device)}};
+    const su = rep.sufficient, core = own.length > 0 && !(nSeed || nBase || nEvalW) && !Object.values(rep.reproduce).some(r => r.runs && r.missing.some(m => m.id.startsWith("setting:")));
+    let level, next;
+    if (repOnly){ level = "none"; next = ["runs made in this study"]; }
+    else if (!(hasLink && su.model.ok)){ level = "none"; next = (hasLink ? [] : ["a link to every dataset"]).concat(su.model.ok ? [] : ["model code"]); }
+    else if (["experiment","model","training","performance"].every(k => su[k].ok)){ level = "gold"; next = []; }
+    else if (core){ level = "silver"; next = ["experiment","training","performance"].filter(k => !su[k].ok); }
+    else { level = "bronze"; next = ["every run's training settings and seed, or a link to the weights it scored"]; }
+    rep.star = {level, label:RULES.stars[level].label, next}; }
   if ((n = count(trials, t => (res(t).diverged || []).length))) rep.checked.push(`${n} run${n === 1 ? " has" : "s have"} a metric recorded as diverged`);
   rep.checked.push(`${trials.length} runs, ${models.length} models, ${scored} with a score`);
   return rep;
 }
 
-/* ---------- the entry's tag: partial entries are accepted, and say what they lack ---------- */
+/* ---------- results by dataset: for studies that score their models on more than one dataset ---------- */
+const meanSd = v => { if (!v.length) return null; const mean = v.reduce((a, b) => a + b, 0) / v.length; return {n:v.length, mean, sd:v.length > 1 ? Math.sqrt(v.reduce((a, b) => a + (b - mean) * (b - mean), 0) / (v.length - 1)) : null}; };
+const benchOfDataset = ds => !isObj(ds) ? null : ((INDEX || {}).benchmarks || []).find(b => ds.benchmark === b.id) || ((INDEX || {}).benchmarks || []).find(b => b.match && String(ds.name || "").toLowerCase().includes(b.match)) || null;
+function drawDatasets(){
+  const box = document.getElementById("plot"), DSn = META.datasets || {}, ids = [], dn = withResult();
+  for (const r of dn) for (const e of (r.evals || [])) if (!ids.includes(e.dataset)) ids.push(e.dataset);
+  const cols = ids.map(k => { const b = benchOfDataset(DSn[k]); let m = b ? b.metric : null;
+    if (!m) for (const r of dn){ const e = (r.evals || []).find(x => x.dataset === k && Object.keys(x.metrics).length); if (e){ m = Object.keys(e.metrics)[0]; break; } }
+    return {k, m, name:(DSn[k] || {}).name || k, bench:b, low:m ? metricInfo(m)[2] === "low" : false}; }).filter(c => c.m);
+  const groups = {}; for (const r of dn) if ((r.evals || []).length) (groups[r.model] = groups[r.model] || []).push(r);
+  const rows = Object.values(groups).map(rs => ({r:rs.reduce((a, b) => (b.score != null && (a.score == null || better(b.score, a.score))) ? b : a), n:rs.length,
+    cells:cols.map(c => meanSd(rs.flatMap(r => r.evals.filter(e => e.dataset === c.k && typeof e.metrics[c.m] === "number").map(e => e.metrics[c.m]))))}));
+  if (!cols.length || !rows.length){ box.replaceChildren(h("p",{class:"q",style:"padding:16px",text:"No run in this study reports results by dataset."})); setCap([], []); return; }
+  const k0 = state.dsSort == null ? 0 : state.dsSort, sgn = cols[k0].low ? 1 : -1;
+  rows.sort((a, c) => { const x = a.cells[k0], y = c.cells[k0]; if (!x || !y) return (!x) - (!y); return (x.mean - y.mean) * sgn; });
+  box.replaceChildren(h("div",{class:"scrollx"}, h("table",{class:"lb",id:"dstable"},
+    h("thead",null, h("tr",null, h("th",{text:"Model"}), h("th",{text:"How"}), h("th",{class:"num",text:"Runs"}),
+      cols.map((c, i) => h("th",{class:"num","aria-sort":i === k0 ? (c.low ? "ascending" : "descending") : "none"}, h("button",{class:"thb",title:"Sort by this dataset",onclick:()=>{ state.dsSort = i; drawDatasets(); }},
+        c.name.length > 26 ? c.name.slice(0, 24) + "…" : c.name, i === k0 ? (c.low ? " ↑" : " ↓") : ""), h("div",{class:"thsub",text:metricInfo(c.m)[1] + (c.bench ? " · on a leaderboard" : "")}))))),
+    h("tbody",null, rows.map(x => h("tr",{class:"go" + (x.r.id === state.sel ? " sel" : ""),onclick:()=>select(x.r.id)},
+      h("td",null, h("button",{class:"linkish mono",style:"font-size:12.5px",text:x.r.name,onclick:e=>{ e.stopPropagation(); select(x.r.id); }})),
+      h("td",{text:(RULES.kinds[x.r.kind] || "") + ((modelById[x.r.model] || {}).base && modelById[x.r.model].base.name ? " · " + modelById[x.r.model].base.name : "")}),
+      h("td",{class:"num",text:String(x.n)}),
+      x.cells.map(c => h("td",{class:"num",title:c && c.n > 1 ? `mean of ${c.n} runs` : ""}, c ? fmt(c.mean, 3) : "–", c && c.sd != null ? h("span",{class:"pm",text:" ±" + fmt(c.sd, 3)}) : null))))))));
+  setCap([`${rows.length} model${rows.length === 1 ? "" : "s"} · ${cols.length} dataset${cols.length === 1 ? "" : "s"}`, "Each cell is the mean over that model's finished runs, with the spread when there are several"], []);
+}
+
+/* ---------- links out: dataset, code, paper, weights. All optional except the dataset, which the star needs ---------- */
+function linksRow(){
+  const S = ENTRY.raw || {}, first = (...ps) => ps.map(p_ => pathGet(S, p_)).find(known);
+  const items = [["Dataset", first("dataset.doi", "dataset.accession", "dataset.url")], ["Code", first("study.code_url")], ["Paper", first("study.publication")], ["Weights", first("study.weights_url")]];
+  const out = items.filter(x => known(x[1])).map(([k, v]) => { const L = weightLink(v); return L ? h("a",{class:"lk",href:L.href,target:"_blank",rel:"noopener",title:L.label}, k + " ↗") : h("span",{class:"lk",text:k + ": " + String(v)}); });
+  const nW = RUNS.filter(r => r.weights).length; if (nW) out.push(h("span",{class:"lk",text:`Weights linked for ${nW} run${nW === 1 ? "" : "s"}`}));
+  if (ENTRY.id && ENTRY.status === "published") out.push(h("button",{class:"lk",type:"button",id:"citebtn",title:"How to cite this study",text:"Cite",onclick:openCite}));
+  if (ENTRY.id && ENTRY.status === "published") out.push(h("a",{class:"lk",href:"studies/" + encodeURIComponent(ENTRY.id) + ".json",download:ENTRY.id + ".json",title:"The whole entry as one file"}, "Download JSON ↓"));
+  return out.length ? h("div",{class:"links"}, out) : null;
+}
+
+/* ---------- the entry's star: partial entries are accepted, and say what they lack ---------- */
 function reproTag(){
-  const rep = checkStudy(ENTRY.raw), T = RULES.tags[rep.reproducibility.tag], items = rep.blocking.concat(rep.suggested);
+  const rep = checkStudy(ENTRY.raw), T = RULES.stars[rep.star.level], items = rep.blocking.concat(rep.suggested);
   const row = part => { const ok = rep.sufficient[part].ok, mine = items.filter(it => (RULES.parts[part] || []).includes(it.id)).map(it => it.message);
     return h("div",{class:"rb"}, h("span",{class:"ic " + (ok ? "y" : "n"),text:ok ? "✓" : "!"}), h("span",null, h("b",{text:part[0].toUpperCase() + part.slice(1) + ". "}), ok ? "Complete." : (mine.join("; ") || "Incomplete") + ".")); };
-  return h("details",{class:"repro"}, h("summary",{title:"What this entry records"}, h("span",{class:"pill " + T.cls,text:T.label})),
+  return h("details",{class:"repro"}, h("summary",{title:"What this entry records"}, starPill(rep.star.level)),
     h("div",{class:"repro-b"}, ["experiment","model","training","performance"].map(row), h("p",{class:"fine",text:T.means})));
 }
 
 /* ---------- can this run be rebuilt? model code, settings, recipe, and what is still missing ---------- */
 const LEVEL = {exact:"Exact", faithful:"Can be re-implemented", partial:"Incomplete"};
 function rebuildOf(r){
-  const rec = (META.recipes || {})[r.recipe] || {}, t = ENTRY.raw.trials.find(x => x.id === r.id) || {}, miss = recipeMissing(rec, [t]);
-  return {rec, t, miss, level:rebuildLevel(rec, miss), code:pathGet(rec, "source.code"), mdl:modelById[r.model]};
+  const rec = (META.recipes || {})[r.recipe] || {}, t = ENTRY.raw.trials.find(x => x.id === r.id) || {}, ev = kindOf(t) === "evaluate", miss = ev ? [] : recipeMissing(rec, [t]);
+  return {rec, t, miss, ev, level:rebuildLevel(rec, miss), code:pathGet(rec, "source.code"), mdl:modelById[r.model]};
 }
 function rebuildSection(r){
-  const {rec, miss, level, code, mdl} = rebuildOf(r), hasSrc = !!(mdl && mdl.src), hasCode = known(code), nRuns = RUNS.filter(x => x.recipe === r.recipe).length, rs = Object.assign({}, recSet(r), r.hp);
+  const {rec, miss, level, code, mdl, ev} = rebuildOf(r), hasSrc = !!(mdl && mdl.src), hasCode = known(code), nRuns = RUNS.filter(x => x.recipe === r.recipe).length, rs = Object.assign({}, recSet(r), r.hp);
   const line = (ok, k, v) => h("div",{class:"rb"}, h("span",{class:"ic " + (ok ? "y" : "n"),text:ok ? "✓" : "!"}), h("span",null, h("b",{text:k + ". "}), v));
   const facts = [], fact = (k, v) => { if (known(v) || v === false) facts.push(h("tr",null, h("td",{text:k}), h("td",{text:showV(v)}))); };
   const loss = isObj(rec.loss) ? rec.loss : {}, extra = Object.keys(loss).filter(k => !["kind","terms","reduction"].includes(k) && known(loss[k]));
@@ -1577,19 +2261,22 @@ function rebuildSection(r){
   const sec = h("div",{class:"sec"},
     h("h3",null, "Rebuild this run", h("span",{class:"sp"}, h("button",{class:"btn sm",text:"Copy as JSON",title:"Model code, settings, recipe and gaps",onclick:e=>copyText(rebuildText(r), e.target)}))),
     line(hasSrc, "Model", hasSrc ? "Code stored." + (mdl.match === true ? ` Builds with ${fmtInt(mdl.traced_params)} parameters, as recorded.` : "") : "No code stored."),
-    line(level !== "partial", "Training", LEVEL[level] + ". " + RULES.levels[level]),
+    ev ? line(true, "Training", "None. This run only scored existing weights.") : line(level !== "partial", "Training", LEVEL[level] + ". " + RULES.levels[level]),
+    mdl && mdl.base ? line(!!mdl.base.link, "Base model", mdl.base.link ? h("a",{href:mdl.base.link.href,target:"_blank",rel:"noopener",text:mdl.base.name || mdl.base.link.label}) : (mdl.base.name || "") + ", with no link", mdl.adaptation ? " · " + mdl.adaptation : "") : null,
+    r.weights ? line(true, "Weights", h("a",{href:r.weights.href,target:"_blank",rel:"noopener",text:r.weights.label})) : null,
     miss.length ? h("details",{class:"rbd"}, h("summary",{text:`${miss.length} detail${miss.length === 1 ? "" : "s"} missing`}), h("ul",null, miss.map(m => h("li",{text:m.message})))) : null,
     facts.length ? h("details",{class:"rbd"}, h("summary",{text:"Recorded details"}), h("table",{class:"set"}, h("tbody",null, facts))) : null,
     hasCode ? h("details",{class:"rbd"}, h("summary",{text:"Training code"}), h("pre",{class:"src",tabindex:"0",text:code})) : null,
-    h("p",{class:"fine",text:`Recipe “${META.recipesImplied ? "study defaults" : (rec.name || r.recipe)}” · ${nRuns} run${nRuns === 1 ? "" : "s"}`}),
+    ev ? null : h("p",{class:"fine",text:`Recipe “${META.recipesImplied ? "study defaults" : (rec.name || r.recipe)}” · ${nRuns} run${nRuns === 1 ? "" : "s"}`}),
     h("p",{class:"fine"}, "As files: ", h("span",{class:"mono",text:`python3 cameo.py export-run ${ENTRY.fileName || "study.json"} ${r.id} -o rebuild`})));
   return sec;
 }
 function rebuildText(r){
-  const {rec, t, miss, level, code, mdl} = rebuildOf(r), own = r.hp || {}, settings = Object.assign({}, recSet(r), own), recOut = {}; for (const k in rec) if (k !== "source") recOut[k] = rec[k];
+  const {rec, t, miss, level, code, mdl, ev} = rebuildOf(r), own = r.hp || {}, settings = Object.assign({}, recSet(r), own), recOut = {}; for (const k in rec) if (k !== "source") recOut[k] = rec[k];
   return JSON.stringify({study:META.study.id, run:r.id, seed:r.seed, model:{id:r.model, name:r.name, args:t.model_args || {}, source:mdl && mdl.src ? mdl.src : null},
     settings, set_by_this_run:Object.keys(own), recipe_id:r.recipe, recipe:recOut, training_code:known(code) ? code : null,
-    rebuild:{model:!!(mdl && mdl.src), training:level, missing:miss.map(m => m.message)},
+    kind:r.kind, base_model:mdl && mdl.base ? {name:mdl.base.name, link:mdl.base.link ? mdl.base.link.href : null} : null, weights:r.weights ? r.weights.href : null,
+    rebuild:{model:!!(mdl && mdl.src), training:ev ? "none" : level, missing:miss.map(m => m.message)},
     recorded_result:{status:r.status, score:r.score, valid:r.v, test:r.t, diverged:r.diverged, parameters:r.params, best_epoch:r.bestEp, epochs_run:r.ep}}, null, 1);
 }
 
@@ -1617,7 +2304,7 @@ function checklist(){
   const rep = checkStudy(ENTRY.raw), file = ENTRY.fileName || "study.json";
   const item = it => ({id:it.id, text:it.message, fix:it.field ? null : it.fix.replace(/FILE/g, file), act:it.field ? () => focusField(it.field) : null});
   const ok = rep.checked.slice();
-  ok.push(/deepstarr/i.test((META.dataset||{}).name || "") ? "Matches the DeepSTARR benchmark, by dataset name" : "No matching benchmark: publishing would start a new one");
+  ok.push(BM ? `Matches the benchmark “${BM.title}”` : "No matching benchmark yet. A maintainer adds one when the study is published");
   return {block:rep.blocking.map(item), sug:rep.suggested.filter(it => it.id !== "format").map(item), ok, reproduce:rep.reproduce};
 }
 function renderBanner(){
@@ -1654,7 +2341,7 @@ function editorCard(){
     else if (f.area){ ctl = h("textarea",{id:"f-" + f.id,placeholder:f.ph || "",oninput:onin}); ctl.value = v; }
     else ctl = h("input",{id:"f-" + f.id,type:"text",placeholder:f.ph || "",value:v,oninput:onin});
     const err = v && f.test ? cap(f.test(v)) : "";
-    return h("label",{class:"fld" + (f.wide ? " wide" : "") + (err ? " bad" : ""),id:"fl-" + f.id}, h("span",null, f.label, f.need ? h("span",{class:"need",text:" · needed"}) : null), ctl,
+    return h("label",{class:"fld" + (f.wide ? " wide" : "") + (err ? " bad" : ""),id:"fl-" + f.id}, h("span",null, f.label, f.need ? h("span",{class:"need",text:" · needed"}) : f.level === "optional" ? " · optional" : null), ctl,
       h("span",{class:"msg",id:"fm-" + f.id,text:err}), f.hint ? h("span",{class:"hint",text:f.hint}) : null);
   }));
   return h("section",{class:"editor","aria-label":"Entry details"}, h("div",null, h("h2",{text:"Entry details"}), form), h("div",null, h("h2",{text:"Checklist"}), h("div",{id:"todo"})));
@@ -1684,20 +2371,20 @@ function focusField(id){
 }
 function correctionUI(r){
   if (ENTRY.status !== "staged-edit") return null;
-  const orig = ORIG.scores[r.id], changed = orig !== r.score, set = v => { r.score = v; if (r.v) r.v.mse = v; TIE = null; state.corrOpen = false; build(); };
+  const orig = ORIG.scores[r.id], changed = orig !== r.score, set = v => { r.score = v; if (r.v && OBJ.split === "valid") r.v[OBJ.metric] = v; TIE = null; state.corrOpen = false; build(); };
   if (!state.corrOpen) return h("div",{class:"corr"},
     h("button",{class:"linkish",style:"font-size:12.5px",text:changed ? "Change the correction" : "Correct this result",onclick:()=>{ state.corrOpen = true; renderInspector(); }}),
     changed ? h("button",{class:"linkish",style:"font-size:12.5px",text:"undo it",onclick:()=>set(orig)}) : null);
-  const inp = h("input",{type:"text",inputmode:"decimal",value:String(r.score),id:"corr-in","aria-label":"Corrected validation MSE",style:"width:110px"}), msg = h("span",{class:"msg",style:"color:var(--warn);font-size:12px"});
-  const apply = () => { const v = Number(inp.value.trim()); if (!inp.value.trim() || !isFinite(v) || v <= 0){ msg.textContent = "Enter a positive number."; return; } set(v); };
+  const inp = h("input",{type:"text",inputmode:"decimal",value:String(r.score),id:"corr-in","aria-label":"Corrected " + lowerFirst(OBJ.label),style:"width:110px"}), msg = h("span",{class:"msg",style:"color:var(--warn);font-size:12px"});
+  const apply = () => { const v = Number(inp.value.trim()); if (!inp.value.trim() || !isFinite(v)){ msg.textContent = "Enter a number."; return; } set(v); };
   inp.addEventListener("keydown", e => { if (e.key === "Enter") apply(); });
-  return h("div",{class:"corr"}, h("label",{class:"fld",style:"flex-direction:row;align-items:center;gap:8px"}, "Corrected validation MSE", inp),
+  return h("div",{class:"corr"}, h("label",{class:"fld",style:"flex-direction:row;align-items:center;gap:8px"}, "Corrected " + lowerFirst(OBJ.label), inp),
     h("button",{class:"btn sm",text:"Apply",onclick:apply}), h("button",{class:"btn sm",text:"Cancel",onclick:()=>{ state.corrOpen = false; renderInspector(); }}), msg);
 }
 function startEdit(){ ENTRY.status = "staged-edit"; ENTRY.flash = null; state.editorOpen = true; build(); }
 function discard(){
   for (const f of FIELDS){ f.set(ORIG.fields[f.id]); f._other = false; }
-  for (const r of RUNS) if (r.score !== ORIG.scores[r.id]){ r.score = ORIG.scores[r.id]; if (r.v) r.v.mse = r.score; }
+  for (const r of RUNS) if (r.score !== ORIG.scores[r.id]){ r.score = ORIG.scores[r.id]; if (r.v && OBJ.split === "valid") r.v[OBJ.metric] = r.score; }
   TIE = null; if (ENTRY.status === "staged-edit"){ ENTRY.status = "published"; state.editorOpen = false; }
   build();
 }
@@ -1728,7 +2415,9 @@ function openDialog(fill){
     const f = [...dlg.querySelectorAll("button:not([disabled]),input:not([type=file]),select,textarea,summary")]; if (!f.length) return;
     if (e.shiftKey && document.activeElement === f[0]){ e.preventDefault(); f[f.length-1].focus(); }
     else if (!e.shiftKey && document.activeElement === f[f.length-1]){ e.preventDefault(); f[0].focus(); } };
-  document.addEventListener("keydown", ov._key); document.body.append(ov); fill(dlg); dlg.focus();
+  /* the dialog is named by its own heading, also when its content is replaced */
+  const name = () => { const t = dlg.querySelector("h2"); if (t){ t.id = "dlgtitle"; dlg.setAttribute("aria-labelledby", "dlgtitle"); } };
+  document.addEventListener("keydown", ov._key); document.body.append(ov); fill(dlg); name(); new MutationObserver(name).observe(dlg, {childList:true}); dlg.focus();
 }
 function closeDialog(){
   const ov = document.getElementById("overlay"); if (!ov) return;
@@ -1790,11 +2479,11 @@ function checkFile(text, file, out, fix){
   if (!S || !Array.isArray(S.trials) || !Array.isArray(S.models) || !S.study){
     items.push(li("blk","!",RULES.checks.shape.message + " " + RULES.checks.shape.fix)); show(); return; }
   let conv; try{ conv = fromStudy(S); }catch(e){ items.push(li("blk","!","The file could not be read as a study: " + e.message)); show(); return; }
-  if (!conv.runs.some(r => r.score != null)){ items.push(li("blk","!","No run in this file has a score, so there is nothing to show.")); show(); return; }
+  if (!conv.runs.some(r => r.score != null) && !S.trials.some(t => kindOf(t) === "reported" && hasMetric(t))){ items.push(li("blk","!","No run in this file has a score, so there is nothing to show.")); show(); return; }
   if (!known(S.study.license)){ S.study.license = RULES.license_default; items.push(li("fine-ok","✓",`License set to the default, ${RULES.license_default}. You can change it.`)); }
   const rep0 = checkStudy(S);
   items.push(li(rep0.blocking.length ? "sug" : "fine-ok", rep0.blocking.length ? "+" : "✓", `${rep0.blocking.length} needed before publishing, ${rep0.suggested.length} suggested`));
-  items.push(li("fine-ok","✓",`Study format ${S.format_version || "not stated"}: ${conv.runs.length} runs, ${conv.models.length} architectures, ${conv.runs.filter(r => r.score != null).length} with a result`));
+  items.push(li("fine-ok","✓",`Study format ${S.format_version || "not stated"}: ${conv.runs.length} runs, ${conv.models.length} architectures, ${conv.runs.filter(r => r.score != null || r.kind === "reported").length} with a result`));
   show(h("div",{class:"foot",style:"justify-content:flex-start"}, h("button",{class:"btn pri",id:"openstaged",text:"Open the staged view",onclick:()=>{
     closeDialog(); stageStudy(S, {fileName:file.name}); window.scrollTo(0,0); }})));
 }
@@ -1812,6 +2501,8 @@ function fromStudy(S){
   const {recipes, implied} = recipesOf(S), M = {}; for (const m of S.models) M[m.id] = m;
   const recBy = {};
   const runs = S.trials.map((t, i) => { const r = isObj(t.result) ? t.result : {}, m = M[t.model] || {}, note = (t.notes||[]).map(x => x.text).join(" "), mm = /candidate (C\d+) \(lineage [^,]+, ([a-z_]+)\)/.exec(note), test = mp(r.test), valid = mp(r.valid);
+    const evals = (Array.isArray(r.evaluations) ? r.evaluations : []).filter(isObj).map(e => ({dataset:known(e.dataset) ? e.dataset : "main", split:known(e.split) ? String(e.split) : "test", metrics:mp(e.metrics)}));
+    for (const e of evals){ const tgt = /^val/.test(e.split) ? valid : test; for (const k in e.metrics){ const key = e.dataset === "main" ? k : e.dataset + ":" + k; if (!(key in tgt)) tgt[key] = e.metrics[k]; } }   /* so every evaluation can go on a chart axis */
     const div = new Set((Array.isArray(r.diverged) ? r.diverged : []).map(String).filter(d => !/^valid\./.test(d)).map(d => d.replace(/^test\./, "")));
     if (r.status === "done") for (const k in test) if (test[k] == null) div.add(k);
     const p = fin(r.parameters); if (p != null) (recBy[t.model] = recBy[t.model] || new Set()).add(p);
@@ -1820,10 +2511,11 @@ function fromStudy(S){
       bestEp:fin(r.best_epoch), ep:fin(r.epochs_run), params:p != null ? p : fin(m.parameters), mins:fin(r.runtime_minutes),
       recipe:recipeId(t, recipes), sp:isObj(t.second_parent) ? t.second_parent : null,
       hp:isObj(t.training) ? t.training : {}, hyp:known(t.hypothesis) ? t.hypothesis : null, pred:t.predicted_effect, note,
-      op:isCross(t) ? "crossover" : (mm ? mm[2] : null), speed:fin((m.inference_speed || {}).seq_per_s)}; });
+      weights:weightLink(t.weights), kind:kindOf(t), evals, reported:kindOf(t) === "reported" ? {citation:isObj(t.reported_in) && known(t.reported_in.citation) ? String(t.reported_in.citation) : null, where:isObj(t.reported_in) && known(t.reported_in.where) ? String(t.reported_in.where) : null, note:isObj(t.reported_in) && known(t.reported_in.note) ? String(t.reported_in.note) : null, link:weightLink(sourceLink(t))} : null, op:isCross(t) ? "crossover" : (mm ? mm[2] : null), speed:fin((m.inference_speed || {}).seq_per_s)}; });
   const models = S.models.map(m => { const tree = isObj(m.layers) ? m.layers : null, tp = fin(m.parameters) != null ? fin(m.parameters) : (tree ? fin(tree.params) : null), rec = [...(recBy[m.id] || [])], src = pathGet(m, "custom_ops.model_source.reference_implementation");
     return {id:m.id, name:m.name, fam:m.family, parent:m.parent, change:known(m.change_summary) ? m.change_summary : null, src:known(src) ? String(src) : "", tree, traced_params:tp, recorded:rec,
-      match:(tree && rec.length) ? rec.includes(tp) : null, io:{inputs:m.inputs, outputs:m.outputs}}; });
+      match:(tree && rec.length) ? rec.includes(tp) : null, io:{inputs:m.inputs, outputs:m.outputs}, adaptation:known(m.adaptation) ? String(m.adaptation) : null,
+      base:isObj(m.base_model) && (known(m.base_model.name) || known(m.base_model.link)) ? {name:known(m.base_model.name) ? String(m.base_model.name) : null, link:weightLink(m.base_model.link)} : null}; });
   const lineages = {}; for (const [k, v] of Object.entries(isObj(S.lineages) ? S.lineages : {})) if (isObj(v)) lineages[k] = {name:known(v.name) ? v.name : k, family:v.family, parents:Array.isArray(v.parents) ? v.parents.filter(known) : []};
   for (const r of runs) if (!lineages[r.lin]) lineages[r.lin] = {name:r.lin, family:r.fam, parents:[]};
   const sm = isObj(S.summary) ? S.summary : {}, se = isObj(S.search) ? S.search : {}, fails = {}; for (const f of (Array.isArray(sm.failures) ? sm.failures : [])) fails[f.trial] = f.lesson;
@@ -1831,7 +2523,7 @@ function fromStudy(S){
   const meta = {study:S.study, contributor:S.contributor, objective:S.objective, dataset:S.dataset, evaluation:S.evaluation,
     benchmark_title:known(S.dataset.name) ? String(S.dataset.name).split(/,| \(/)[0] : null,
     search:{method:se.method, budget:se.budget || {}, defaults:(Object.values(recipes)[0] || {}).settings || {}, space:se.training_space},
-    recipes, recipesImplied:implied, summary:{best_trial:sm.best_trial, findings:arr(sm.findings), open_questions:arr(sm.open_questions)}, failures:fails, lineages,
+    recipes, recipesImplied:implied, datasets:datasetsOf(S), summary:{best_trial:sm.best_trial, findings:arr(sm.findings), open_questions:arr(sm.open_questions)}, failures:fails, lineages,
     speed:isObj(S.evaluation.speed_context) ? S.evaluation.speed_context : null,
     counts:{runs:runs.length, models:models.length, families:fam.size, done:runs.filter(r => r.status === "done").length, invalid:runs.filter(r => r.status !== "done").length, traced:models.filter(m => m.tree).length}};
   return {meta, runs, models};
@@ -1840,39 +2532,44 @@ function fromStudy(S){
 /* ----- step 3: review what changed, then publish ----- */
 function exportText(reason){
   const ch = changes(), fv = id => fval(FIELDS.find(f => f.id === id));
-  if (ENTRY.raw && ENTRY.status === "staged-new"){
+  if (ENTRY.raw && (ENTRY.status === "staged-new" || INDEX.site.live)){
     const S = clone(ENTRY.raw); S.study = S.study || {}; S.contributor = S.contributor || {}; S.dataset = S.dataset || {};
     for (const [o, k, id] of [[S.study,"title","title"],[S.study,"question","question"],[S.study,"license","license"],[S.study,"code_url","code_url"],[S.study,"publication","publication"],
       [S.contributor,"orcid","orcid"],[S.contributor,"lab","lab"],[S.contributor,"institution","institution"],[S.dataset,"accession","accession"]]){ if (fv(id)) o[k] = fv(id); }
-    for (const c of ch.result){ const t = S.trials.find(x => x.id === c.run.id); if (t && t.result){ t.result.score = c.after; if (t.result.valid) t.result.valid.mse = c.after; } }
+    for (const c of ch.result){ const t = S.trials.find(x => x.id === c.run.id); if (t && t.result){ t.result.score = c.after; if (isObj(t.result[OBJ.split]) && OBJ.metric in t.result[OBJ.split]) t.result[OBJ.split][OBJ.metric] = c.after; } }
     return JSON.stringify(toExternal(S), null, 1);
   }
   return JSON.stringify({study:META.study.id, base_version:ENTRY.version, reason:reason || null,
     details:ch.detail.map(c => ({field:c.label, from:c.before || null, to:c.after || null})),
-    corrections:ch.result.map(c => ({run:c.run.id, metric:"valid.mse", from:c.before, to:c.after}))}, null, 2);
+    corrections:ch.result.map(c => ({run:c.run.id, metric:OBJ.split + "." + OBJ.metric, from:c.before, to:c.after}))}, null, 2);
 }
 function openReview(){
   openDialog(dlg => {
     const cl = checklist(), ch = changes(), isNew = ENTRY.status === "staged-new", n = ch.detail.length + ch.result.length;
     const reason = h("input",{type:"text",id:"reason",placeholder:ch.result.length ? "Why did these results change?" : "Optional"});
-    const msg = h("p",{class:"fine",style:"color:var(--warn);min-height:1.2em"}), pub = h("button",{class:"btn pri",id:"pubbtn",text:isNew ? "Publish" : "Publish changes"});
+    const msg = h("p",{class:"fine",style:"color:var(--warn);min-height:1.2em"}), pub = h("button",{class:"btn pri",id:"pubbtn",text:INDEX.site.live ? "Download the file" : isNew ? "Publish" : "Publish changes"});
     pub.disabled = cl.block.length > 0 || (!isNew && n === 0);
-    pub.addEventListener("click", () => { const r = reason.value.trim(); if (ch.result.length && !r){ msg.textContent = "Add a reason. Readers see it next to the revised result."; reason.focus(); return; } publish(r); });
+    pub.addEventListener("click", () => { const r = reason.value.trim(); if (ch.result.length && !r){ msg.textContent = "Add a reason. Readers see it next to the revised result."; reason.focus(); return; }
+      if (!INDEX.site.live){ publish(r); return; }
+      const name = downloadStudy(r);   /* the live site has no server: publishing is a pull request */
+      put(dlg, h("h2",{text:"Almost there"}), h("ol",{class:"steps2"}, h("li",null, "The file ", h("span",{class:"mono",text:name}), " is in your downloads."),
+        h("li",null, "Open the ", h("a",{href:`https://github.com/${INDEX.site.repo}/upload/main/studies`,target:"_blank",rel:"noopener",text:"studies folder on GitHub"}), ", drop the file there, and choose to open a pull request."),
+        h("li",null, "A check runs on it. Once a maintainer merges it, the site updates itself.")), h("div",{class:"foot"}, h("button",{class:"btn",text:"Done",onclick:closeDialog}))); });
     const was = v => h("span",{class:"was",style:v ? "" : "text-decoration:none",text:v || "empty"});
     const rows = ch.detail.map(c => h("tr",null, h("td",{text:c.label}), h("td",null, was(c.before)), h("td",{text:c.after || "empty"})))
-      .concat(ch.result.map(c => h("tr",null, h("td",null, `Run ${c.run.n}, validation MSE `, h("span",{class:"pill rev",text:"will be marked revised"})), h("td",null, was(fmt(c.before,4))), h("td",{text:fmt(c.after,4)}))));
+      .concat(ch.result.map(c => h("tr",null, h("td",null, `Run ${c.run.n}, ${lowerFirst(OBJ.label)} `, h("span",{class:"pill rev",text:"will be marked revised"})), h("td",null, was(fmt(c.before,4))), h("td",{text:fmt(c.after,4)}))));
     put(dlg, h("h2",{text:isNew ? "Publish this study" : "Publish your changes"}),
       h("p",{class:"steps",text:isNew ? `${META.counts.runs} runs · ${META.counts.models} architectures` + (blank(META.study.license) ? "" : ` · license ${META.study.license}`) + (ENTRY.fileName ? ` · from ${ENTRY.fileName}` : "") : `Version ${ENTRY.version} → ${ENTRY.version + 1}`}),
       cl.block.length ? h("div",{class:"warnline"}, h("b",{text:"Needed before publishing: "}), cl.block.map(x => x.text).join("; ") + ".") : null,
       n ? h("table",{class:"diff"}, h("tbody",null, rows)) : h("p",{class:"q",text:isNew ? "No edits since the file was staged." : "No changes yet."}),
       h("label",{class:"fld",style:"margin-top:8px"}, ch.result.length ? "Reason for the change, shown to readers" : "Note for the history", reason), msg,
-      h("details",{class:"about",style:"margin:0"}, h("summary",{text:"What publishing does"}),
+      INDEX.site.live ? h("p",{class:"fine",text:"Publishing is a pull request on GitHub. Download the file here, then add it to the studies folder. A check runs on it and a maintainer merges it."}) : h("details",{class:"about",style:"margin:0"}, h("summary",{text:"What publishing does"}),
         h("div",{class:"notes",style:"padding:6px 0 0"},
           h("p",{text:"On the real site, Publish creates a pull request for you and checks run on it. A first deposit from a new account waits for the maintainer's approval once. After that, your deposits and edits go live on their own."}),
           h("p",{text:"Until there is a sign-in service, there are two ways to send it: this command, or a download that you drag onto a GitHub upload page."}),
           h("pre",{class:"cmd",text:"cameo publish " + (ENTRY.fileName || "study.json")}),
           h("p",{text:"In this prototype nothing leaves your browser. Publish only changes what this page shows, and a reload starts over."}))),
-      h("div",{class:"foot"}, h("button",{class:"btn",text:(ENTRY.raw && isNew) ? "Copy the staged JSON" : "Copy the change request",onclick:e=>copyText(exportText(reason.value.trim()), e.target)}),
+      h("div",{class:"foot"}, h("button",{class:"btn",text:(ENTRY.raw && (isNew || INDEX.site.live)) ? "Copy the staged JSON" : "Copy the change request",onclick:e=>copyText(exportText(reason.value.trim()), e.target)}),
         h("button",{class:"btn",text:"Cancel",onclick:closeDialog}), pub));
   });
 }
