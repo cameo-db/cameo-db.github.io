@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CAMEO</title>
 <meta name="description" content="CAMEO is an open catalog of machine-learning experiments: model architectures, training recipes and results, comparable across studies.">
-<meta name="theme-color" content="#0B6B75">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230B6B75'/%3E%3Cpath d='M21.5 11.5a7 7 0 1 0 0 9' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#0C1418">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230C1418'/%3E%3Cellipse cx='16' cy='16' rx='7.6' ry='10' fill='none' stroke='white' stroke-width='2'/%3E%3Cellipse cx='16' cy='16' rx='3.4' ry='5.2' fill='%235CC8D4'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..500&display=swap" rel="stylesheet">
 <style>
 :root{
   /* Layout: benchmark header, then a two-column workbench. Left: linked chart and leaderboard. Right: sticky run inspector. */
@@ -506,16 +506,227 @@ pre.cmd.wrap{white-space:pre-wrap;overflow-wrap:anywhere}
 .citeh{display:flex;align-items:center;justify-content:space-between;font-size:13px}
 .citeh b{font-weight:600}
 button.lk{cursor:pointer;font:inherit;font-size:12.5px;color:var(--accent)} button.lk:hover{border-color:var(--accent)}
-.thsub a{color:var(--accent)}
+.thsub a,.lb .thsub a{color:var(--accent);font-weight:400;text-decoration:underline}
 @media (max-width:700px){ .cmp .rowh{width:120px} .cmptray .hint{display:none} }
+.land{grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:72px;padding:88px 0 72px}
+.land h1{font-size:50px;line-height:1.08;letter-spacing:-.01em;margin:0 0 20px;max-width:15ch}
+.land .lede{font-size:18px;line-height:1.55;max-width:56ch;margin:0 0 28px}
+.land .search{max-width:480px;padding:12px 14px;font-size:15px;margin:0}
+.btn.big{padding:9px 18px;font-size:14.5px;border-radius:8px}
+.land .count{margin-top:28px}
+@media (max-width:980px){.land{grid-template-columns:minmax(0,1fr);gap:36px;padding:40px 0 36px}.land h1{font-size:36px}.ways{grid-template-columns:minmax(0,1fr);gap:28px;padding-top:32px}}
+
+/* ================= design layer =================
+   Direction: a collection catalog. Quiet, cool paper; ink for actions; one teal accent for links and selection;
+   serif display for names of things, mono for labels and identifiers. The one loud element is the field of dots on the front page. */
+:root{
+  --paper:#F4F6F6; --surface:#FFFFFF; --ink:#0C1418; --ink-2:#3B484E; --muted:#5A676D; --line:#D9E0E1; --line-2:#EAEEEE;
+  --accent:#0B6B75; --accent-wash:#E0EFF0; --band-bg:#0C1418; --band-ink:#F1F5F5; --band-muted:#A9B8BC;
+  --font-display:"Newsreader","Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --font-body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0A0F11; --surface:#11181B; --ink:#E8EEEF; --ink-2:#B4C0C4; --muted:#93A1A6; --line:#27333A; --line-2:#1A2327;
+    --accent:#62C6D2; --accent-wash:#11333A; --band-bg:#172226; --band-ink:#EEF3F4; --band-muted:#A3B2B7;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0A0F11; --surface:#11181B; --ink:#E8EEEF; --ink-2:#B4C0C4; --muted:#93A1A6; --line:#27333A; --line-2:#1A2327;
+  --accent:#62C6D2; --accent-wash:#11333A; --band-bg:#172226; --band-ink:#EEF3F4; --band-muted:#A3B2B7;
+}
+body{font:15px/1.55 var(--font-body);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:var(--accent);text-underline-offset:2px}
+.wrap{max-width:1200px;padding:0 28px}
+body.wide .wrap{max-width:1480px}
+h1,h2,h3{text-wrap:balance}
+h1{font-size:40px;line-height:1.08;font-weight:500;letter-spacing:-.012em;margin:0 0 10px}
+.eyebrow{font-family:var(--font-mono);font-size:11.5px;font-weight:500;letter-spacing:.12em;color:var(--accent);margin:0 0 14px}
+.mono{font-size:.9em}
+kbd{font-family:var(--font-mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:0 5px;line-height:18px;background:var(--surface)}
+
+/* ribbon and header */
+.ribbon{background:var(--warn-fill);color:var(--warn);font-size:12.5px;text-align:center;padding:5px 16px}
+.top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--paper) 88%,transparent);-webkit-backdrop-filter:saturate(1.5) blur(12px);backdrop-filter:saturate(1.5) blur(12px);border-bottom:1px solid var(--line)}
+.top .wrap{min-height:62px;gap:10px 30px;padding-top:8px;padding-bottom:8px}
+.brand{display:inline-flex;align-items:center;gap:9px;font-family:var(--font-body);font-weight:600;font-size:14.5px;letter-spacing:.16em}
+.mark{width:22px;height:22px;flex:none}
+.nav{gap:2px}
+.nav a{font-size:14.5px;padding:6px 11px;border-radius:8px;color:var(--ink-2);font-weight:500}
+.nav a:hover{background:var(--line-2);color:var(--ink)}
+.nav a[aria-current="page"]{color:var(--ink);background:none;font-weight:600;box-shadow:inset 0 -2px 0 var(--ink);border-radius:0}
+.topr{margin-left:auto;display:flex;align-items:center;gap:10px}
+.tsw{position:relative;display:flex;align-items:center}
+.tsearch{width:210px;min-height:36px;border-radius:9px;padding:6px 34px 6px 12px;font-size:14px;background:var(--surface)}
+.tsw kbd{position:absolute;right:9px;pointer-events:none}
+.tsearch:focus + kbd{display:none}
+#crumbs{padding:18px 0 0;font-size:13px}
+
+/* buttons, chips, pills */
+.btn{border-radius:8px;padding:6px 12px;font-weight:500;font-size:13.5px}
+.btn.pri{background:var(--ink);border-color:var(--ink);color:var(--paper);font-weight:600}
+.btn.pri:hover{color:var(--paper);filter:none;opacity:.86}
+.top .btn.pri{padding:8px 16px;border-radius:9px;font-size:14px}
+.top .btn.pri[aria-current="page"]{background:var(--accent);border-color:var(--accent)}
+.btn.big{padding:11px 20px;font-size:15px;border-radius:10px}
+.btn.inv{background:var(--band-ink);border-color:var(--band-ink);color:var(--band-bg);font-weight:600}
+.btn.inv:hover{color:var(--band-bg);opacity:.88;border-color:var(--band-ink)}
+.pill.plain{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;background:none;border:1px solid var(--line);color:var(--ink-2);line-height:18px;padding:0 7px}
+.tagb:hover{border-color:var(--accent);color:var(--accent)}
+.fchip{padding:4px 12px;font-size:13px}
+.card{border-radius:12px}
+.stat{border-radius:12px;padding:14px 18px}
+.stat b{font-family:var(--font-display);font-weight:500;font-size:30px;line-height:1.2}
+.search{border-radius:10px;padding:10px 14px;font-size:14.5px;max-width:none;margin:0}
+.search:focus,.tsearch:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.search.big{padding:15px 18px;font-size:16.5px;border-radius:12px;box-shadow:0 1px 0 var(--line-2),0 10px 30px -22px #0008}
+
+/* page heads, toolbars, result lists */
+.page-h{padding:52px 0 26px}
+.page-h h1{font-size:46px}
+.page-h .sub{font-size:17px;color:var(--ink-2);max-width:62ch;margin:0}
+.page-h .links{margin-top:14px}
+.toolbar{display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center}
+.toolbar .search{flex:1 1 320px}
+.tsel{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.tsel select{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:9px 10px;font:inherit;font-size:14px;min-height:42px}
+.facet{margin:14px 0 0}
+.facet .fl{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;min-width:44px;font-weight:500}
+#results{margin-top:26px;padding-bottom:36px}
+.reshead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:0 0 10px}
+.reshead h2,#nres{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:0}
+.empty{color:var(--ink-2);padding:40px 0;font-size:16px}
+.slist{border-top:1px solid var(--line)}
+.srow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 40px;padding:24px 14px;margin:0 -14px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:10px;transition:background-color .12s}
+.srow:hover{background:var(--surface)}
+.srow h3{margin:0;font-weight:400;font-size:inherit}
+.srow-t{font-family:var(--font-display);font-size:24px;line-height:1.2;font-weight:500;color:var(--ink);text-decoration:none;letter-spacing:-.005em}
+.srow:hover .srow-t{text-decoration:underline;text-decoration-thickness:1px}
+.srow-s{color:var(--ink-2);margin:8px 0 0;max-width:72ch;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.srow-m{display:flex;gap:4px 20px;flex-wrap:wrap;color:var(--muted);font-size:13.5px;margin-top:12px}
+.srow-m a{color:var(--ink-2);text-decoration:none;border-bottom:1px solid var(--line)} .srow-m a:hover{color:var(--accent);border-color:var(--accent)}
+.srow .tags{margin-top:12px}
+.srow-side{display:flex;flex-direction:column;align-items:flex-end;gap:10px;min-width:170px;text-align:right}
+.srow-n b{display:block;font-family:var(--font-display);font-weight:500;font-size:32px;line-height:1;font-variant-numeric:tabular-nums}
+.srow-n span{display:block;font-size:12px;color:var(--muted);max-width:250px;margin-top:4px}
+.grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
+.bcard{border-radius:14px;padding:22px 24px;display:flex;flex-direction:column;transition:border-color .12s,transform .12s}
+.bcard:hover{border-color:var(--ink);transform:translateY(-1px)}
+.bc-k{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;min-height:16px}
+.bcard h3{font-family:var(--font-display);font-weight:500;font-size:24px;line-height:1.15;margin:0 0 4px}
+.bcard .m{margin:0;font-size:13.5px}
+.bc-n{margin-top:22px}
+.bc-n b{display:block;font-family:var(--font-display);font-weight:500;font-size:40px;line-height:1;font-variant-numeric:tabular-nums;margin-bottom:6px}
+.bc-n span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:16px}
+.bc-f{margin-top:auto;padding-top:12px;border-top:1px solid var(--line-2);font-size:13px;color:var(--ink-2)}
+.sres{margin:34px 0 0}
+.sres > h2{font-family:var(--font-display);font-weight:500;font-size:26px;margin:0 0 12px;display:flex;align-items:baseline;gap:10px}
+.sres > h2 span{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.more-l{display:inline-block;margin-top:12px;font-weight:600;font-size:14px;text-decoration:none}
+.plist{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.plist a{display:flex;gap:14px;align-items:baseline;padding:12px 0;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.plist span{color:var(--muted);font-size:13.5px}
+.lb th{padding:11px 12px}
+.lb thead th{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:500}
+.cmp thead th{font-family:var(--font-body);font-size:13px;letter-spacing:0;text-transform:none;font-weight:400}
+.cmp tr.sect th{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;font-weight:500}
+.lb td{padding:11px 12px}
+.thb{font-weight:500;letter-spacing:.08em;text-transform:uppercase}
+.hero2{padding:34px 0 6px}
+.hero2 h1{font-size:38px}
+
+/* front page */
+.land{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:64px;align-items:center;padding:76px 0 64px}
+.land h1{font-size:68px;line-height:1.02;letter-spacing:-.022em;font-weight:400;margin:0 0 22px;max-width:none}
+.land h1 em{font-style:italic;color:var(--accent)}
+.land .lede{font-size:18.5px;line-height:1.55;color:var(--ink-2);max-width:54ch;margin:0 0 30px}
+.land .search{max-width:520px;width:100%}
+.tries{display:flex;gap:6px 10px;flex-wrap:wrap;align-items:baseline;margin:14px 0 0;font-size:13.5px;color:var(--muted)}
+.tries a{color:var(--ink-2);text-decoration:none;border-bottom:1px solid var(--line)} .tries a:hover{color:var(--accent);border-color:var(--accent)}
+.land .count{margin:34px 0 0;font-family:var(--font-mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.field{margin:0}
+.field-h{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;color:var(--muted);font-size:13.5px}
+.field-h b{font-family:var(--font-display);font-weight:400;font-size:44px;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
+.field-c{position:relative;min-height:180px}
+.field-c canvas{display:block;width:100%}
+.field figcaption{margin-top:14px;font-size:13px;color:var(--muted)}
+.doors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.door{display:flex;flex-direction:column;padding:34px 34px 30px;color:inherit;text-decoration:none;transition:background-color .12s}
+.door + .door{border-left:1px solid var(--line)}
+.door:hover{background:var(--surface)}
+.door-n{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.door h2{font-family:var(--font-display);font-weight:500;font-size:30px;line-height:1.12;margin:14px 0 10px;letter-spacing:-.008em}
+.door p{color:var(--ink-2);margin:0 0 22px;font-size:15px;max-width:34ch}
+.door-l{margin-top:auto;font-weight:600;font-size:14px;color:var(--accent)}
+.door:hover .door-l{text-decoration:underline}
+.band{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:28px 56px;align-items:center;background:var(--band-bg);color:var(--band-ink);border-radius:18px;padding:48px 52px;margin:64px 0 8px}
+.band h2{font-family:var(--font-display);font-weight:400;font-size:34px;line-height:1.14;margin:0 0 12px;max-width:24ch;letter-spacing:-.01em}
+.band p{color:var(--band-muted);margin:0;max-width:60ch;font-size:15.5px}
+.band-a{display:flex;flex-direction:column;gap:14px;align-items:flex-start}
+.band-l{color:var(--band-ink);font-size:14px;text-decoration:none;border-bottom:1px solid var(--band-muted)}
+
+/* deposit */
+.dsteps{display:flex;flex-direction:column;max-width:860px;padding-bottom:40px}
+.dstep{display:grid;grid-template-columns:64px minmax(0,1fr);gap:0 12px;padding:30px 0;border-top:1px solid var(--line)}
+.dstep-n{font-family:var(--font-display);font-size:44px;line-height:1;color:var(--accent);font-weight:400}
+.dstep-b h2{font-family:var(--font-display);font-weight:500;font-size:26px;margin:4px 0 8px}
+.dstep-b h3{font-size:14px;font-weight:600;margin:22px 0 4px}
+.dstep-b > p{color:var(--ink-2);margin:0 0 14px;max-width:66ch}
+.dstep-b a:not(.btn){color:var(--accent)}
+.kitrow{margin:0 0 4px}
+.starlist{list-style:none;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:8px;font-size:14px;color:var(--ink-2)}
+.starlist li{display:grid;grid-template-columns:86px minmax(0,1fr);gap:10px;align-items:baseline}
+.drop{border-radius:14px;padding:34px 22px;background:var(--surface)}
+#depout{margin-top:6px}
+
+/* about */
+.about-w{max-width:72ch;padding-bottom:40px}
+.about-s{scroll-margin-top:90px}
+.about-s h2{font-family:var(--font-display);font-weight:500;font-size:26px;margin:34px 0 8px}
+.about-s .card{margin:12px 0}
+
+/* footer */
+.foot-site{margin-top:72px;padding:44px 0 40px;font-size:13.5px}
+.foot-site .wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr);gap:28px 56px;align-items:start}
+.fbrand b{display:block;font-family:var(--font-body);font-weight:600;letter-spacing:.16em;font-size:14px;margin:0 0 8px;color:var(--ink)}
+.fbrand p{margin:0;max-width:38ch;color:var(--muted)}
+.fnav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.foot-site .fcol{display:flex;flex-direction:column;gap:8px}
+.fcol h2{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:0 0 4px}
+.fleg{grid-column:1/-1;margin:14px 0 0;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+
+@media (max-width:980px){
+  .land{grid-template-columns:minmax(0,1fr);gap:44px;padding:44px 0 44px}
+  .land h1{font-size:46px}
+  .doors{grid-template-columns:minmax(0,1fr)} .door + .door{border-left:0;border-top:1px solid var(--line)} .door{padding:28px 4px}
+  .band{grid-template-columns:minmax(0,1fr);padding:34px 28px;margin-top:44px}
+  .band h2{font-size:28px}
+  .foot-site .wrap{grid-template-columns:minmax(0,1fr)}
+  .tsearch{display:block;width:150px}
+}
+@media (max-width:700px){
+  .wrap{padding:0 18px}
+  .page-h{padding:34px 0 20px} .page-h h1{font-size:36px} h1{font-size:32px}
+  .land h1{font-size:40px}
+  .srow{grid-template-columns:minmax(0,1fr);padding:20px 10px;margin:0 -10px}
+  .srow-side{flex-direction:row;align-items:center;justify-content:flex-start;text-align:left;min-width:0;gap:16px}
+  .srow-n b{font-size:24px;display:inline} .srow-n span{display:inline;margin-left:8px}
+  .dstep{grid-template-columns:40px minmax(0,1fr)} .dstep-n{font-size:32px}
+  .fnav{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .top .wrap{gap:4px 14px} .tsw{display:none} .nav{order:3;width:100%;margin:0 -8px} .nav a{padding:6px 8px}
+  .starlist li{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){ .srow,.bcard,.door{transition:none} .bcard:hover{transform:none} }
 </style>
 </head>
 <body>
 <a class="skip" href="#app">Skip to content</a>
+<div class="ribbon" id="protolabel" role="region" aria-label="About this copy of the site" hidden></div>
 <header class="top"><div class="wrap">
-  <a class="brand" href="#/" id="homelink">CAMEO</a>
-  <nav class="nav" aria-label="Site"><a href="#/browse" data-nav="browse">Browse</a><a href="#/browse/benchmarks" data-nav="bench">Benchmarks</a><a href="#/agents" data-nav="agents">For agents</a><a href="#/about" data-nav="about">About</a></nav>
-  <span class="topr"><input class="tsearch" id="tsearch" type="search" placeholder="Search" aria-label="Search the catalog"><button class="btn" id="depbtn" type="button">Deposit a study</button><span class="proto" id="protolabel"></span></span>
+  <a class="brand" href="#/" id="homelink"><svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="8.6" ry="10.6" fill="none" stroke="currentColor" stroke-width="1.6"/><ellipse cx="12" cy="12" rx="4.4" ry="6.2" fill="var(--accent)"/></svg><span>CAMEO</span></a>
+  <nav class="nav" aria-label="Site"><a href="#/benchmarks" data-nav="bench">Benchmarks</a><a href="#/studies" data-nav="studies">Studies</a><a href="#/models" data-nav="models">Models</a><a href="#/about" data-nav="about">About</a></nav>
+  <span class="topr"><label class="tsw"><span class="vh">Search the catalog</span><input class="tsearch" id="tsearch" type="search" placeholder="Search"><kbd aria-hidden="true">/</kbd></label><a class="btn pri" id="depbtn" href="#/deposit" data-nav="deposit">Deposit</a></span>
 </div></header>
 <div id="banner"></div>
 <nav class="wrap" aria-label="Breadcrumb"><div class="crumbs" id="crumbs"></div></nav>
@@ -582,6 +793,8 @@ function metricInfo0(id){
   if (BASE[id]) return [BASE[id][0], BASE[id][0], BASE[id][1]];
   const m = /^(.+)_([a-z0-9]+)$/.exec(id);
   if (m && BASE[m[2]]){ const n = `${BASE[m[2]][0]} (${m[1].replace(/_/g, " ")})`; return [n, n, BASE[m[2]][1]]; }
+  const m2 = /^([a-z0-9]+)_(.+)$/.exec(id);
+  if (m2 && BASE[m2[1]]){ const n = `${BASE[m2[1]][0]} (${m2[2].replace(/_/g, " ")})`; return [n, n, BASE[m2[1]][1]]; }
   const n = id.replace(/_/g, " "); return [n, n, /mse|mae|loss|err/i.test(id) ? "low" : "high"];
 }
 let BM = null, UNIT = "examples";
@@ -595,7 +808,10 @@ function setupObjective(){
   const raw = String(known(o.metric) ? o.metric : known(ev.primary_metric) ? ev.primary_metric : "score"), split0 = String(known(o.split) ? o.split : known(ev.selection_split) ? ev.selection_split : "valid").toLowerCase();
   const word = known(o.direction) ? o.direction : ev.direction, stripped = raw.replace(/^(val|valid|validation|test|train)_/i, ""), keys = new Set();
   for (const r of RUNS) for (const k of Object.keys(r.v || {}).concat(Object.keys(r.t || {}))) keys.add(k);
-  const metric = keys.has(raw) ? raw : stripped, split = /^val/.test(split0) ? "valid" : split0, info = metricInfo(metric), sp = SPLIT_NAME[split] || (split[0].toUpperCase() + split.slice(1));
+  const split = /^val/.test(split0) ? "valid" : split0, own = RUNS.filter(r => r.score != null && r.kind !== "reported"), bag = r => (split === "test" ? r.t : r.v) || {};
+  /* a file may call its objective just "score": name it when every run's score equals one of its recorded metrics */
+  const same = keys.has(raw) || keys.has(stripped) || own.length < 2 ? null : [...keys].find(k => own.every(r => typeof bag(r)[k] === "number" && Math.abs(bag(r)[k] - r.score) < 1e-9));
+  const metric = keys.has(raw) ? raw : same || stripped, info = metricInfo(metric), sp = SPLIT_NAME[split] || (split[0].toUpperCase() + split.slice(1));
   OBJ = {metric, split, dir:word === "maximize" ? -1 : word === "minimize" ? 1 : (info[2] === "low" ? 1 : -1), label:sp + " " + info[1], short:(split === "valid" ? "Val" : sp) + " " + info[1]};
 }
 function applyUnit(){ Q.speed.name = `Inference speed (${UNIT}/s)`; Q.speed.short = unitLabel(UNIT) + "/s"; Q.speed.val = v => fmtInt(v) + " " + UNIT + "/s"; }
@@ -631,9 +847,12 @@ const curAxes = () => state.tab === "history" ? {x:resolveAxis(state.hx), y:reso
 let BUNDLED = null, WIRED = false;
 const clone = o => JSON.parse(JSON.stringify(o));
 function siteFoot(){
-  const repo = "https://github.com/" + INDEX.site.repo, a = (href, t, out) => h("a", out ? {href, target:"_blank", rel:"noopener", text:t} : {href, text:t});
-  put(document.getElementById("sitefoot"), h("div",null, h("b",{text:"CAMEO"}), "Catalog of Architecture Metadata and Experimental Outcomes"),
-    h("nav",{"aria-label":"Footer"}, a("#/browse","Browse"), a("#/browse/benchmarks","Benchmarks"), a("#/agents","For agents"), a("#/about","About"), a("#/about/cite","Cite"), a(repo,"GitHub",true)));
+  const repo = "https://github.com/" + INDEX.site.repo, a = (href, t, out) => h("a", out ? {href, target:"_blank", rel:"noopener", text:t} : {href, text:t}), col = (t, ...k) => h("div",{class:"fcol"}, h("h2",{text:t}), k);
+  put(document.getElementById("sitefoot"), h("div",{class:"fbrand"}, h("b",{text:"CAMEO"}), h("p",{text:"Catalog of Architecture Metadata and Experimental Outcomes. An open record of machine-learning experiments."})),
+    h("nav",{"aria-label":"Footer",class:"fnav"}, col("Explore", a("#/benchmarks","Benchmarks"), a("#/studies","Studies"), a("#/models","Models"), a("#/compare","Compare runs")),
+      col("Contribute", a("#/deposit","Deposit a study"), a(KITF,"Instructions for agents"), a(repo,"GitHub",true)),
+      col("About", a("#/about","What CAMEO is"), a("#/about/cite","How to cite"), a("#/about/data","Get the data"))),
+    h("p",{class:"fleg",text:"The site and its code are under the MIT license. Each study carries its own open license."}));
 }
 async function load(){
   try{ [RULES, INDEX] = await Promise.all([getJSON("rules.json"), getJSON("index.json")]); }
@@ -647,14 +866,19 @@ const STUDIES = {};
 const getJSON = async f => { const r = await fetch(f); if (!r.ok) throw new Error(f + " returned " + r.status); return r.json(); };
 function parseHash(){
   const raw = location.hash.replace(/^#\/?/, ""), at = raw.indexOf("?"), path = decodeURIComponent(at < 0 ? raw : raw.slice(0, at)).split("/"), qs = new URLSearchParams(at < 0 ? "" : raw.slice(at + 1));
+  const list = view => ({view, has:at >= 0, q:qs.get("q") || "", tags:qs.get("tag") || "", stars:qs.get("star") || "", sort:qs.get("sort") || "", bench:qs.get("bench") || ""});
   if (path[0] === "b" && path[1]) return {view:"bench", id:path[1]};
   if (path[0] === "s" && path[1]) return {view:"study", id:path[1], run:path.slice(2).join("/") || null};
   if (path[0] === "d" && path[1]) return {view:"dep", id:path[1]};
-  if (path[0] === "browse") return {view:"browse", sub:["benchmarks","models"].includes(path[1]) ? path[1] : "studies", has:at >= 0, q:qs.get("q") || "", tags:qs.get("tag") || "", stars:qs.get("star") || ""};
+  if (path[0] === "studies") return list("studies");
+  if (path[0] === "benchmarks") return list("benchmarks");
+  if (path[0] === "models") return list("models");
+  if (path[0] === "browse") return list(path[1] === "benchmarks" ? "benchmarks" : path[1] === "models" ? "models" : "studies");   /* older links */
+  if (path[0] === "search") return {view:"search", q:qs.get("q") || ""};
   if (path[0] === "about") return {view:"about", sub:path[1] || null};
-  if (path[0] === "agents") return {view:"agents"};
+  if (path[0] === "deposit" || path[0] === "agents") return {view:"deposit"};
   if (path[0] === "compare") return {view:"compare", items:qs.getAll("r").map(x => { const i = x.indexOf("~"); return i > 0 ? {study:x.slice(0, i), run:x.slice(i + 1)} : null; }).filter(Boolean).slice(0, 4)};
-  return {view:"home"};
+  return path[0] ? {view:"notfound"} : {view:"home"};
 }
 function setCrumbs(parts){
   const el = document.getElementById("crumbs"), out = [];
@@ -671,133 +895,213 @@ function weightLink(w){
   return null;
 }
 const madeUp = x => x.made_up ? h("span",{class:"pill bad",title:"Every number in this study is made up, so the demo has more than one study",text:"made-up data"}) : null;
+const TITLES = {studies:"Studies", benchmarks:"Benchmarks", models:"Models", about:"About", deposit:"Deposit", search:"Search", compare:"Compare", notfound:"Not found"};
 async function route(){
-  const r = parseHash(); ROUTE = r; window.scrollTo(0, 0); closeDialog();
-  document.title = r.view === "browse" ? (r.sub === "benchmarks" ? "Benchmarks" : r.sub === "models" ? "Models" : "Browse") + " · CAMEO" : r.view === "about" ? "About · CAMEO" : "CAMEO";
-  document.querySelectorAll(".nav a").forEach(a => { const k = a.dataset.nav, on = (k === "about" && r.view === "about") || (k === "agents" && r.view === "agents") || (k === "browse" && ((r.view === "browse" && r.sub !== "benchmarks") || r.view === "dep")) || (k === "bench" && (r.view === "bench" || (r.view === "browse" && r.sub === "benchmarks")));
-    if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  const r = parseHash(); ROUTE = r; window.scrollTo(0, 0); closeDialog(); if (FIELD_STOP){ FIELD_STOP(); FIELD_STOP = null; }
+  document.title = TITLES[r.view] ? TITLES[r.view] + " · CAMEO" : "CAMEO";
+  document.body.classList.toggle("wide", ["study","bench","compare"].includes(r.view)); document.body.classList.toggle("at-home", r.view === "home");
+  const here = {bench:["bench","benchmarks"], studies:["studies","study","dep"], models:["models"], about:["about"], deposit:["deposit"]};
+  document.querySelectorAll("[data-nav]").forEach(a => { if ((here[a.dataset.nav] || []).includes(r.view)) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   renderTray();
   if (r.view === "study"){
     if (ENTRY && ENTRY.id === r.id && ENTRY.status === "published" && document.getElementById("insp")){ if (r.run && byId[r.run] && r.run !== state.sel) select(r.run, true); return; }
     await openStudy(r.id);
   } else if (r.view === "bench") await openBench(r.id);
-  else if (r.view === "browse") openBrowse(r);
+  else if (r.view === "studies") openStudies(r);
+  else if (r.view === "benchmarks") openBenchmarks(r);
+  else if (r.view === "models") openModels(r);
+  else if (r.view === "search") await openSearch(r);
   else if (r.view === "about") openAbout(r.sub);
-  else if (r.view === "agents") openAgents();
+  else if (r.view === "deposit") openDepositPage();
   else if (r.view === "compare") await openCompare(r);
   else if (r.view === "dep") openDepositor(r.id);
+  else if (r.view === "notfound"){ leave(); setCrumbs([]); put(document.getElementById("app"), pageHead(null, "This page does not exist", "The address may be mistyped, or the page may have moved."), h("p",{class:"empty"}, h("a",{href:"#/",text:"Go to the front page"}), " · ", h("a",{href:"#/studies",text:"Browse studies"}))); }
   else openHome();
 }
 const leave = () => { document.getElementById("banner").replaceChildren(); ENTRY = {status:"none", history:[]}; };
 const pl = (v, one, many) => fmtInt(v) + " " + (v === 1 ? one : many);
 const unitLabel = u => !u ? "Examples" : u === "seq" ? "Seq" : u[0].toUpperCase() + u.slice(1);
-const benchCard = b => h("a",{class:"bcard",href:"#/b/" + b.id}, h("h3",{text:b.title}), h("div",{class:"m",text:b.task}),
-  h("div",{class:"big",text:fmt(b.best,3)}), h("div",{class:"m",text:`best ${b.metric_label} · ${pl(b.studies,"study","studies")} · ${fmtInt(b.models)} models`}),
-  h("div",{class:"tags"}, [b.domain, b.task_type].filter(Boolean).map(t => h("span",{class:"pill plain",text:t}))));
-function studyTable(St, full){
-  const heads = full ? ["Study","Depositor","Benchmark","Runs","Models","Star","Added"] : ["Study","Depositor","Benchmark","Runs","Star","Added"];
-  return h("table",{class:"lb"}, h("thead",null, h("tr",null, heads.map(t => h("th",{class:/Runs|Models/.test(t) ? "num" : "",text:t})))),
-    h("tbody",null, St.map(x => h("tr",{class:"go",onclick:e=>{ if (!e.target.closest("a,button")) location.hash = "#/s/" + x.id; }},
-      h("td",null, h("a",{href:"#/s/" + x.id,text:x.title || "Untitled study"}), " ", madeUp(x),
-        full && (x.tags || []).length ? h("div",{class:"tags"}, x.tags.map(t => h("button",{class:"pill plain tagb",title:"Show studies with this tag",text:t,onclick:()=>{ const to = "#/browse?tag=" + encodeURIComponent(t.toLowerCase()); if (location.hash === to) route(); else location.hash = to; }}))) : null),
-      h("td",null, x.depositor ? h("a",{class:"plainlink",href:"#/d/" + encodeURIComponent(x.depositor_slug),title:"All studies by this depositor",text:x.depositor}) : "–", x.lab ? " · " + x.lab : ""), h("td",null, x.benchmark ? [h("a",{class:"plainlink",href:"#/b/" + x.benchmark,text:x.benchmark_title}), (x.benchmarks || []).length > 1 ? h("span",{class:"by",title:"On " + x.benchmarks.length + " benchmarks",text:" +" + (x.benchmarks.length - 1)}) : null] : "–"),
-      h("td",{class:"num"}, fmtInt(x.runs), x.reported ? h("div",{class:"thsub",title:"Results copied from papers, not run by the depositor",text:`+${x.reported} reported`}) : null), full ? h("td",{class:"num",text:fmtInt(x.models)}) : null, h("td",null, starPill(x.star)), h("td",{text:x.created || ""})))));
+const benchCard = b => h("a",{class:"bcard",href:"#/b/" + b.id},
+  h("div",{class:"bc-k",text:[b.domain, b.task_type].filter(Boolean).join(" · ")}), h("h3",{text:b.title}), h("p",{class:"m",text:b.task}),
+  h("div",{class:"bc-n"}, h("b",{text:fmt(b.best,3)}), h("span",{text:"best " + b.metric_label + (b.best_reported ? ", reported" : "")})),
+  h("div",{class:"bc-f",text:`${pl(b.studies,"study","studies")} · ${pl(b.models,"model","models")}`}));
+const pageHead = (eyebrow, title, sub, ...extra) => h("section",{class:"page-h"}, eyebrow ? h("div",{class:"eyebrow",text:eyebrow}) : null, h("h1",{text:title}), sub ? h("p",{class:"sub",text:sub}) : null, extra);
+const goTo = to => { if (location.hash === to) route(); else location.hash = to; };
+/* one study per row: what it is, who deposited it, how big it is, and its headline number */
+function studyList(St){
+  return h("div",{class:"slist"}, St.map(x => { const b = INDEX.benchmarks.find(y => y.id === x.benchmark);
+    return h("article",{class:"srow",onclick:e=>{ if (!e.target.closest("a,button")) location.hash = "#/s/" + x.id; }},
+      h("div",{class:"srow-main"},
+        h("h3",null, h("a",{class:"srow-t",href:"#/s/" + x.id,text:x.title || "Untitled study"}), " ", madeUp(x)),
+        x.summary ? h("p",{class:"srow-s",text:x.summary}) : null,
+        h("div",{class:"srow-m"},
+          x.depositor ? h("span",null, h("a",{href:"#/d/" + encodeURIComponent(x.depositor_slug),title:"All studies by this depositor",text:x.depositor}), x.lab ? " · " + x.lab : "") : null,
+          x.benchmark ? h("span",null, h("a",{href:"#/b/" + x.benchmark,title:"The leaderboard this study is on",text:x.benchmark_title}), (x.benchmarks || []).length > 1 ? ` +${x.benchmarks.length - 1}` : "") : null,
+          h("span",{text:[x.runs || !x.reported ? pl(x.runs,"run","runs") : null, x.reported ? pl(x.reported,"reported result","reported results") : null, pl(x.models,"model","models")].filter(Boolean).join(" · ")}),
+          x.created ? h("span",{text:x.created}) : null),
+        (x.tags || []).length ? h("div",{class:"tags"}, x.tags.map(t => h("button",{class:"pill plain tagb",type:"button",title:"Show studies with this tag",text:t,onclick:()=>goTo("#/studies?tag=" + encodeURIComponent(t.toLowerCase()))}))) : null),
+      h("div",{class:"srow-side"}, starPill(x.star), x.best != null && b ? h("div",{class:"srow-n"}, h("b",{text:fmt(x.best,3)}), h("span",{text:"best " + b.metric_label})) : null)); }));
 }
-/* ---------- landing: what this is, what you can do with it, how it works ---------- */
+/* ---------- landing: what CAMEO is, the catalog itself, and the three ways in ---------- */
+let FIELD_STOP = null;
 function openHome(){
   leave(); setCrumbs([]); const T = INDEX.totals;
-  const q = h("input",{class:"search",type:"search",id:"homeq",placeholder:"Search studies, benchmarks, model families, depositors…","aria-label":"Search the catalog"});
-  q.addEventListener("keydown", e => { if (e.key === "Enter") location.hash = "#/browse?q=" + encodeURIComponent(q.value.trim()); });
-  const what = [["Find what has been tried","Search by task, dataset, model family or depositor, and filter by tag.","#/browse","Browse studies"],
-    ["Compare across studies","One leaderboard per benchmark. Pick any runs to see their results, data, training and model side by side.","#/browse/benchmarks","See benchmarks"],
-    ["Rebuild any model","Open a run to get its model code, settings and training recipe. Each entry carries a star for how complete it is.",INDEX.studies[0] ? "#/s/" + INDEX.studies[0].id : "#/browse","Open a study"],
-    ["Deposit your own","Give your training loop, or an agent, one instructions file. Check the output and add it. Your name stays on every result.","#/agents","Get the instructions"]];
-  const steps = [["Run experiments","A person or an agentic loop trains models, in any field."],["Write one file",null],
-    ["Check and deposit","A checker says what is missing. The file is added by pull request. Partial entries are welcome."],["Use it","Browse, compare on leaderboards, and rebuild any run."]];
-  const fb = INDEX.benchmarks.slice().sort((a, c) => c.models - a.models)[0];
-  const fig = fb ? h("div",{class:"herofig",id:"herofig"}, h("div",{class:"hf-h"}, h("b",{text:fb.title}), h("span",{text:`${fmtInt(fb.models)} models from ${pl(fb.studies,"study","studies")}`})), h("div",{class:"hf-wait",text:"Loading the chart…"})) : null;
+  const q = h("input",{class:"search big",type:"search",id:"homeq",placeholder:"Search models, studies, benchmarks, people","aria-label":"Search the catalog"});
+  q.addEventListener("keydown", e => { if (e.key === "Enter" && q.value.trim()) location.hash = "#/search?q=" + encodeURIComponent(q.value.trim()); });
+  /* a few real things to search for, taken from the catalog itself */
+  const real = INDEX.studies.some(x => !x.made_up) ? INDEX.studies.filter(x => !x.made_up) : INDEX.studies, cnt = {}, fam = {};
+  for (const x of real){ for (const t of (x.tags || [])) cnt[t] = (cnt[t] || 0) + 1; for (const f of (x.families || [])) if (f !== "baseline" && f !== "unknown") fam[f] = (fam[f] || 0) + 1; }
+  const top = (o, n) => Object.keys(o).sort((a, c) => o[c] - o[a] || a.localeCompare(c)).slice(0, n), tries = top(cnt, 2).concat(top(fam, 2)).map(t => t.toLowerCase());
+  const cv = h("canvas",{id:"fieldcv",role:"img","aria-label":"Every model in the catalog that has a result, drawn as one dot each"}), tip = h("div",{class:"tip",id:"fieldtip"}), fn = h("b",{id:"fieldn",text:"–"});
+  const field = h("figure",{class:"field",id:"field"}, h("div",{class:"field-h"}, fn, h("span",{text:"models with a result, each one a dot"})),
+    h("div",{class:"field-c"}, cv, tip), h("figcaption",null, "Bigger dots have more parameters. Point at one to see it. ", h("a",{href:"#/models",text:"List them all"})));
+  const doors = [["Benchmarks","Which model is best at a task?","One leaderboard for each dataset and metric, shared by every study that used it.", pl(T.benchmarks,"leaderboard","leaderboards"), "#/benchmarks"],
+    ["Studies","What has been tried?","Each deposited experiment in full: every run, what it changed, and how it scored.", pl(T.studies,"study","studies") + " · " + pl(T.runs,"run","runs"), "#/studies"],
+    ["Models","How was it built?","Every architecture with its code, its size and its results, to compare or rebuild.", "Models", "#/models"]];
   put(document.getElementById("app"),
-    h("section",{class:"land"}, h("div",{class:"land-t"}, h("div",{class:"eyebrow",text:"Catalog of Architecture Metadata and Experimental Outcomes"}),
-      h("h1",{text:"See what has been tried, compare results across studies, and rebuild any model."}),
-      h("p",{class:"lede",text:"CAMEO is an open catalog of machine-learning experiments in any field. Each entry is one file that holds the models, how they were trained and what they scored, deposited by the people and agents who ran them."}),
-      q, h("p",{class:"count",id:"totals",text:[pl(T.studies,"study","studies"), pl(T.benchmarks,"benchmark","benchmarks"), pl(T.models,"model","models"), pl(T.runs,"training run","training runs")].join(" · ")})), fig),
-    h("h2",{class:"sec-h",text:"What you can do"}), h("div",{class:"grid what"}, what.map(([t, d, href, cta]) => h("a",{class:"bcard",href}, h("h3",{text:t}), h("div",{class:"m",text:d}), h("div",{class:"cta",text:cta + " →"})))),
-    h("h2",{class:"sec-h",text:"How it works"}),
-    h("div",{class:"flowrow"}, steps.map(([t, d], i) => h("div",{class:"fstep"}, h("span",{class:"n","aria-hidden":"true",text:String(i + 1)}), h("b",{text:t}),
-      d ? h("p",{text:d}) : [h("p",null, h("span",{class:"mono",text:"study.json"}), " has four parts:"), h("div",{class:"tags"}, ["experiment","models","training","runs"].map(x => h("span",{class:"pill tie",text:x})))]))),
-    h("h2",{class:"sec-h"}, "Benchmarks", h("a",{href:"#/browse/benchmarks",text:"All benchmarks"})),
-    INDEX.benchmarks.length ? h("div",{class:"grid"}, INDEX.benchmarks.slice(0, 6).map(b => benchCard(b))) : h("p",{class:"q",text:"No benchmarks yet."}),
-    h("h2",{class:"sec-h"}, "Recent studies", h("a",{href:"#/browse",text:"Browse all"})),
-    INDEX.studies.length ? h("div",{class:"card scrollx",tabindex:"0",role:"region","aria-label":"Recent studies"}, studyTable(INDEX.studies.slice(0, 5), false)) : h("p",{class:"q",text:"No studies yet. Use Deposit a study to add the first."}));
-  /* a real chart from the catalog, so the first screen shows what is inside */
-  if (fb) getJSON("boards/" + fb.id + ".json").then(B => {
-    if (ROUTE.view !== "home" || !document.body.contains(fig)) return;
-    const st = INDEX.studies.filter(x => (x.benchmarks || [x.benchmark]).includes(fb.id)), col = {}; st.forEach((x, i) => { col[x.id] = `var(--s${(i % 3) + 1})`; });
-    const ch = boardChart(B, col, Math.max(320, fig.clientWidth - 30), 240); if (!ch){ fig.remove(); return; }
-    put(fig, fig.firstChild, st.length > 1 ? h("div",{class:"legend2",style:"margin:0 0 4px;font-size:12.5px"}, st.map(x => h("span",null, h("span",{class:"dot",style:"background:" + col[x.id]}), x.title || "Untitled study"))) : null,
-      ch, h("a",{class:"cta",href:"#/b/" + fb.id,text:"Open the leaderboard →"}));
-  }).catch(() => { fig.remove(); });
+    h("section",{class:"land"}, h("div",{class:"land-t"},
+        h("div",{class:"eyebrow",text:"Catalog of Architecture Metadata and Experimental Outcomes"}),
+        h("h1",null, "Machine-learning experiments, ", h("em",{text:"on the record."})),
+        h("p",{class:"lede",text:"CAMEO is an open database of what has been tried. It keeps each model's code, how it was trained and what it scored, with credit to the people and agents who ran it."}),
+        q, tries.length ? h("div",{class:"tries"}, h("span",{text:"Try"}), tries.map(t => h("a",{href:"#/search?q=" + encodeURIComponent(t),text:t}))) : null,
+        ), field),
+    h("section",{class:"doors","aria-label":"Three ways in"}, doors.map(([t, ask, d, n, href]) => h("a",{class:"door",href}, h("span",{class:"door-n",id:"door-" + t.toLowerCase(),text:n}), h("h2",{text:ask}), h("p",{text:d}), h("span",{class:"door-l",text:t + " →"})))),
+    h("section",{class:"band"}, h("div",null, h("h2",{text:"Your training loop already has the results. Put them on the record."}),
+        h("p",{text:"Hand your loop, or any coding agent, one instructions file. It writes each run as it finishes. You check the file and add it, with your name on every result."})),
+      h("div",{class:"band-a"}, h("a",{class:"btn inv big",href:"#/deposit",text:"How to deposit"}), h("a",{class:"band-l",href:"#/about",text:"What an entry holds →"}))));
+  const start = M => { if (ROUTE.view !== "home" || !document.body.contains(cv)) return;
+    const seen = new Set(), rows = M.filter(r => { const k = r.study + "|" + r.run; if (seen.has(k)) return false; seen.add(k); return true; }).sort((a, c) => (a.params || 0) - (c.params || 0));
+    fn.textContent = fmtInt(rows.length); { const d = document.getElementById("door-models"); if (d) d.textContent = pl(rows.length, "model with a result", "models with a result"); } if (FIELD_STOP) FIELD_STOP(); FIELD_STOP = drawField(cv, tip, rows); };
+  if (MODELS_ALL) start(MODELS_ALL); else getJSON("models.json").then(m => { MODELS_ALL = m; start(m); }).catch(() => field.remove());
 }
-/* ---------- browse: search, tags, filters ---------- */
-const BROWSE = {q:"", tags:new Set(), repro:new Set(), sub:"studies", more:false};
+/* the catalog as a field of dots: one per model, sized by parameter count. Decorative, but every dot is real and opens its run. */
+function drawField(cv, tip, rows){
+  const box = cv.parentNode, n = rows.length, ctx = cv.getContext("2d"), still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const lp = rows.map(r => r.params > 0 ? Math.log10(r.params) : null), kn = lp.filter(v => v != null).sort((a, c) => a - c), lo = kn.length ? kn[Math.floor((kn.length - 1) * 0.04)] : 0, hi = kn.length ? kn[Math.ceil((kn.length - 1) * 0.96)] : 1;
+  let W = 0, H = 0, cols = 1, cell = 1, hot = -1, raf = 0, t0 = 0, ink = "#000", acc = "#000";
+  const rad = i => lp[i] == null ? cell * 0.07 : cell * (0.07 + 0.37 * Math.pow(hi > lo ? Math.max(0, Math.min(1, (lp[i] - lo) / (hi - lo))) : 0.5, 1.5)), pos = i => [(i % cols + 0.5) * cell, (Math.floor(i / cols) + 0.5) * cell];
+  const paint = t => { const dpr = window.devicePixelRatio || 1; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    for (let i = 0; i < n; i++){ const k = Math.max(0, Math.min(1, t * 1.7 - (i / n) * 0.7)); if (k <= 0 || i === hot) continue; const [x, y] = pos(i);
+      ctx.beginPath(); ctx.arc(x, y, rad(i) * (0.4 + 0.6 * k), 0, 6.2832); ctx.fillStyle = ink; ctx.globalAlpha = 0.86 * k; ctx.fill(); }
+    ctx.globalAlpha = 1; if (hot >= 0){ const [x, y] = pos(hot); ctx.beginPath(); ctx.arc(x, y, rad(hot), 0, 6.2832); ctx.fillStyle = acc; ctx.fill(); ctx.beginPath(); ctx.arc(x, y, rad(hot) + 4, 0, 6.2832); ctx.strokeStyle = acc; ctx.lineWidth = 1.5; ctx.stroke(); } };
+  const size = () => { W = box.clientWidth; if (!W) return; const target = Math.min(380, Math.max(180, W * 0.66)); cols = Math.max(6, Math.round(Math.sqrt(n * W / target))); cell = W / cols; H = Math.ceil(Math.ceil(n / cols) * cell);
+    const dpr = window.devicePixelRatio || 1, cs = getComputedStyle(document.documentElement); cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.height = H + "px"; ink = cs.getPropertyValue("--ink").trim(); acc = cs.getPropertyValue("--accent").trim(); };
+  const frame = now => { if (!t0) t0 = now; const t = Math.min(1, (now - t0) / 900); paint(t); if (t < 1) raf = requestAnimationFrame(frame); };
+  const at = e => { const b = cv.getBoundingClientRect(), i = Math.floor((e.clientY - b.top) / cell) * cols + Math.floor((e.clientX - b.left) / cell); return i >= 0 && i < n && e.clientX - b.left < cols * cell ? i : -1; };
+  const move = e => { const i = at(e); if (i === hot) return; hot = i; cancelAnimationFrame(raf); paint(1); cv.style.cursor = i < 0 ? "default" : "pointer";
+    if (i < 0){ tip.style.display = "none"; return; } const r = rows[i], [x, y] = pos(i);
+    put(tip, h("b",{text:r.name}), h("div",{text:(r.study_title || "Untitled study") + (r.made_up ? " · made-up data" : "")}), h("div",{class:"row"}, h("span",{text:r.metric_label}), h("span",{text:fmt(r.metric,3)})), r.params ? h("div",{class:"row"}, h("span",{text:"Parameters"}), h("span",{text:fmtInt(r.params)})) : null);
+    tip.style.display = "block"; const tw = tip.offsetWidth, th = tip.offsetHeight; tip.style.left = Math.max(0, Math.min(W - tw, x - tw / 2)) + "px"; tip.style.top = (y - th - rad(i) - 10 < 0 ? y + rad(i) + 10 : y - th - rad(i) - 10) + "px"; };
+  const out = () => { hot = -1; tip.style.display = "none"; paint(1); }, click = e => { const i = at(e); if (i >= 0) location.hash = "#/s/" + rows[i].study + "/" + rows[i].run; };
+  const redo = () => { size(); cancelAnimationFrame(raf); paint(1); }, mq = window.matchMedia("(prefers-color-scheme: dark)");
+  cv.addEventListener("mousemove", move); cv.addEventListener("mouseleave", out); cv.addEventListener("click", click); window.addEventListener("resize", redo); mq.addEventListener("change", redo);
+  size(); if (still) paint(1); else { paint(0); raf = requestAnimationFrame(frame); }
+  return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", redo); mq.removeEventListener("change", redo); };
+}
+/* ---------- the three sections: studies, benchmarks, models. Each has its own page and keeps its filters in the address ---------- */
+const STUD = {q:"", tags:new Set(), stars:new Set(), sort:"new", allTags:false};
+const SORTS = {new:["Newest first", (a, b) => String(b.created || "").localeCompare(String(a.created || ""))], runs:["Most runs", (a, b) => b.runs - a.runs],
+  models:["Most models", (a, b) => b.models - a.models], title:["Title, A to Z", (a, b) => String(a.title || "").localeCompare(String(b.title || ""))]};
 let MODELS_ALL = null;
+const wordsOf = t => t.trim().toLowerCase().split(/\s+/).filter(Boolean), hitFn = words => (...v) => { const text = v.flat().filter(Boolean).join(" ").toLowerCase(); return words.every(w => text.includes(w)); };
+const selectOf = (id, label, opts, value, on) => { const s_ = h("select",{id,"aria-label":label}, opts.map(([v, t]) => h("option",{value:v,text:t}))); s_.value = value; s_.addEventListener("change", () => on(s_.value)); return h("label",{class:"tsel"}, h("span",{text:label}), s_); };
 /* under a model's name: how it got its weights, when that is not plain training */
 const howLine = r => r.kind === "reported" ? h("div",{class:"thsub",title:(r.reported || {}).note || ""}, "Reported in ", srcEl(r.reported), (r.reported || {}).where ? ", " + r.reported.where : "", (r.reported || {}).note ? " · see note" : "") : (r.kind && r.kind !== "train") || r.base ? h("div",{class:"thsub",text:[r.kind && r.kind !== "train" ? RULES.kinds[r.kind] : null, r.base ? "from " + r.base : null].filter(Boolean).join(" · ")}) : null;
-function openBrowse(r){
-  leave(); setCrumbs([]); BROWSE.sub = r.sub;
-  if (r.has){ BROWSE.q = r.q; BROWSE.tags = new Set(r.tags.split(",").filter(Boolean).map(t => t.toLowerCase())); BROWSE.repro = new Set(r.stars.split(",").filter(t => RULES.stars[t])); }
-  const q = h("input",{class:"search",type:"search",id:"browseq",value:BROWSE.q,placeholder:"Search by title, depositor, dataset, model family, tag…","aria-label":"Search"});
-  q.addEventListener("input", () => { BROWSE.q = q.value; BROWSE.more = false; drawBrowse(); });
-  put(document.getElementById("app"), h("section",{class:"home-h"}, h("h1",{text:"Browse"}),
-      h("div",{class:"browse-bar"}, h("div",{class:"seg"}, [["studies","Studies","#/browse"],["models","Models","#/browse/models"],["benchmarks","Benchmarks","#/browse/benchmarks"]].map(([v, t, href]) => h("button",{"aria-pressed":String(BROWSE.sub === v),text:t,onclick:()=>{ location.hash = href; }}))), q)),
-    h("div",{id:"facets"}), h("div",{id:"results"}));
-  drawBrowse();
+function openStudies(r){
+  leave(); setCrumbs([]);
+  if (r.has){ STUD.q = r.q; STUD.tags = new Set(r.tags.split(",").filter(Boolean).map(t => t.toLowerCase())); STUD.stars = new Set(r.stars.split(",").filter(t => RULES.stars[t])); STUD.sort = SORTS[r.sort] ? r.sort : "new"; }
+  const q = h("input",{class:"search",type:"search",id:"browseq",value:STUD.q,placeholder:"Filter by title, depositor, dataset, model family or tag","aria-label":"Filter studies"});
+  q.addEventListener("input", () => { STUD.q = q.value; drawStudies(); });
+  put(document.getElementById("app"), pageHead(null, "Studies", "A study is one deposited experiment: its models, how they were trained, and every run."),
+    h("div",{class:"toolbar"}, q, selectOf("studysort", "Sort", Object.keys(SORTS).map(k => [k, SORTS[k][0]]), STUD.sort, v => { STUD.sort = v; drawStudies(); })), h("div",{id:"facets"}), h("div",{id:"results"}));
+  drawStudies();
 }
-function drawBrowse(){
+function drawStudies(){
   const fac = document.getElementById("facets"), res = document.getElementById("results"); if (!fac || !res) return;
-  { const qs = new URLSearchParams(); if (BROWSE.q.trim()) qs.set("q", BROWSE.q.trim()); if (BROWSE.sub === "studies" && BROWSE.tags.size) qs.set("tag", [...BROWSE.tags].join(",")); if (BROWSE.sub === "studies" && BROWSE.repro.size) qs.set("star", [...BROWSE.repro].join(","));
-    const to = "#/browse" + (BROWSE.sub === "studies" ? "" : "/" + BROWSE.sub) + (qs.toString() ? "?" + qs.toString() : ""); if (location.hash !== to) try{ history.replaceState(null, "", to); }catch(e){} }   /* filters live in the address, so a view can be shared */
-  const words = BROWSE.q.trim().toLowerCase().split(/\s+/).filter(Boolean), hit = (...v) => { const text = v.flat().filter(Boolean).join(" ").toLowerCase(); return words.every(w => text.includes(w)); };
-  if (BROWSE.sub === "benchmarks"){
-    const B = INDEX.benchmarks.filter(b => hit(b.title, b.dataset, b.task, b.domain, b.task_type));
-    put(fac); put(res, h("h2",{class:"q",id:"nres",text:pl(B.length,"benchmark","benchmarks")}), B.length ? h("div",{class:"grid"}, B.map(benchCard)) : h("p",{class:"q",text:"Nothing matches."})); return; }
-  if (BROWSE.sub === "models"){
-    put(fac);
-    if (!MODELS_ALL){ put(res, h("p",{class:"q",text:"Loading the models…"}));
-      getJSON("models.json").then(m => { MODELS_ALL = m; if (ROUTE.view === "browse" && BROWSE.sub === "models") drawBrowse(); }).catch(e => put(res, h("div",{class:"err",text:"The model list did not load. (" + e.message + ")"}))); return; }
-    const M = MODELS_ALL.filter(r => hit(r.name, r.family, r.base, r.study_title, r.depositor, r.benchmark_title, r.kind ? RULES.kinds[r.kind] : null, (r.reported || {}).citation)), shown = M.slice(0, BROWSE.more ? M.length : 50);
-    put(res, h("h2",{class:"q",id:"nres",text:pl(M.length,"model on a leaderboard","models on leaderboards")}), M.length ? h("div",{class:"card scrollx",tabindex:"0",role:"region","aria-label":"Models"}, h("table",{class:"lb",id:"modeltable"},
-        h("thead",null, h("tr",null, h("th",{class:"cmpc"}, h("span",{class:"vh",text:"Compare"})), ["Model","Family","Study","Benchmark","Result","Parameters","Star"].map(t => h("th",{class:/Result|Parameters/.test(t) ? "num" : "",text:t})))),
-        h("tbody",null, shown.map(r => h("tr",{class:"go",onclick:e=>{ if (!e.target.closest("a,button")) location.hash = "#/s/" + r.study + "/" + r.run; }},
-          h("td",{class:"cmpc"}, cmpBtn(r.study, r.run, r.name)), h("td",null, h("a",{class:"rowlink",href:"#/s/" + r.study + "/" + r.run,text:r.name}), howLine(r)),
-          h("td",{text:known(r.family) ? pretty(String(r.family)) : "–"}),
-          h("td",null, r.study_title || "Untitled study", h("span",{class:"by",text:" · " + (r.depositor || "")}), " ", madeUp(r)),
-          h("td",null, h("a",{class:"plainlink",href:"#/b/" + r.benchmark,text:r.benchmark_title})),
-          h("td",{class:"num",title:r.n > 1 ? `mean of ${r.n} seeds` : ""}, fmt(r.metric,3), r.sd != null ? h("span",{class:"pm",text:" ±" + fmt(r.sd,3)}) : null, h("div",{class:"thsub",text:r.metric_label})),
-          h("td",{class:"num",text:fmtInt(r.params)}), h("td",null, r.kind === "reported" ? repStar() : starPill(r.star))))))) : h("p",{class:"q",text:"Nothing matches."}),
-      M.length > shown.length ? h("button",{class:"linkish",style:"margin:10px 0",text:`Show all ${M.length} models`,onclick:()=>{ BROWSE.more = true; drawBrowse(); }}) : null);
-    return; }
-  const all = INDEX.studies, cnt = {}; for (const x of all) for (const t of (x.tags || [])) cnt[t] = (cnt[t] || 0) + 1;
-  const St = all.filter(x => hit(x.title, x.summary, x.depositor, x.lab, x.benchmark_title, x.tags, x.families, x.bases) && [...BROWSE.tags].every(t => (x.tags || []).some(y => y.toLowerCase() === t)) && (!BROWSE.repro.size || BROWSE.repro.has(x.star)));
-  const chip = (label, on, fn, n) => h("button",{class:"fchip","aria-pressed":String(on),onclick:()=>{ fn(); drawBrowse(); }}, label, h("span",{class:"n",text:String(n)}));
+  { const qs = new URLSearchParams(); if (STUD.q.trim()) qs.set("q", STUD.q.trim()); if (STUD.tags.size) qs.set("tag", [...STUD.tags].join(",")); if (STUD.stars.size) qs.set("star", [...STUD.stars].join(",")); if (STUD.sort !== "new") qs.set("sort", STUD.sort);
+    const to = "#/studies" + (qs.toString() ? "?" + qs.toString() : ""); if (location.hash !== to) try{ history.replaceState(null, "", to); }catch(e){} }   /* filters live in the address, so a view can be shared */
+  const words = wordsOf(STUD.q), hit = hitFn(words), all = INDEX.studies, cnt = {}; for (const x of all) for (const t of (x.tags || [])) cnt[t] = (cnt[t] || 0) + 1;
+  const St = all.filter(x => hit(x.title, x.summary, x.depositor, x.lab, x.benchmark_title, x.tags, x.families, x.bases) && [...STUD.tags].every(t => (x.tags || []).some(y => y.toLowerCase() === t)) && (!STUD.stars.size || STUD.stars.has(x.star))).sort(SORTS[STUD.sort][1]);
+  const chip = (label, on, fn, n) => h("button",{class:"fchip",type:"button","aria-pressed":String(on),onclick:()=>{ fn(); drawStudies(); }}, label, h("span",{class:"n",text:String(n)}));
   const tog = (set, v) => () => { if (set.has(v)) set.delete(v); else set.add(v); };
-  put(fac, h("div",{class:"facet"}, h("span",{class:"fl",text:"Star"}), Object.keys(RULES.stars).map(t => chip(RULES.stars[t].label, BROWSE.repro.has(t), tog(BROWSE.repro, t), all.filter(x => x.star === t).length))),
-    Object.keys(cnt).length ? h("div",{class:"facet"}, h("span",{class:"fl",text:"Tags"}), Object.keys(cnt).sort((a, c) => cnt[c] - cnt[a] || a.localeCompare(c)).map(t => chip(t, BROWSE.tags.has(t.toLowerCase()), tog(BROWSE.tags, t.toLowerCase()), cnt[t]))) : null,
-    (BROWSE.tags.size || BROWSE.repro.size || words.length) ? h("button",{class:"linkish",style:"font-size:13px;margin-top:8px",text:"Clear filters",onclick:()=>{ BROWSE.tags.clear(); BROWSE.repro.clear(); BROWSE.q = ""; const i = document.getElementById("browseq"); if (i) i.value = ""; drawBrowse(); }}) : null);
-  put(res, h("h2",{class:"q",id:"nres",text:pl(St.length,"study","studies")}), St.length ? h("div",{class:"card scrollx",tabindex:"0",role:"region","aria-label":"Studies"}, studyTable(St, true)) : h("p",{class:"q",text:"Nothing matches. Try fewer filters."}));
+  put(fac, h("div",{class:"facet"}, h("span",{class:"fl",text:"Star"}), Object.keys(RULES.stars).map(t => chip(RULES.stars[t].label, STUD.stars.has(t), tog(STUD.stars, t), all.filter(x => x.star === t).length))),
+    (names => names.length ? h("div",{class:"facet"}, h("span",{class:"fl",text:"Tag"}), names.filter((t, i) => STUD.allTags || i < 6 || STUD.tags.has(t.toLowerCase())).map(t => chip(t, STUD.tags.has(t.toLowerCase()), tog(STUD.tags, t.toLowerCase()), cnt[t])),
+      names.length > 6 ? h("button",{class:"linkish",type:"button",style:"font-size:13px;margin-left:4px","aria-expanded":String(STUD.allTags),text:STUD.allTags ? "Fewer tags" : `${names.length - 6} more`,onclick:()=>{ STUD.allTags = !STUD.allTags; drawStudies(); }}) : null) : null)(Object.keys(cnt).sort((a, c) => cnt[c] - cnt[a] || a.localeCompare(c))));
+  put(res, h("div",{class:"reshead"}, h("h2",{class:"q",id:"nres",text:pl(St.length,"study","studies")}),
+      (STUD.tags.size || STUD.stars.size || words.length) ? h("button",{class:"linkish",type:"button",text:"Clear filters",onclick:()=>{ STUD.tags.clear(); STUD.stars.clear(); STUD.q = ""; const i = document.getElementById("browseq"); if (i) i.value = ""; drawStudies(); }}) : null),
+    St.length ? studyList(St) : h("p",{class:"empty",text:"No study matches. Try fewer filters."}));
+}
+function openBenchmarks(r){
+  leave(); setCrumbs([]);
+  const q = h("input",{class:"search",type:"search",id:"browseq",value:r.q || "",placeholder:"Filter by name, dataset, task or field","aria-label":"Filter benchmarks"}), res = h("div",{id:"results"});
+  const draw = () => { const hit = hitFn(wordsOf(q.value)), B = INDEX.benchmarks.filter(b => hit(b.title, b.dataset, b.task, b.domain, b.task_type));
+    put(res, h("div",{class:"reshead"}, h("h2",{class:"q",id:"nres",text:pl(B.length,"benchmark","benchmarks")})), B.length ? h("div",{class:"grid"}, B.map(benchCard)) : h("p",{class:"empty",text:"No benchmark matches."})); };
+  q.addEventListener("input", draw);
+  put(document.getElementById("app"), pageHead(null, "Benchmarks", "A benchmark is a dataset, a test set and a metric. Every study that used it shares one leaderboard."), h("div",{class:"toolbar"}, q), res); draw();
+}
+const MOD = {q:"", bench:"", sort:"rank", more:false};
+const MSORTS = {rank:["Leaderboard order", null], small:["Fewest parameters", (a, b) => (a.params == null) - (b.params == null) || a.params - b.params], large:["Most parameters", (a, b) => (a.params == null) - (b.params == null) || b.params - a.params], name:["Name, A to Z", (a, b) => String(a.name).localeCompare(String(b.name))]};
+function openModels(r){
+  leave(); setCrumbs([]); MOD.more = false;
+  if (r.has){ MOD.q = r.q; MOD.bench = INDEX.benchmarks.some(b => b.id === r.bench) ? r.bench : ""; MOD.sort = MSORTS[r.sort] ? r.sort : "rank"; }
+  const q = h("input",{class:"search",type:"search",id:"browseq",value:MOD.q,placeholder:"Filter by model, family, base model, study or depositor","aria-label":"Filter models"});
+  q.addEventListener("input", () => { MOD.q = q.value; MOD.more = false; drawModels(); });
+  put(document.getElementById("app"), pageHead(null, "Models", "Every architecture with a result, once for each leaderboard it is on. Results compare only within one benchmark."),
+    h("div",{class:"toolbar"}, q, selectOf("modelbench", "Benchmark", [["", "All benchmarks"]].concat(INDEX.benchmarks.map(b => [b.id, b.title])), MOD.bench, v => { MOD.bench = v; MOD.more = false; drawModels(); }),
+      selectOf("modelsort", "Sort", Object.keys(MSORTS).map(k => [k, MSORTS[k][0]]), MOD.sort, v => { MOD.sort = v; drawModels(); })), h("div",{id:"results"}));
+  drawModels();
+}
+function modelTable(rows){
+  return h("div",{class:"card scrollx",tabindex:"0",role:"region","aria-label":"Models"}, h("table",{class:"lb",id:"modeltable"},
+    h("thead",null, h("tr",null, h("th",{class:"cmpc"}, h("span",{class:"vh",text:"Compare"})), ["Model","Family","Study and benchmark","Result","Parameters","Star"].map(t => h("th",{class:/Result|Parameters/.test(t) ? "num" : "",text:t})))),
+    h("tbody",null, rows.map(r => h("tr",{class:"go",onclick:e=>{ if (!e.target.closest("a,button")) location.hash = "#/s/" + r.study + "/" + r.run; }},
+      h("td",{class:"cmpc"}, cmpBtn(r.study, r.run, r.name)), h("td",null, h("a",{class:"rowlink",href:"#/s/" + r.study + "/" + r.run,text:r.name}), howLine(r)),
+      h("td",{text:known(r.family) ? pretty(String(r.family)) : "–"}),
+      h("td",null, r.study_title || "Untitled study", " ", madeUp(r), h("div",{class:"thsub"}, (r.depositor || "") + " · on ", h("a",{href:"#/b/" + r.benchmark,text:r.benchmark_title}))),
+      h("td",{class:"num",title:r.n > 1 ? `mean of ${r.n} seeds` : ""}, fmt(r.metric,3), r.sd != null ? h("span",{class:"pm",text:" ±" + fmt(r.sd,3)}) : null, h("div",{class:"thsub",text:r.metric_label})),
+      h("td",{class:"num",text:fmtInt(r.params)}), h("td",null, r.kind === "reported" ? repStar() : starPill(r.star)))))));
+}
+const modelHit = hit => r => hit(r.name, r.family, r.base, r.study_title, r.depositor, r.benchmark_title, r.kind ? RULES.kinds[r.kind] : null, (r.reported || {}).citation);
+function drawModels(){
+  const res = document.getElementById("results"); if (!res) return;
+  { const qs = new URLSearchParams(); if (MOD.q.trim()) qs.set("q", MOD.q.trim()); if (MOD.bench) qs.set("bench", MOD.bench); if (MOD.sort !== "rank") qs.set("sort", MOD.sort);
+    const to = "#/models" + (qs.toString() ? "?" + qs.toString() : ""); if (location.hash !== to) try{ history.replaceState(null, "", to); }catch(e){} }
+  if (!MODELS_ALL){ put(res, h("p",{class:"q",text:"Loading the models…"}));
+    getJSON("models.json").then(m => { MODELS_ALL = m; if (ROUTE.view === "models") drawModels(); }).catch(e => put(res, h("div",{class:"err",text:"The model list did not load. (" + e.message + ")"}))); return; }
+  const M = MODELS_ALL.filter(r => !MOD.bench || r.benchmark === MOD.bench).filter(modelHit(hitFn(wordsOf(MOD.q)))); if (MSORTS[MOD.sort][1]) M.sort(MSORTS[MOD.sort][1]);
+  const shown = M.slice(0, MOD.more ? M.length : 50);
+  put(res, h("div",{class:"reshead"}, h("h2",{class:"q",id:"nres",text:pl(M.length,"leaderboard entry","leaderboard entries")})), M.length ? modelTable(shown) : h("p",{class:"empty",text:"No model matches."}),
+    M.length > shown.length ? h("button",{class:"linkish",type:"button",style:"margin:14px 0",text:`Show all ${M.length} models`,onclick:()=>{ MOD.more = true; drawModels(); }}) : null);
+}
+/* ---------- one search across benchmarks, studies, models and people ---------- */
+async function openSearch(r){
+  leave(); setCrumbs([]); document.title = "Search · CAMEO"; const app = document.getElementById("app"), res = h("div",{id:"results"});
+  const q = h("input",{class:"search big",type:"search",id:"searchq",value:r.q,placeholder:"Search models, studies, benchmarks, people","aria-label":"Search the catalog"});
+  q.addEventListener("keydown", e => { if (e.key === "Enter") goTo("#/search?q=" + encodeURIComponent(q.value.trim())); });
+  put(app, pageHead(null, "Search", null), h("div",{class:"toolbar"}, q), res);
+  const words = wordsOf(r.q); if (!words.length){ put(res, h("p",{class:"empty",text:"Type a task, a dataset, a model family or a name."})); q.focus(); return; }
+  const hit = hitFn(words), B = INDEX.benchmarks.filter(b => hit(b.title, b.dataset, b.task, b.domain, b.task_type)), St = INDEX.studies.filter(x => hit(x.title, x.summary, x.depositor, x.lab, x.benchmark_title, x.tags, x.families, x.bases)),
+    D = (INDEX.depositors || []).filter(d => hit(d.name, d.lab, d.institution));
+  const sec = (t, n, ...k) => n ? h("section",{class:"sres"}, h("h2",null, t, h("span",{text:String(n)})), k) : null;
+  const show = M => { const total = B.length + St.length + D.length + (M ? M.length : 0);
+    put(res, h("p",{class:"q",id:"nres",text:M && !total ? `Nothing in the catalog matches “${r.q}”.` : `${total}${M ? "" : "+"} result${total === 1 ? "" : "s"} for “${r.q}”`}),
+      sec("Benchmarks", B.length, h("div",{class:"grid"}, B.map(benchCard))), sec("Studies", St.length, studyList(St)),
+      M ? sec("Models", M.length, modelTable(M.slice(0, 8)), M.length > 8 ? h("a",{class:"more-l",href:"#/models?q=" + encodeURIComponent(r.q),text:`All ${M.length} models that match →`}) : null) : h("p",{class:"q",text:"Searching the models…"}),
+      sec("Depositors", D.length, h("div",{class:"plist"}, D.map(d => h("a",{href:"#/d/" + encodeURIComponent(d.slug)}, h("b",{text:d.name}), h("span",{text:[d.lab, d.institution, pl(d.studies.length,"study","studies")].filter(Boolean).join(" · ")})))))); };
+  show(MODELS_ALL ? MODELS_ALL.filter(modelHit(hit)) : null);
+  if (!MODELS_ALL){ try{ MODELS_ALL = await getJSON("models.json"); }catch(e){ MODELS_ALL = null; } if (ROUTE.view === "search" && ROUTE.q === r.q) show(MODELS_ALL ? MODELS_ALL.filter(modelHit(hit)) : []); }
 }
 /* ---------- a depositor's page: who they are, and everything they have deposited ---------- */
 function openDepositor(slug){
   leave(); const d = (INDEX.depositors || []).find(x => x.slug === slug), app = document.getElementById("app");
-  if (!d){ setCrumbs([["Browse","#/browse"]]); put(app, h("div",{class:"err",text:"No such depositor."})); return; }
-  document.title = d.name + " · CAMEO"; setCrumbs([["Browse","#/browse"],[d.name,null]]);
+  if (!d){ setCrumbs([["Studies","#/studies"]]); put(app, h("div",{class:"err",text:"No such depositor."})); return; }
+  document.title = d.name + " · CAMEO"; setCrumbs([["Studies","#/studies"],[d.name,null]]);
   const st = INDEX.studies.filter(x => d.studies.includes(x.id)), stars = ["gold","silver","bronze"].map(k => [k, st.filter(x => x.star === k).length]).filter(x => x[1]);
   const tile = (k, v, sub) => h("div",{class:"stat"}, h("span",{class:"k",text:k}), h("b",{text:v}), h("span",{class:"s",text:sub || ""}));
-  put(app, h("section",{class:"hero2"}, h("div",{class:"eyebrow",text:"Depositor"}), h("h1",{text:d.name}),
-      h("p",{class:"sub",text:[d.lab, d.institution].filter(Boolean).join(" · ")}),
+  put(app, pageHead("Depositor", d.name, [d.lab, d.institution].filter(Boolean).join(" · ") || null,
       /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/.test(d.orcid || "") ? h("div",{class:"links"}, h("a",{class:"lk",href:"https://orcid.org/" + d.orcid,target:"_blank",rel:"noopener",text:"ORCID " + d.orcid + " ↗"})) : null),
     h("div",{class:"stats three"}, tile("Studies", String(st.length), stars.map(([k, n]) => `${n} ${RULES.stars[k].label.toLowerCase()}`).join(" · ")), tile("Models", fmtInt(d.models)), tile("Training runs", fmtInt(d.runs))),
-    h("h2",{class:"sec-h",text:"Studies"}), h("div",{class:"card scrollx",tabindex:"0",role:"region","aria-label":"Studies by this depositor"}, studyTable(st, true)));
+    h("div",{class:"reshead"}, h("h2",{class:"q",text:"Studies"})), studyList(st));
 }
 /* ---------- about ---------- */
 function openAbout(sub){
@@ -805,7 +1109,16 @@ function openAbout(sub){
   const sec = (t, ...kids_) => h("section",{class:"about-s"}, h("h2",{text:t}), kids_), p = (...k) => h("p",null, k), a = (href, text) => h("a",{href,target:"_blank",rel:"noopener",text}), inl = (href, text) => h("a",{href,text});
   const cite = sec("How to cite", p("To credit one study, use Cite on its page. That citation names the depositor. To cite the catalog as a whole:"), citeBlock("Citation", cs.text), citeBlock("BibTeX", cs.bib),
     cs.doi ? h("p",null, "DOI: ", a("https://doi.org/" + cs.doi, cs.doi), ".") : p("The catalog has no DOI yet. Until it does, cite its address and the date you used it.")); cite.id = "cite";
-  put(document.getElementById("app"), h("section",{class:"home-h"}, h("div",{class:"eyebrow",text:"About"}), h("h1",{text:"What CAMEO is, and how to add to it"})),
+  const fb = INDEX.benchmarks[0], fs_ = INDEX.studies[0], files = [["index.json","index.json","Every study, benchmark and depositor, with counts and stars. Start here."],
+    ["models.json","models.json","Every model on every leaderboard, one row each: result, parameters, speed, training time and study."],
+    ["boards/<benchmark id>.json", fb ? "boards/" + fb.id + ".json" : null, "One leaderboard, and how each study on it prepared the data."],
+    ["studies/<study id>.json", fs_ ? "studies/" + fs_.id + ".json" : null, "One whole entry, in the format the instructions describe."],
+    ["kit/rules.json","kit/rules.json","The checks, the open licenses, and what each star means."],
+    ["llms.txt","llms.txt","This list as plain text, for agents that look for it."]];
+  const data = sec("Get the data", p("There is no sign-in. The files are rebuilt whenever a study is added. They start at ", h("span",{class:"mono",text:siteBase() + "index.json"}), "."),
+    h("div",{class:"card scrollx",tabindex:"0",role:"region","aria-label":"Data files"}, h("table",{class:"lb",id:"filetable"}, h("thead",null, h("tr",null, h("th",{text:"File"}), h("th",{text:"What it holds"}), h("th",null, h("span",{class:"vh",text:"Open"})))),
+      h("tbody",null, files.map(([name, href, what]) => h("tr",null, h("td",null, h("span",{class:"mono",text:name})), h("td",{text:what}), h("td",null, href ? h("a",{class:"plainlink",href,target:"_blank",rel:"noopener",text:name.includes("<") ? "Open an example" : "Open"}) : ""))))))); data.id = "data";
+  put(document.getElementById("app"), pageHead("About", "What CAMEO is, and how to add to it", null),
     h("div",{class:"about-w"},
       sec("What it is", p("CAMEO is the Catalog of Architecture Metadata and Experimental Outcomes, an open record of machine-learning experiments. It keeps the models, how each was trained and what each scored together, so that results can be compared across studies and any model can be rebuilt. It is not tied to one field."),
         p("CAMEO is a record, not a referee. It shows what each depositor reported. It does not re-run, re-score or re-measure anything.")),
@@ -820,14 +1133,15 @@ function openAbout(sub){
         p("Studies can split and process the same dataset differently. Each benchmark page lists how every study prepared the data, and Compare puts any runs side by side. Speed and training time are shown with their hardware and are not ranked across studies."),
         p("An entry can also list results reported in a paper. They are marked Reported, link to their source, and carry no star, because the depositor did not run them.")),
       sec("How to deposit", h("ol",null,
-        h("li",null, "Give your training loop, or an agent, the instructions file from ", inl("#/agents", "For agents"), "."),
+        h("li",null, "Give your training loop, or an agent, the instructions file from ", inl("#/deposit", "Deposit"), "."),
         h("li",null, "Check the file with the ", a(repo + "/tree/main/kit", "kit"), ": ", h("span",{class:"mono",text:"python3 cameo.py check study.json"}), "."),
-        h("li",null, "Use ", h("b",{text:"Deposit a study"}), " at the top of this page to preview it, then add the file to the ", a(repo + "/tree/main/studies", "studies folder"), " by pull request.")),
+        h("li",null, "Preview it on the ", inl("#/deposit", "Deposit"), " page, then add the file to the ", a(repo + "/tree/main/studies", "studies folder"), " by pull request.")),
         p("A check runs on every pull request. A new depositor's first entry is also looked at by a maintainer.")),
       sec("Credit and licenses", p("The depositor's name stays on the study, on every leaderboard row and on every run. Entries carry an open license: MIT unless the depositor chooses another from the list.")),
       cite,
-      sec("Where it lives", p("The whole catalog is a public repository, ", a(repo, INDEX.site.repo), ". The study files there are the database, and anyone can download them. ", inl("#/agents", "For agents"), " lists the data files."))));
-  if (sub === "cite") cite.scrollIntoView();
+      sec("Where it lives", p("The whole catalog is a public repository, ", a(repo, INDEX.site.repo), ". The study files there are the database, and anyone can download them. ", "Everything the site shows is also a plain file, listed below.")),
+      data));
+  if (sub === "cite") cite.scrollIntoView(); if (sub === "data") data.scrollIntoView();
 }
 /* ================= compare: runs from any studies, side by side =================
    The selection lives in the address (#/compare?r=study~run&r=...), so a comparison can be shared. */
@@ -866,7 +1180,7 @@ function renderTray(){
 const textOf = (v, key) => { const t = isObj(v) ? v[key || "how"] : v; return known(t) && typeof t !== "object" ? String(t) : null; };
 const exLine = ex => { const e = isObj(ex) ? ex : {}, ks = ["train","valid","test"].filter(k => typeof e[k] === "number"); return ks.length ? ks.map(k => fmtInt(e[k]) + " " + (k === "valid" ? "validation" : k)).join(" · ") : null; };
 async function openCompare(r){
-  leave(); setCrumbs([["Browse","#/browse"],["Compare",null]]); document.title = "Compare · CAMEO"; const app = document.getElementById("app");
+  leave(); setCrumbs([["Models","#/models"],["Compare",null]]); document.title = "Compare · CAMEO"; const app = document.getElementById("app");
   /* the address decides what is shown, so a shared link opens the same comparison */
   CMP.sel = r.items.map(x => { const old = CMP.sel.find(y => y.study === x.study && y.run === x.run); return {study:x.study, run:x.run, name:old ? old.name : x.run}; });
   renderTray();
@@ -874,7 +1188,7 @@ async function openCompare(r){
   if (!CMP.sel.length){
     put(app, head("Up to four runs side by side, from one study or several."),
       h("div",{class:"card pad"}, h("p",{class:"q",style:"font-size:15px"}, "Nothing is selected yet. Use the ", h("span",{class:"cmpb demo","aria-hidden":"true",text:"+"}), " button on a leaderboard row, in the Models list, or on a run's panel."),
-        h("p",{class:"q",style:"margin:0;font-size:15px"}, h("a",{href:"#/browse/benchmarks",text:"See the benchmarks"}), " · ", h("a",{href:"#/browse/models",text:"Browse models"})))); return; }
+        h("p",{class:"q",style:"margin:0;font-size:15px"}, h("a",{href:"#/benchmarks",text:"See the benchmarks"}), " · ", h("a",{href:"#/models",text:"Browse models"})))); return; }
   put(app, h("div",{class:"loading",role:"status",text:"Loading the runs…"}));
   const failed = {};
   await Promise.all([...new Set(CMP.sel.map(x => x.study))].filter(id => INDEX.studies.some(q => q.id === id)).map(async id => { if (CMPD[id]) return;
@@ -974,13 +1288,13 @@ async function openCompare(r){
     panels.length ? h("section",{class:"card"}, h("div",{class:"card-h"}, h("h2",{text:"At a glance"}),
         h("span",{class:"legend2"}, good.map(c => h("span",null, h("span",{class:"cdot",style:"background:" + c.color}), h("b",{text:c.letter}), " ", h("span",{class:"mono",text:c.run.name}))))), h("div",{class:"glance",id:"glance"}, panels)) : null,
     h("section",{class:"card"}, h("div",{class:"card-h"}, h("h2",{text:"Side by side"}), good.length > 1 ? dchip : null,
-        h("span",{class:"sp",style:"margin-left:auto;display:flex;gap:8px"}, h("button",{class:"btn sm",type:"button",text:"Copy link",title:"A link that opens this comparison",onclick:e=>copyText(link, e.currentTarget)}), cols.length < CMP_MAX ? h("a",{class:"btn sm",href:"#/browse/models",text:"Add a run"}) : null)), tbox,
+        h("span",{class:"sp",style:"margin-left:auto;display:flex;gap:8px"}, h("button",{class:"btn sm",type:"button",text:"Copy link",title:"A link that opens this comparison",onclick:e=>copyText(link, e.currentTarget)}), cols.length < CMP_MAX ? h("a",{class:"btn sm",href:"#/models",text:"Add a run"}) : null)), tbox,
       h("p",{class:"fine",style:"padding:0 16px 12px",text:"Every value is what the depositor recorded. CAMEO does not re-run or re-measure anything. A dash means the entry does not say."})),
     good.filter(c => c.mdl.src).map(c => h("details",{class:"about",style:"margin:14px 0 0"}, h("summary",{text:`Model code · ${c.letter} · ${c.run.name}`}), h("pre",{class:"src",tabindex:"0",text:c.mdl.src}))));
   draw();
 }
 
-/* ================= for agents: the instructions file, a prompt, and the data files ================= */
+/* ================= deposit: the instructions for a loop or agent, the check, and a preview of the file ================= */
 const siteBase = () => known((INDEX.site || {}).url) ? String(INDEX.site.url).replace(/\/+$/, "") + "/" : location.href.split("#")[0].replace(/[^/]*$/, "");
 const KITF = "kit/CAMEO_LOOP_SPEC.md"; let SPEC_TEXT = null;
 const getText = async f => { const r = await fetch(f); if (!r.ok) throw new Error(f + " returned " + r.status); return r.text(); };
@@ -990,9 +1304,19 @@ const agentPrompt = () => `Record every model you train as a CAMEO entry, so the
 2. Write one file, study.json, with four parts: experiment, models, training, runs. Record each run when it finishes. Never invent a value: write "not_reported" for anything you do not know.
 3. Check the file. Put ${siteBase()}kit/cameo.py and ${siteBase()}kit/rules.json in one folder, then run: python3 cameo.py check study.json
 4. Fix everything the check marks as needed. Then tell me the star it reports and what is still missing.`;
-function openAgents(){
-  leave(); setCrumbs([]); document.title = "For agents · CAMEO";
-  const fb = INDEX.benchmarks[0], fs_ = INDEX.studies[0], dl = (href, text, pri) => h("a",{class:"btn" + (pri ? " pri" : ""),href,download:href.split("/").pop(),text});
+/* the file is read here, in the browser, and never uploaded */
+function depositBox(){
+  const out = h("div",{id:"depout"}), input = h("input",{type:"file",id:"depfile",accept:".json,application/json",style:"position:absolute;left:-9999px","aria-label":"Study JSON file"});
+  input.addEventListener("change", e => { const f = e.target.files[0]; if (f) readFile(f, out); });
+  const drop = h("div",{class:"drop"}, h("p",{style:"margin:0 0 10px",text:"Drop study.json here"}), h("button",{class:"btn",type:"button",text:"Choose a file",onclick:()=>input.click()}), input);
+  drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
+  drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+  drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("over"); const f = e.dataTransfer.files[0]; if (f) readFile(f, out); });
+  return [drop, out, h("p",{class:"fine"}, "The file is read in this browser only. Nothing is sent anywhere. No file yet? ", h("button",{class:"linkish",type:"button",text:"Use the example study instead"  ,onclick:stageExample}), ".")];
+}
+function openDepositPage(){
+  leave(); setCrumbs([]); document.title = "Deposit · CAMEO"; const repo = "https://github.com/" + INDEX.site.repo;
+  const dl = (href, text, pri) => h("a",{class:"btn" + (pri ? " pri" : ""),href,download:href.split("/").pop(),text});
   if (SPEC_TEXT == null) getText(KITF).then(t => { SPEC_TEXT = t; }).catch(() => {});
   const copySpec = h("button",{class:"btn",type:"button",id:"copyspec",text:"Copy the instructions",onclick:e=>{ const b = e.currentTarget; if (SPEC_TEXT != null){ copyText(SPEC_TEXT, b); return; }
     getText(KITF).then(t => { SPEC_TEXT = t; copyText(t, b); }).catch(() => { b.textContent = "The file did not load"; }); }});
@@ -1001,29 +1325,19 @@ function openAgents(){
   /* a preview copy of the site may not carry the zip; say so instead of offering a dead download */
   const kit = dl("kit/cameo-agent-kit.zip", "Download the kit (.zip)");
   fetch("kit/cameo-agent-kit.zip", {method:"HEAD"}).then(r => { if (!r.ok) throw 0; }).catch(() => kit.replaceWith(h("span",{class:"btn",id:"nokit",style:"opacity:.6;cursor:default",text:"The kit (.zip) is on the live site"})));
-  const files = [["index.json","index.json","Every study, benchmark and depositor, with counts and stars. Start here."],
-    ["models.json","models.json","Every model on every leaderboard, one row each: result, parameters, speed, training time and study."],
-    ["boards/<benchmark id>.json", fb ? "boards/" + fb.id + ".json" : null, "One leaderboard, and how each study on it prepared the data."],
-    ["studies/<study id>.json", fs_ ? "studies/" + fs_.id + ".json" : null, "One whole entry, in the format the instructions describe."],
-    ["kit/rules.json","kit/rules.json","The checks, the open licenses, and what each star means."],
-    ["llms.txt","llms.txt","This list as plain text, for agents that look for it."]];
-  const card = (t, ...k) => h("section",{class:"card pad"}, h("h2",{text:t}), k);
-  put(document.getElementById("app"), h("section",{class:"home-h"}, h("div",{class:"eyebrow",text:"For agents"}), h("h1",{text:"Give your training loop the format"}),
-      h("p",{class:"lede",text:"One file tells a model-search loop, or any coding agent, how to write its results as a CAMEO entry. Hand it over before a search starts, or afterwards to convert a finished project."})),
-    h("div",{class:"agents"},
-      card("1. The instructions", h("p",{class:"q",text:"The format, the rules and a full example, in one file an agent can read."}),
+  const step = (n, t, ...k) => h("section",{class:"dstep"}, h("div",{class:"dstep-n","aria-hidden":"true",text:String(n)}), h("div",{class:"dstep-b"}, h("h2",{text:t}), k));
+  put(document.getElementById("app"), pageHead("Deposit", "Add your experiments to the record", "A deposit is one file. Your training loop or agent writes it, you check it, and you add it by pull request. Partial entries are welcome."),
+    h("div",{class:"dsteps"},
+      step(1, "Give your loop the format", h("p",{text:"One instructions file tells a model-search loop, or any coding agent, how to write its results as a CAMEO entry. Hand it over before a search starts, or afterwards to convert a finished project."}),
         h("div",{class:"kitrow"}, dl(KITF, "Download CAMEO_LOOP_SPEC.md", true), copySpec, kit),
-        h("p",{class:"fine",text:"The kit adds the checker (cameo.py), its rules, a complete example entry, and a guide for converting a finished project."}), view),
-      card("2. A prompt to paste", h("p",{class:"q",text:"For an agent that can read web pages. For one that cannot, attach the instructions file instead."}),
+        h("p",{class:"fine",text:"The kit adds the checker (cameo.py), its rules, a complete example entry, and a guide for converting a finished project."}), view,
+        h("h3",{text:"Or paste this prompt"}), h("p",{class:"fine",style:"margin-top:0",text:"For an agent that can read web pages. For one that cannot, attach the instructions file instead."}),
         h("pre",{class:"cmd wrap",id:"agentprompt",tabindex:"0",text:agentPrompt()}), h("button",{class:"btn",type:"button",id:"copyprompt",text:"Copy the prompt",onclick:e=>copyText(agentPrompt(), e.currentTarget)})),
-      card("3. Check, then deposit", h("ol",{class:"steps2",style:"margin:0"},
-        h("li",null, "The agent runs ", h("span",{class:"mono",text:"python3 cameo.py check study.json"}), ". It lists what is needed, what is worth adding, and the star the entry would get."),
-        h("li",null, "Use ", h("b",{text:"Deposit a study"}), " at the top of this page to preview the entry."),
-        h("li",null, "Add the file by pull request. ", h("a",{href:"#/about",text:"How deposits work"}), "."))),
-      h("section",{class:"card"}, h("div",{class:"card-h"}, h("h2",{text:"Read the catalog"}), h("span",{class:"q",style:"margin:0",text:"Everything the site shows is also a plain file."})),
-        h("div",{class:"scrollx",tabindex:"0",role:"region","aria-label":"Data files"}, h("table",{class:"lb",id:"filetable"}, h("thead",null, h("tr",null, h("th",{text:"File"}), h("th",{text:"What it holds"}), h("th",null, h("span",{class:"vh",text:"Open"})))),
-          h("tbody",null, files.map(([name, href, what]) => h("tr",null, h("td",null, h("span",{class:"mono",text:name})), h("td",{text:what}), h("td",null, href ? h("a",{class:"plainlink",href,target:"_blank",rel:"noopener",text:name.includes("<") ? "Open an example" : "Open"}) : "")))))),
-        h("p",{class:"fine",style:"padding:0 16px 12px"}, "Address: ", h("span",{class:"mono",text:siteBase() + "index.json"}), ". No sign-in. The files are rebuilt whenever a study is added."))));
+      step(2, "Check the file", h("p",{text:"Run the checker beside your file. It lists what is needed, what is worth adding, and the star the entry would get."}),
+        h("pre",{class:"cmd",tabindex:"0",text:"python3 cameo.py check study.json"}),
+        h("ul",{class:"starlist"}, ["gold","silver","bronze"].map(k => h("li",null, starPill(k), h("span",{text:RULES.stars[k].means}))))),
+      step(3, "Preview it here", h("p",{text:"Drop the file to see the entry as visitors will, with a checklist of what is still missing."}), ...depositBox()),
+      step(4, "Add it by pull request", h("p",null, "From the preview, download the checked file and add it to the ", h("a",{href:repo + "/tree/main/studies",target:"_blank",rel:"noopener",text:"studies folder on GitHub"}), ". A check runs on it, a maintainer merges it, and the site rebuilds itself. Your name stays on the study, on every leaderboard row and on every run."))));
 }
 
 /* ================= how to cite: a study, or the whole catalog ================= */
@@ -1057,14 +1371,15 @@ function downloadStudy(reason){   /* the staged entry as a file, for the pull re
 function boardChart(B, col, W, H0){
   const pts = B.rows.filter(r => r.metric != null && r.params > 0); if (pts.length < 2) return null;
   const H = H0 || 320, m = {l:52, r:16, t:12, b:42}, xs = pts.map(p => Math.log10(p.params)), ys = pts.map(p => p.metric), srt = ys.slice().sort((a, c) => a - c);
-  let x0 = Math.floor(Math.min(...xs)), x1 = Math.ceil(Math.max(...xs)); if (x0 === x1) x1 = x0 + 1;
+  const xlo = Math.min(...xs), xhi = Math.max(...xs), xpad = Math.max(0.06, (xhi - xlo) * 0.05), x0 = xlo - xpad, x1 = xhi + xpad, xticks = [];
+  for (let e = Math.floor(x0); e <= Math.ceil(x1); e++) for (const k of (x1 - x0 < 1.7 ? [1, 2, 5] : [1])){ const v = k * Math.pow(10, e); if (Math.log10(v) >= x0 && Math.log10(v) <= x1) xticks.push(v); }
   /* a few very low runs would flatten everything else, so the axis covers the main body and the rest sit on the bottom edge */
   const yhi = srt[srt.length-1], q = srt[Math.floor(srt.length * 0.08)], ylo = pts.length > 10 ? Math.max(srt[0], q - (yhi - q) * 0.6) : srt[0];
   const span = (yhi - ylo) || 0.01, step = [0.005,0.01,0.02,0.05,0.1,0.2,0.5].find(v => span / v <= 6) || 1, y0 = Math.floor((ylo - span * 0.04) / step) * step, y1 = Math.ceil((yhi + span * 0.04) / step) * step;
   const X = v => m.l + (Math.log10(v) - x0) / (x1 - x0) * (W - m.l - m.r), Y = v => H - m.b - (v - y0) / (y1 - y0) * (H - m.t - m.b);
   const svg = s("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":`${B.benchmark.metric_label} against parameter count, one point per model`,style:"width:100%;height:auto;display:block"});
-  const lab = e => e >= 6 ? Math.pow(10, e - 6) + "M" : e >= 3 ? Math.pow(10, e - 3) + "k" : String(Math.pow(10, e));
-  for (let e = x0; e <= x1; e++){ const x = X(Math.pow(10, e)); svg.append(s("line",{x1:x,x2:x,y1:m.t,y2:H-m.b,stroke:"var(--line-2)"}), s("text",{x,y:H-m.b+16,"text-anchor":"middle","font-size":11,fill:"var(--muted)"}, lab(e))); }
+  const lab = v => v >= 1e9 ? v / 1e9 + "B" : v >= 1e6 ? v / 1e6 + "M" : v >= 1e3 ? v / 1e3 + "k" : String(v);
+  for (const v of xticks){ const x = X(v); svg.append(s("line",{x1:x,x2:x,y1:m.t,y2:H-m.b,stroke:"var(--line-2)"}), s("text",{x,y:H-m.b+16,"text-anchor":"middle","font-size":11,fill:"var(--muted)"}, lab(v))); }
   for (let v = y0; v <= y1 + 1e-9; v += step){ const y = Y(v); svg.append(s("line",{x1:m.l,x2:W-m.r,y1:y,y2:y,stroke:"var(--line-2)"}), s("text",{x:m.l-8,y:y+4,"text-anchor":"end","font-size":11,fill:"var(--muted)"}, v.toFixed(step < 0.01 ? 3 : 2))); }
   let low = 0, nrep = 0;
   svg.append(s("text",{x:(m.l+W-m.r)/2,y:H-6,"text-anchor":"middle","font-size":12,fill:"var(--ink-2)"}, "Parameters, log scale"),
@@ -1088,17 +1403,17 @@ function csvOf(B){
 }
 async function openBench(id){
   const app = document.getElementById("app"), b = INDEX.benchmarks.find(x => x.id === id); leave();
-  if (!b){ setCrumbs([["Benchmarks","#/browse/benchmarks"]]); put(app, h("div",{class:"err",text:"No such benchmark."})); return; }
-  document.title = b.title + " · CAMEO"; setCrumbs([["Benchmarks","#/browse/benchmarks"],[b.title,null]]); put(app, h("div",{class:"loading",role:"status",text:"Loading the leaderboard…"}));
+  if (!b){ setCrumbs([["Benchmarks","#/benchmarks"]]); put(app, h("div",{class:"err",text:"No such benchmark."})); return; }
+  document.title = b.title + " · CAMEO"; setCrumbs([["Benchmarks","#/benchmarks"],[b.title,null]]); put(app, h("div",{class:"loading",role:"status",text:"Loading the leaderboard…"}));
   let B; try{ B = await getJSON("boards/" + id + ".json"); }catch(e){ put(app, h("div",{class:"err"}, h("b",{text:"The leaderboard did not load. "}), "Reload the page to try again. (" + e.message + ")")); return; }
   if (ROUTE.view !== "bench" || ROUTE.id !== id) return;
   const studies = INDEX.studies.filter(x => (x.benchmarks || [x.benchmark]).includes(id)), col = {}; studies.forEach((x, i) => { col[x.id] = `var(--s${(i % 3) + 1})`; });
-  const better = b.direction === "minimize" ? 1 : -1, RANK = {gold:0, silver:1, bronze:2, none:3}, nRep = B.rows.filter(r => r.kind === "reported").length; BOARD.key = "metric"; BOARD.dir = better; BOARD.all = false; BOARD.rep = true;
+  const better = b.direction === "minimize" ? 1 : -1, RANK = {gold:0, silver:1, bronze:2, none:3}, nRep = B.rows.filter(r => r.kind === "reported").length; BOARD.key = "metric"; BOARD.dir = better; BOARD.all = false; BOARD.rep = true; if (BOARD.for !== id){ BOARD.for = id; BOARD.mode = studies.length > 1 ? "study" : "model"; BOARD.q = ""; }
   const repChip = nRep ? h("button",{class:"fchip",type:"button",id:"repchip",title:"Show or hide results copied from papers",onclick:()=>{ BOARD.rep = !BOARD.rep; BOARD.all = false; draw(); }}, "Reported results", h("span",{class:"n",text:String(nRep)})) : null;
   const tbox = h("div",{class:"scrollx",tabindex:"0",role:"region","aria-label":"Leaderboard"}), seg = h("div",{class:"seg"}), cnt = h("span",{class:"q",style:"margin:0"});
   const fq = h("input",{class:"search sm",type:"search",id:"boardq",value:BOARD.q,placeholder:"Filter by model, family, study…","aria-label":"Filter the leaderboard"});
   fq.addEventListener("input", () => { BOARD.q = fq.value; BOARD.all = false; draw(); });
-  const COLS = [["name","Model",""],["family","Family",""],["study_title","Study",""],["metric",b.metric_label,"num"],["params","Parameters","num"],["speed",unitLabel(b.example_unit) + "/s","num"],["minutes","Training time","num"],["star","Star",""]];
+  const hasCol = k => B.rows.some(r => r[k] != null), COLS = [["name","Model",""],["family","Family",""],["study_title","Study",""],["metric",b.metric_short || b.metric_label,"num"],["params","Parameters","num"],["speed",unitLabel(b.example_unit) + "/s","num"],["minutes","Training time","num"],["star","Star",""]].filter(c => (c[0] !== "speed" && c[0] !== "minutes") || hasCol(c[0]));
   function draw(){
     const words = BOARD.q.trim().toLowerCase().split(/\s+/).filter(Boolean), hit = r => { const t = [r.name, r.family, r.base, r.study_title, r.depositor, (r.reported || {}).citation].filter(Boolean).join(" ").toLowerCase(); return words.every(w => t.includes(w)); };
     const pool = BOARD.rep ? B.rows : B.rows.filter(r => r.kind !== "reported"); if (repChip) repChip.setAttribute("aria-pressed", String(BOARD.rep));
@@ -1119,8 +1434,8 @@ async function openBench(id){
         h("td",{text:known(r.family) ? pretty(String(r.family)) : "–"}),
         h("td",null, h("span",{class:"dot",style:"background:" + col[r.study]}), r.study_title || "Untitled study", h("span",{class:"by",text:" · " + (r.depositor || "")}), " ", madeUp(r)),
         h("td",{class:"num",title:r.n > 1 ? `mean of ${r.n} seeds` : ""}, fmt(r.metric,3), r.sd != null ? h("span",{class:"pm",text:" ±" + fmt(r.sd,3)}) : null), h("td",{class:"num",text:fmtInt(r.params)}),
-        h("td",{class:"num",title:r.speed_device ? "Measured on " + r.speed_device : "",text:r.speed ? fmtInt(r.speed) : "–"}),
-        h("td",{class:"num",title:r.train_device ? "Trained on " + r.train_device : "Training device not recorded",text:dur(r.minutes)}), h("td",null, r.kind === "reported" ? repStar() : starPill(r.star)))))) : h("p",{class:"q",style:"padding:14px 16px",text:"No model matches."}),
+        hasCol("speed") ? h("td",{class:"num",title:r.speed_device ? "Measured on " + r.speed_device : "",text:r.speed ? fmtInt(r.speed) : "–"}) : null,
+        hasCol("minutes") ? h("td",{class:"num",title:r.train_device ? "Trained on " + r.train_device : "Training device not recorded",text:dur(r.minutes)}) : null, h("td",null, r.kind === "reported" ? repStar() : starPill(r.star)))))) : h("p",{class:"q",style:"padding:14px 16px",text:"No model matches."}),
       rows.length > shown.length ? h("button",{class:"linkish",style:"margin:10px 16px",text:`Show all ${rows.length} rows`,onclick:()=>{ BOARD.all = true; draw(); }}) : null);
   }
   const cbox = h("div",{style:"padding:8px 12px"}), ext = (href, text) => h("a",{class:"lk",href,target:"_blank",rel:"noopener",text:text + " ↗"});
@@ -1166,14 +1481,15 @@ async function openStudy(id){
     catch(e){ put(app, h("div",{class:"err"}, h("b",{text:"The study did not load. "}), "Reload the page to try again. (" + e.message + ")")); return; } }
   if (ROUTE.view !== "study" || ROUTE.id !== id) return;
   const S0 = clone(STUDIES[id]), c = fromStudy(S0);
-  setCrumbs(meta.benchmark ? [["Benchmarks","#/browse/benchmarks"],[meta.benchmark_title,"#/b/" + meta.benchmark],[meta.title || "Untitled study",null]] : [["Browse","#/browse"],[meta.title || "Untitled study",null]]); document.title = (meta.title || "Untitled study") + " · CAMEO";
+  setCrumbs(meta.benchmark ? [["Benchmarks","#/benchmarks"],[meta.benchmark_title,"#/b/" + meta.benchmark],[meta.title || "Untitled study",null]] : [["Studies","#/studies"],[meta.title || "Untitled study",null]]); document.title = (meta.title || "Untitled study") + " · CAMEO";
   init(c.meta, c.runs, c.models, {status:"published", version:1, history:[{v:1, date:meta.created || today(), reason:"First deposit", nd:0, nr:0}], raw:S0, bundled:true, example:!INDEX.site.live && !meta.made_up, madeUp:!!meta.made_up, id, fileName:"study.json"});
 }
 
 /* Everything the page shows is read from one study file: the example, or one the depositor drops. */
 function stageStudy(S, extra){
   if (isObj(S.study) && !known(S.study.license)) S.study.license = RULES.license_default;
-  ROUTE = {view:"study", id:null}; setCrumbs([["Benchmarks","#/browse/benchmarks"],["Your staged study",null]]); document.title = "Staged study · CAMEO";
+  ROUTE = {view:"study", id:null}; try{ if (location.hash !== "#/deposit/preview") history.pushState(null, "", "#/deposit/preview"); }catch(e){}   /* its own address, so Back and the Deposit link both leave the preview */
+  document.body.classList.add("wide"); document.body.classList.remove("at-home"); setCrumbs([["Deposit","#/deposit"],["Your staged study",null]]); document.title = "Staged study · CAMEO";
   const c = fromStudy(S); init(c.meta, c.runs, c.models, Object.assign({status:"staged-new", version:0, history:[], raw:S}, extra || {}));
 }
 /* Show a study: the bundled one, or a file the depositor just dropped. */
@@ -1206,14 +1522,14 @@ function wire(){
   if (WIRED) return; WIRED = true;
   let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (document.getElementById("plot")) drawMain(); }, 80); });
   window.addEventListener("hashchange", route);
-  document.getElementById("homelink").addEventListener("click", () => setTimeout(() => { if (parseHash().view === "home") route(); }, 0));
+  /* a link to the page you are already on still reloads it */
+  document.addEventListener("click", e => { const a = e.target.closest && e.target.closest('a[href^="#/"]'); if (a && a.getAttribute("href") === (location.hash || "#/") && !a.hasAttribute("download")) route(); });
   document.addEventListener("keydown", e => {
     const typing = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName);
-    if (e.key === "/" && !typing && !document.getElementById("overlay")){ e.preventDefault(); const q = document.getElementById("q"); if (q) q.focus(); }
+    if (e.key === "/" && !typing && !document.getElementById("overlay")){ e.preventDefault(); const q = ["q","browseq","searchq","homeq","tsearch"].map(i => document.getElementById(i)).find(Boolean); if (q) q.focus(); }
     else if (e.key === "Escape" && typing && !document.getElementById("overlay")){ document.activeElement.blur(); }
   });
-  document.getElementById("depbtn").addEventListener("click", openDeposit);
-  document.getElementById("tsearch").addEventListener("keydown", e => { if (e.key !== "Enter") return; const v = e.target.value.trim(), to = "#/browse?q=" + encodeURIComponent(v); BROWSE.q = v; e.target.value = ""; if (location.hash === to) route(); else location.hash = to; });
+  document.getElementById("tsearch").addEventListener("keydown", e => { if (e.key !== "Enter") return; const v = e.target.value.trim(); if (!v) return; e.target.value = ""; e.target.blur(); goTo("#/search?q=" + encodeURIComponent(v)); });
 }
 
 /* ---------- derived ---------- */
@@ -1763,7 +2079,7 @@ function tableRows(){
     return (typeof x === "string" ? x.localeCompare(y) : x - y) * dir || a.r.n - b.r.n; });
   return rows;
 }
-const tcols = () => RUNS.some(r => r.score != null) ? COLS : COLS.filter(c => c.key !== "score");
+const tcols = () => COLS.filter(c => (c.key !== "score" || RUNS.some(r => r.score != null)) && (c.key !== "speed" || RUNS.some(r => r.speed != null)) && (c.key !== "mins" || RUNS.some(r => r.mins != null)));
 function renderTable(){
   const t = document.getElementById("tbl"), all = tableRows(), ti = tieInfo(), LIMIT = 10;
   const rows = state.rowsAll ? all : all.slice(0, LIMIT);
@@ -2429,20 +2745,6 @@ function copyText(text, btn){
 }
 
 /* ----- step 1: submit a file; it is read here, never uploaded ----- */
-function openDeposit(){
-  openDialog(dlg => {
-    const out = h("div",{id:"depout"});
-    const input = h("input",{type:"file",id:"depfile",accept:".json,application/json",style:"position:absolute;left:-9999px","aria-label":"Study JSON file"});
-    input.addEventListener("change", e => { const f = e.target.files[0]; if (f) readFile(f, out); });
-    const drop = h("div",{class:"drop"}, h("p",{style:"margin:0 0 8px",text:"Drop a study JSON here"}), h("button",{class:"btn",text:"Choose a file",onclick:()=>input.click()}), input);
-    drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
-    drop.addEventListener("dragleave", () => drop.classList.remove("over"));
-    drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("over"); const f = e.dataTransfer.files[0]; if (f) readFile(f, out); });
-    put(dlg, h("h2",{text:"Deposit a study"}), h("p",{class:"steps",text:"1 Check the file  ·  2 Preview and edit, staged  ·  3 Publish"}), drop,
-      h("p",{class:"fine",text:"The file is read in this browser only. Nothing is sent anywhere until you publish."}), out,
-      h("div",{class:"foot"}, h("button",{class:"btn",text:"Use the example study instead",onclick:stageExample}), h("button",{class:"btn",text:"Cancel",onclick:closeDialog})));
-  });
-}
 function readFile(file, out){
   out.replaceChildren(h("p",{class:"q",text:"Reading " + file.name + "…"}));
   const fr = new FileReader();

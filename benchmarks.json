@@ -19,5 +19,27 @@
     "href": "https://doi.org/10.1038/s41588-022-01048-5"
    }
   ]
+ },
+ {
+  "id": "gosai-mpra",
+  "title": "Gosai MPRA activity",
+  "dataset": "Gosai et al. 2024 episomal MPRA: K562, HepG2, SK-N-SH",
+  "task": "Regression from 200 bp of DNA",
+  "domain": "Genomics",
+  "task_type": "Regression",
+  "example_unit": "seq",
+  "match": "gosai",
+  "metric": "pearson_mean",
+  "split": "test",
+  "metric_label": "Test Pearson r (mean of 3 cell types)",
+  "direction": "maximize",
+  "description": "Predict the activity of 200 bp sequences in an episomal massively parallel reporter assay, as log2 fold change in K562, HepG2 and SK-N-SH cells.",
+  "links": [
+   {
+    "label": "Paper",
+    "href": "https://doi.org/10.1038/s41586-024-08070-z"
+   }
+  ],
+  "metric_short": "Test Pearson r"
  }
 ]
