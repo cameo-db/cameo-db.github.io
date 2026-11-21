@@ -934,6 +934,43 @@ body.has-stray{padding-bottom:72px} body.has-stray .cmptray{bottom:62px}
 .tog-empty b{display:block;color:var(--ink);font-family:var(--font-display);font-weight:500;font-size:20px;margin-bottom:6px}
 @media (max-width:1100px){ .tog-work{grid-template-columns:minmax(0,1fr)} .tog-work .insp{position:static;max-height:none} }
 @media (max-width:700px){ .stray{padding:10px 0 calc(10px + env(safe-area-inset-bottom))} .stray .sp{margin-left:0;flex:1 1 100%} .stray .sp .btn{flex:1 1 auto;text-align:center} .stray .hint{flex:1 1 100%} body.has-stray{padding-bottom:124px} body.has-stray .cmptray{bottom:112px} }
+/* zoom: one labelled control on every chart. Reset is always there, so the buttons never move. */
+.zgrp{display:inline-flex;align-items:stretch;border:1px solid var(--line);border-radius:9px;background:var(--surface);overflow:hidden;font-size:13px;box-shadow:0 1px 2px #0000000d}
+.zgrp .zl{display:inline-flex;gap:6px;align-items:center;padding:0 11px 0 10px;color:var(--ink-2);font-weight:500;background:var(--line-2)}
+.zgrp .zl svg{width:14px;height:14px;flex:none}
+.zgrp button{border:0;border-left:1px solid var(--line);background:none;font:inherit;color:var(--ink);padding:6px 0;width:34px;cursor:pointer;font-size:16px;line-height:1}
+.zgrp button.zr{width:auto;padding:6px 12px;font-size:13px;font-weight:500}
+.zgrp button:hover:not([disabled]){background:var(--accent-wash);color:var(--accent)} .zgrp button[disabled]{color:var(--muted);opacity:.55;cursor:default}
+.zgrp button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.bctl .zslot{margin-left:auto}
+/* the merged studies, each with what can be done to it */
+.tog-card{margin:0 0 20px}
+.tog-card .card-h h2{font-family:var(--font-display);font-weight:500;font-size:19px}
+.tog-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px 14px;align-items:center;padding:13px 18px;border-top:1px solid var(--line-2)}
+.tog-row:first-of-type{border-top:0}
+.tog-row .mk{width:12px;height:12px;border-radius:50%;border:2px solid transparent;box-sizing:border-box}
+.tog-rt b{display:block;font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tog-rt span{display:block;font-size:13px;color:var(--muted)} .tog-rt span i{font-style:normal;color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums}
+.tog-row.off .tog-rt b{color:var(--muted);font-weight:500}
+.tog-ra{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.tog-ra .btn{display:inline-flex;gap:6px;align-items:center} .tog-ra .btn svg{width:14px;height:14px;flex:none}
+.tog-ra .btn.rm:hover{border-color:var(--warn);color:var(--warn)}
+@media (max-width:760px){ .tog-row{grid-template-columns:auto minmax(0,1fr)} .tog-ra{grid-column:1 / -1;justify-content:flex-start} .tog-rt b{white-space:normal} .bctl .zslot{margin-left:0} }
+.tog-card .card-h .sp{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+/* the selected models side by side, large: it opens over the merged view and closes back onto it */
+.dialog.wide{max-width:min(1500px,96vw);padding:0;display:flex;flex-direction:column;max-height:88vh}
+.cmpx-h{display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid var(--line)}
+.cmpx-h h2{font-family:var(--font-display);font-weight:500;font-size:22px;margin:0} .cmpx-h .sp{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.cmpx-b{overflow:auto;flex:1 1 auto}
+.cmpx{border-collapse:separate;border-spacing:0;width:100%;font-size:13.5px}
+.cmpx th,.cmpx td{white-space:normal;word-break:break-word;vertical-align:top;padding:8px 12px;border-bottom:1px solid var(--line-2);min-width:200px;max-width:340px;text-align:left}
+.cmpx thead th{position:sticky;top:0;z-index:3;background:var(--surface);border-bottom:1px solid var(--line);font-weight:400}
+.cmpx th.rh{position:sticky;left:0;z-index:2;background:var(--surface);min-width:170px;max-width:190px;color:var(--muted);font-weight:500;font-size:12.5px;border-right:1px solid var(--line-2)}
+.cmpx thead th.rh{z-index:4}
+.cmpx .mh b{display:block;font-family:var(--font-mono);font-weight:500;font-size:13px;color:var(--ink);margin:2px 0} .cmpx .mh span{font-size:12px;color:var(--muted)} .cmpx .mh{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 6px}
+.cmpx tr.sect th{background:var(--line-2);color:var(--ink-2);font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:600;position:sticky;left:0}
+.cmpx tr.dif td{background:var(--warn-fill)}
+.cmpx td.num{font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -1096,7 +1133,7 @@ function parseHash(){
   if (path[0] === "b" && path[1]) return {view:"bench", id:path[1], only:qs.get("s") || ""};
   if (path[0] === "s" && path[1]) return {view:"study", id:path[1], run:path.slice(2).join("/") || null};
   if (path[0] === "d" && path[1]) return {view:"dep", id:path[1]};
-  if (path[0] === "together") return {view:"together", ids:(qs.get("s") || "").split(",").filter(Boolean), bench:qs.get("b") || "", split:qs.get("split"), pts:qs.get("pts"), x:qs.get("x"), m:qs.get("m"), q:qs.get("q"), url:true};
+  if (path[0] === "together") return {view:"together", ids:(qs.get("s") || "").split(",").filter(Boolean), bench:qs.get("b") || "", off:qs.get("off"), split:qs.get("split"), pts:qs.get("pts"), x:qs.get("x"), m:qs.get("m"), q:qs.get("q"), url:true};
   if (path[0] === "database") return list(["studies","models","benchmarks"].includes(path[1]) ? path[1] : null);
   if (["studies","models","benchmarks"].includes(path[0])) return list(path[0]);   /* older links */
   if (path[0] === "browse") return list(path[1] === "benchmarks" ? "benchmarks" : path[1] === "models" ? "models" : "studies");
@@ -1120,13 +1157,14 @@ function weightLink(w){
   return null;
 }
 const madeUp = x => x.made_up ? h("span",{class:"pill bad",title:"Every number in this study is made up, so the demo has more than one study",text:"made-up data"}) : null;
-const TITLES = {database:"Database", together:"Studies together", about:"About", deposit:"Deposit", compare:"Compare", notfound:"Not found"};
+const TITLES = {database:"Database", together:"Merged studies", about:"About", deposit:"Deposit", compare:"Compare", notfound:"Not found"};
 async function route(){
   const r = parseHash(); ROUTE = r; window.scrollTo(0, 0); closeDialog(); if (FIELD_STOP){ FIELD_STOP(); FIELD_STOP = null; }
   document.title = TITLES[r.view] ? TITLES[r.view] + " · CAMEO" : "CAMEO";
   document.body.classList.toggle("wide", ["study","bench","compare","together"].includes(r.view)); document.body.classList.toggle("at-home", r.view === "home"); document.body.classList.toggle("at-db", r.view === "database");   /* those two pages have their own search box, so the one in the header steps aside */
   const here = {database:["database","bench","study","dep","together"], about:["about"], deposit:["deposit"]};
   document.querySelectorAll("[data-nav]").forEach(a => { if ((here[a.dataset.nav] || []).includes(r.view)) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  TOG.redraw = null; TOG.compare = null;   /* they belong to the merged view that was on screen; it sets them again when it opens */
   renderTray(); renderStudyTray();
   if (r.view === "study"){
     if (ENTRY && ENTRY.id === r.id && ENTRY.status === "published" && document.getElementById("insp")){ if (r.run && byId[r.run] && r.run !== state.sel) select(r.run, true); return; }
@@ -1323,16 +1361,16 @@ function renderStudyTray(){
   if (!t){ t = h("div",{class:"stray",id:"stray",role:"region","aria-label":"Selected studies"}); document.body.append(t); }
   const St = ids.map(id => INDEX.studies.find(x => x.id === id)), n = St.length, runs = St.reduce((a, x) => a + (x.runs || 0), 0);
   put(t, h("div",{class:"wrap"}, h("b",{id:"straycount",text:`${pl(n,"study","studies")} selected · ${pl(runs,"run","runs")}`}),
-    n === 1 ? h("span",{class:"hint",text:"Tick another study to explore their models on one plot"}) : null,
+    n === 1 ? h("span",{class:"hint",text:"Tick another study to explore them merged, on one plot"}) : null,
     h("span",{class:"sp"}, h("button",{class:"linkish",type:"button",id:"strayclear",text:"Clear",onclick:()=>{ DB.picked.clear(); document.querySelectorAll(".spick input").forEach(c => { c.checked = false; }); paintPicked(); }}),
-      h("button",{class:"btn",type:"button",id:"straydl",title:n > 1 ? "The selected studies, merged into one JSON file" : "The selected study, as its JSON file",text:n > 1 ? "Download studies (JSON)" : "Download study (JSON)",onclick:e=>downloadStudies(ids.slice(), e.currentTarget)}),
-      n > 1 ? h("a",{class:"btn go",id:"straygo",href:togHref(ids),title:"Every model of the selected studies on one plot and in one list",text:"Explore models"}) : null)));
+      h("button",{class:"btn",type:"button",id:"straydl",title:n > 1 ? "The selected studies, merged into one JSON file" : "The selected study, as its JSON file",text:n > 1 ? "Download merged studies (JSON)" : "Download study (JSON)",onclick:e=>downloadStudies(ids.slice(), e.currentTarget)}),
+      n > 1 ? h("a",{class:"btn go",id:"straygo",href:togHref(ids),title:"Every model of the selected studies on one plot and in one list",text:"Explore merged studies"}) : null)));
   document.getElementById("live").textContent = `${pl(n,"study","studies")} selected`;
 }
 /* A search that finds several studies offers the same step without ticking them. */
 function paintAcross(){
   const box = document.getElementById("xact"); if (!box) return; const ids = !DB.picked.size && (DB.q.trim() || fltAny()) ? (DB.shown || []) : [];
-  put(box, ids.length > 1 ? h("div",{class:"across",id:"across"}, h("span",{class:"fl",text:"Across these studies"}), h("a",{href:togHref(ids)}, `Explore models across these ${ids.length} studies`, h("span",{text:"One plot and one list, with each model's details beside them"}))) : null);
+  put(box, ids.length > 1 ? h("div",{class:"across",id:"across"}, h("span",{class:"fl",text:"Across these studies"}), h("a",{href:togHref(ids)}, `Explore these ${ids.length} studies merged`, h("span",{text:"One plot and one list, with each model's details beside them"}))) : null);
 }
 /* ---------- several studies together: one plot, one list of models, and a model's details beside them ----------
    Nothing here leaves the page. A click on a point or a name opens that model in the panel, whichever study it is from.
@@ -1340,17 +1378,27 @@ function paintAcross(){
 const TOG = {key:null, bench:null, sel:null, pin:null, q:"", sort:null, all:false};
 async function openTogether(r){
   leave(); const app = document.getElementById("app"), St = r.ids.map(id => INDEX.studies.find(x => x.id === id)).filter((x, i, a) => x && a.indexOf(x) === i), ids = St.map(x => x.id);
-  setCrumbs([["Database","#/database"],["Studies together",null]]);
-  if (!St.length){ put(app, pageHead(null, "Explore studies together", "Tick studies in the database, then choose Explore models."), h("p",{class:"empty"}, h("a",{href:"#/database",text:"Open the database"}))); return; }
+  setCrumbs([["Database","#/database"],["Merged studies",null]]);
+  if (!St.length){ put(app, pageHead(null, "Explore merged studies", "Tick studies in the database, then choose Explore merged studies."), h("p",{class:"empty"}, h("a",{href:"#/database",text:"Open the database"}))); return; }
   const on = x => x.benchmarks || (x.benchmark ? [x.benchmark] : []), count = b => St.filter(x => on(x).includes(b.id)).length, benches = INDEX.benchmarks.filter(b => count(b)).sort((a, c) => count(c) - count(a));
   const key = ids.slice().sort().join(","); if (TOG.key !== key){ Object.assign(TOG, {key, bench:null, sel:null, pin:null, q:"", sort:null, all:false}); }
   if (r.bench && benches.some(b => b.id === r.bench)) TOG.bench = r.bench; if (!benches.some(b => b.id === TOG.bench)) TOG.bench = benches.length ? benches[0].id : null;
   const col = {}; St.forEach((x, i) => { col[x.id] = `var(--s${(i % 4) + 1})`; });
   const drop = id => goTo(ids.length > 1 ? togHref(ids.filter(x => x !== id)) : "#/database");
-  const head = [pageHead("Studies together", St.length > 1 ? `Models across ${St.length} studies` : "Models in one study", null),
-    h("div",{class:"tog-st",id:"togst"}, St.map(x => h("span",{class:"item"}, h("span",{class:"dot",style:"background:" + col[x.id]}), h("a",{href:"#/s/" + x.id,title:"Open this study on its own page",text:x.title || "Untitled study"}),
-        h("button",{class:"x",type:"button","aria-label":"Remove " + (x.title || "this study"),title:"Remove from this view",text:"×",onclick:()=>drop(x.id)}))),
-      h("a",{class:"btn sm",id:"togedit",href:"#/database",title:"Back to the database, with these studies still ticked",text:"Edit selection"}), h("button",{class:"btn sm",type:"button",id:"togdl",text:St.length > 1 ? "Download studies (JSON)" : "Download study (JSON)",onclick:e=>downloadStudies(ids.slice(), e.currentTarget)}))];
+  const stbox = h("div",{id:"togst"}), dlb = h("button",{class:"btn sm",type:"button",id:"togdl",text:St.length > 1 ? "Download merged studies (JSON)" : "Download study (JSON)",onclick:e=>downloadStudies(ids.slice(), e.currentTarget)});
+  /* each study, and what can be done with it here: take it off the plot, open it on its own page, or drop it from the merge */
+  const drawSt = P => put(stbox, St.map(x => { const c = P && P.cover.find(q => q.study === x.id), off = BCH.off.has(x.id), miss = c ? c.total - c.n : 0, why = c ? Object.entries(c.why).sort((a, d) => d[1] - a[1]).map(([k, n]) => `${fmtInt(n)} ${k}`).join(", ") : "";
+    return h("div",{class:"tog-row" + (off ? " off" : "")}, h("span",{class:"mk",style:off ? "border-color:" + col[x.id] : "background:" + col[x.id]}),
+      h("div",{class:"tog-rt"}, h("b",{title:x.title || "",text:x.title || "Untitled study"}),
+        !P ? h("span",{text:pl(x.runs,"run","runs")}) : !c ? h("span",{text:"On another benchmark. Choose it below to plot this study."}) : h("span",null, h("i",{text:`${fmtInt(c.n)} of ${fmtInt(c.total)}`}), ` ${P.unit[1]} ${off ? "would be plotted" : "plotted"}`, miss ? ` · ${fmtInt(miss)} not plotted: ${why}` : "")),
+      h("div",{class:"tog-ra"},
+        P && c ? h("button",{class:"btn sm",type:"button",id:"tshow-" + x.id,"aria-pressed":String(!off),title:off ? "Put this study's points back on the plot and its models back in the list" : "Take this study's points off the plot and its models out of the list. It stays in the merge.",onclick:()=>{ if (off) BCH.off.delete(x.id); else BCH.off.add(x.id); TOG.focus = "tshow-" + x.id; cbox_._redraw(); }}, icon(off ? "eyeoff" : "eye"), off ? "Hidden · show" : "Shown · hide") : null,
+        h("a",{class:"btn sm",href:"#/s/" + x.id,title:"Open this study on its own page. Back returns here.",}, icon("out"), "Open study"),
+        h("button",{class:"btn sm rm",type:"button",id:"trm-" + x.id,title:"Remove this study from the merge",onclick:()=>drop(x.id)}, icon("x"), "Remove"))); }));
+  let cbox_ = null;
+  const head = [pageHead("Merged studies", St.length > 1 ? `Models across ${St.length} studies` : "Models in one study", null),
+    h("section",{class:"card tog-card"}, h("div",{class:"card-h"}, h("h2",{text:pl(St.length,"study","studies") + " merged"}), h("span",{class:"sp"}, h("a",{class:"btn sm",id:"togedit",href:"#/database",title:"Back to the database, with these studies still ticked",text:"Edit selection"}), dlb)), stbox)];
+  drawSt(null);
   if (!TOG.bench){ put(app, head, h("p",{class:"empty",text:"None of these studies is on a benchmark yet, so there is no score to plot them by."})); return; }
   put(app, head, h("div",{class:"loading",role:"status",text:"Loading the models…"}));
   let B0; try{ B0 = await getJSON("boards/" + TOG.bench + ".json"); }catch(e){ put(app, head, h("div",{class:"err"}, h("b",{text:"The models did not load. "}), "Reload the page to try again. (" + e.message + ")")); return; }
@@ -1358,11 +1406,11 @@ async function openTogether(r){
   const b = B0.benchmark, mine = x => ids.includes(x.study), B = {benchmark:b, rows:B0.rows.filter(mine), runs:(B0.runs || []).filter(mine), studies:(B0.studies || []).filter(mine)}, K = u => u.study + "~" + u.run;
   { const k = "together|" + key + "|" + b.id; if (BCH.for !== k){ BCH.for = k; BCH.mode = B.runs.length ? "run" : "model"; BCH.split = b.split === "test" ? "test" : "valid"; BCH.x = "params"; BCH.off = new Set(); } }
   /* the address says what is on screen, so Back, Forward, a refresh and a shared link all open the same plot, list and model */
-  if (r.url){ if (r.split === "valid" || r.split === "test") BCH.split = r.split; if (r.pts === "run" || r.pts === "model") BCH.mode = B.runs.length ? r.pts : "model"; if (r.x === "params" || r.x === "minutes") BCH.x = r.x; if (r.pts || r.m) TOG.sel = r.m || null; if (r.pts || r.q) TOG.q = r.q || ""; }
+  if (r.url){ if (r.split === "valid" || r.split === "test") BCH.split = r.split; if (r.pts === "run" || r.pts === "model") BCH.mode = B.runs.length ? r.pts : "model"; if (r.x === "params" || r.x === "minutes") BCH.x = r.x; if (r.pts || r.m) TOG.sel = r.m || null; if (r.pts || r.q) TOG.q = r.q || ""; if (r.pts) BCH.off = new Set(String(r.off || "").split(",").filter(x => ids.includes(x))); }
   DB.picked = new Set(ids);   /* Edit selection goes back to the database with these studies still ticked */
   const words = () => TOG.q.trim().toLowerCase().split(/\s+/).filter(Boolean), title = {}; St.forEach(x => { title[x.id] = x.title || "Untitled study"; });
   const match = u => { const w = words(); if (!w.length) return true; const t = [u.name, u.family, known(u.family) ? pretty(String(u.family)) : "", title[u.study], u.run, u.status].filter(Boolean).join(" ").toLowerCase(); return w.every(x => t.includes(x)); };
-  const cbox = h("div",{style:"padding:8px 12px"}), chead = h("h2",{id:"bchead",text:"Score vs. model size"}), tbox = h("div",{class:"scrollx",tabindex:"0",role:"region","aria-label":"Models"}), tcnt = h("span",{class:"q",style:"margin:0"}), insp = h("aside",{class:"card insp",id:"toginsp","aria-label":"Selected model"});
+  const cbox = h("div",{style:"padding:8px 12px"}); cbox_ = cbox; const chead = h("h2",{id:"bchead",text:"Score vs. model size"}), tbox = h("div",{class:"scrollx",tabindex:"0",role:"region","aria-label":"Models"}), tcnt = h("span",{class:"q",style:"margin:0"}), insp = h("aside",{class:"card insp",id:"toginsp","aria-label":"Selected model"});
   const fq = h("input",{class:"search sm",type:"search",id:"togq",value:TOG.q,placeholder:"Filter by model, family, study…","aria-label":"Filter the models"}); fq.addEventListener("input", () => { TOG.q = fq.value; TOG.all = false; cbox._redraw(); });
   let LIST = [];   /* the models listed, in the order shown: what Previous and Next step through */
   const pick = k => { TOG.sel = k; cbox._redraw(); }, low = b.direction === "minimize";
@@ -1375,16 +1423,17 @@ async function openTogether(r){
     put(tbox, LIST.length ? h("table",{class:"lb tog-t",id:"togtable"},
         h("thead",null, h("tr",null, h("th",{class:"cmpc"}, h("span",{class:"vh",text:"Select"})), th("name","Model"), th("family","Family"), th("study","Study"), th("valid","Validation","num",low ? 1 : -1), th("test","Test","num",low ? 1 : -1), th("params","Parameters","num"), th("minutes","Training time","num"))),
         h("tbody",null, shown.map(u => h("tr",{class:K(u) === TOG.sel ? "sel" : "","data-k":K(u),onclick:e=>{ if (!e.target.closest("input,label,a")) pick(K(u)); }},
-          h("td",{class:"cmpc"}, cmpBtn(u.study, u.run, u.name)),
+          h("td",{class:"cmpc"}, (c_ => { c_.querySelector("input").id = "csel-" + K(u); return c_; })(cmpBtn(u.study, u.run, u.name))),
           h("td",{class:"nm"}, h("button",{class:"nmb",type:"button",title:u.name,text:u.name,onclick:e=>{ e.stopPropagation(); pick(K(u)); }}), u.status && u.status !== "done" ? h("span",{class:"pill bad",text:String(u.status).replace(/_/g, " ")}) : u.kind === "reported" ? h("span",{class:"pill plain",text:"reported"}) : null),
           h("td",{class:"famc",text:known(u.family) ? pretty(String(u.family)) : "–"}), h("td",{class:"st",title:title[u.study]}, h("span",{class:"dot",style:"background:" + col[u.study]}), title[u.study]),
           h("td",{class:"num",text:fmt(u.valid,4)}), h("td",{class:"num",text:fmt(u.test,4)}), h("td",{class:"num",text:fmtInt(u.params)}), h("td",{class:"num",text:dur(u.minutes)})))))
       : h("p",{class:"q",style:"padding:14px 16px",text:"No model matches."}),
       LIST.length > shown.length ? h("button",{class:"linkish",type:"button",style:"margin:10px 16px",text:`Show all ${fmtInt(LIST.length)} rows`,onclick:()=>{ TOG.all = true; cbox._redraw(); }}) : null);
-    { const a_ = ["s=" + ids.map(encodeURIComponent).join(","), "b=" + b.id, "split=" + BCH.split, "pts=" + BCH.mode, "x=" + BCH.x]; if (TOG.sel) a_.push("m=" + encodeURIComponent(TOG.sel)); if (TOG.q.trim()) a_.push("q=" + encodeURIComponent(TOG.q.trim()));
+    { const a_ = ["s=" + ids.map(encodeURIComponent).join(","), "b=" + b.id, "split=" + BCH.split, "pts=" + BCH.mode, "x=" + BCH.x]; if (BCH.off.size) a_.push("off=" + [...BCH.off].map(encodeURIComponent).join(",")); if (TOG.sel) a_.push("m=" + encodeURIComponent(TOG.sel)); if (TOG.q.trim()) a_.push("q=" + encodeURIComponent(TOG.q.trim()));
       const to = "#/together?" + a_.join("&"); if (ROUTE.view === "together" && location.hash !== to) try{ history.replaceState(null, "", to); }catch(e){} }
     tbox.style.maxHeight = TOG.all && LIST.length > 25 ? "620px" : ""; const cur = tbox.querySelector("tr.sel"); if (cur && TOG.all){ const top = cur.offsetTop - 40; if (top < tbox.scrollTop || top > tbox.scrollTop + tbox.clientHeight - 90) tbox.scrollTop = Math.max(0, top - 80); }
-    drawInsp(P);
+    LASTP = P; drawSt(P); drawInsp(P);
+    if (TOG.focus){ const e = document.getElementById(TOG.focus); TOG.focus = null; if (e && !e.disabled) e.focus(); }   /* a button that redraws the page keeps the keyboard */
   }
   /* the panel: one model, or two side by side when one is pinned. The plot and the list stay where they are. */
   const DET = {};   /* what a study's own file adds about a run, once the file has loaded */
@@ -1392,9 +1441,43 @@ async function openTogether(r){
     return DET[k] = {settings:(e && e.training.settings) || {}, own:new Set((e && e.training.set_by_this_run) || []), recipe:e ? e.training.recipe : null, change:known(m.change_summary) ? String(m.change_summary) : null, hyp:known(t.hypothesis) ? String(t.hypothesis) : null,
       parent:(pt => pt ? ((S.models.find(x => x.id === pt.model) || {}).name || pt.model) + " · " + pt.id : null)(known(t.parent_trial) ? S.trials.find(x => x.id === t.parent_trial) : null),
       code:known(pathGet(m, SRCP)) ? String(pathGet(m, SRCP)).split("\n").length : 0, missing:e ? e.rebuild.missing : []}; };
+  /* what is known about each model, as rows: a label and one value per model */
+  const FREE = new Set(["Run","Parent","Change it tested","Hypothesis"]);   /* always different from model to model, so marking them says nothing */
+  const rowsFor = items => { const R = [], sec = t => R.push({sec:t}), row = (label, f, g) => { const vals = items.map(it => f(it.u, it.d)); if (vals.every(v => v == null || v === "")) return;
+      R.push({label, vals, own:g ? g(items[0].d) : false, dif:items.length > 1 && !FREE.has(label) && new Set(vals.map(v => v == null ? "" : String(v))).size > 1}); };
+    sec("Results"); row("Run", x => x.run + (x.seed != null ? " · seed " + x.seed : "")); row("Validation", x => x.valid != null ? fmt(x.valid,4) : null); row("Test", x => x.test != null ? fmt(x.test,4) : null); row("Parameters", x => x.params != null ? fmtInt(x.params) : null); row("Training time", x => x.minutes != null ? dur(x.minutes) : null);
+    sec("Architecture"); row("Family", x => known(x.family) ? pretty(String(x.family)) : null); row("Parent", (x, e) => e.parent); row("Change it tested", (x, e) => e.change); row("Hypothesis", (x, e) => e.hyp); row("Model code", (x, e) => e.code ? `stored · ${fmtInt(e.code)} lines` : "not stored");
+    sec("Training settings"); row("Recipe", (x, e) => e.recipe);
+    for (const k of [...new Set(items.flatMap(it => Object.keys(it.d.settings)))].sort()) row(k.replace(/_/g, " "), (x, e) => e.settings[k] === undefined ? null : showV(e.settings[k]), e => e.own.has(k));
+    row("Still needed to retrain", (x, e) => e.missing.length ? pl(e.missing.length, "detail", "details") : "nothing listed");
+    return R.filter((x, n) => !x.sec || (R[n + 1] && !R[n + 1].sec)); };
+  /* the selected models side by side, as large as the window allows. It opens over this page and closes back onto the same plot. */
+  let LASTP = null, onlyDif = false;
+  TOG.compare = () => openDialog(dlg => { dlg.classList.add("wide");
+    const fill = async () => { const sel = CMP.sel.slice(); if (!sel.length){ closeDialog(); return; }
+      put(dlg, h("div",{class:"cmpx-h"}, h("h2",{text:`Compare ${pl(sel.length,"selected model","selected models")}`})), h("p",{class:"q",style:"padding:18px 20px",text:"Loading the training settings…"}));
+      const by = {}; for (const u of (LASTP ? LASTP.all : [])) by[K(u)] = u; let items;
+      try{ items = await Promise.all(sel.map(async x => { const u = by[K(x)] || {study:x.study, run:x.run, name:x.name}; return {u, d:await detail(u)}; })); }
+      catch(e){ put(dlg, h("div",{class:"cmpx-h"}, h("h2",{text:"Compare"}), h("span",{class:"sp"}, h("button",{class:"btn",type:"button",text:"Close",onclick:closeDialog}))), h("p",{class:"q",style:"padding:18px 20px",text:"The models did not load. (" + e.message + ")"})); return; }
+      if (!dlg.isConnected) return;
+      const draw = () => { const rows0 = rowsFor(items), rows = rows0.filter(x => x.sec || !onlyDif || x.dif).filter((x, n, a) => !x.sec || (a[n + 1] && !a[n + 1].sec));
+        put(dlg, h("div",{class:"cmpx-h"}, h("h2",{text:`Compare ${pl(items.length,"selected model","selected models")}`}),
+            items.length > 1 ? h("button",{class:"fchip",type:"button",id:"cmpxdif","aria-pressed":String(onlyDif),text:"Only rows that differ",onclick:()=>{ onlyDif = !onlyDif; draw(); const e = document.getElementById("cmpxdif"); if (e) e.focus(); }}) : null,
+            h("span",{class:"sp"}, h("button",{class:"btn",type:"button",id:"cmpxdl",title:"Each model with its code, the settings and recipe it was trained with, its data and its results",text:items.length === 1 ? "Download JSON" : `Download ${items.length} as JSON`,onclick:e=>downloadModels(CMP.sel.slice(), e.currentTarget)}),
+              h("button",{class:"btn pri",type:"button",id:"cmpxclose",text:"Close",onclick:closeDialog}))),
+          h("div",{class:"cmpx-b",tabindex:"0",role:"region","aria-label":"Selected models side by side"}, h("table",{class:"cmpx",id:"cmpxtable"},
+            h("thead",null, h("tr",null, h("th",{class:"rh"}), items.map(it => h("th",{scope:"col"}, h("div",{class:"mh"}, h("span",null, h("span",{class:"dot",style:"background:" + (col[it.u.study] || "var(--other)")}), title[it.u.study] || it.u.study),
+              h("button",{class:"x",type:"button","aria-label":"Remove " + it.u.name + " from the selection",title:"Remove from the selection",text:"×",onclick:()=>{ cmpToggle(it.u.study, it.u.run, it.u.name); fill(); }}), h("b",{text:it.u.name})))))),
+            h("tbody",null, rows.length ? rows.map(x => x.sec ? h("tr",{class:"sect"}, h("th",{colspan:String(items.length + 1),scope:"colgroup",text:x.sec}))
+              : h("tr",{class:x.dif ? "dif" : ""}, h("th",{class:"rh",scope:"row",text:x.label}), x.vals.map(v => h("td",{text:v == null || v === "" ? "–" : String(v)}))))
+              : h("tr",null, h("td",{colspan:String(items.length + 1),text:"These models do not differ on anything recorded."}))))),
+          items.length > 1 ? h("p",{class:"fine",style:"margin:0;padding:10px 20px 14px",text:"Shaded rows are results and settings that differ between the models."}) : null); };
+      draw(); };
+    fill(); });
+  TOG.redraw = () => { const id = document.activeElement && document.activeElement.id; if (cbox._redraw) cbox._redraw(); if (id){ const e = document.getElementById(id); if (e) e.focus(); } };
   function drawInsp(P){
     const by = {}; for (const u of P.all) by[K(u)] = u; const u = by[TOG.sel], pin = TOG.pin && TOG.pin !== TOG.sel ? by[TOG.pin] : null;
-    if (!u){ TOG.sel = null; put(insp, h("div",{class:"tog-empty"}, h("b",{text:"Pick a model"}), "Click a point on the plot, or a name in the list. Its study, scores, architecture and training settings open here, and the plot stays as it is.")); return; }
+    if (!u){ TOG.sel = null; put(insp, h("div",{class:"tog-empty"}, h("b",{text:"Pick a model"}), "Click a point on the plot, or a name in the list. Its study, scores, architecture and training settings open here, and the plot stays as it is. Use Select on each model you want to keep: the bar at the foot of the screen then compares them in a large table or downloads them as JSON.")); return; }
     const i = LIST.findIndex(x => K(x) === TOG.sel), step = d => { const n = LIST[i + d]; if (n){ TOG.focus = d < 0 ? "togprev" : "tognext"; pick(K(n)); } };
     const src = x => h("span",null, h("span",{class:"dot",style:"background:" + col[x.study]}), title[x.study]);
     const body = h("div",{class:"sec",id:"togdet"}, h("p",{class:"q",text:"Loading the training settings…"}));
@@ -1404,24 +1487,17 @@ async function openTogether(r){
             h("button",{class:"x",type:"button",id:"togclose","aria-label":"Close the model's details",title:"Close",text:"×",onclick:()=>{ const k = TOG.sel; TOG.sel = null; cbox._redraw(); const row = tbox.querySelector(`tr[data-k="${CSS.escape(k)}"] .nmb`); if (row) row.focus(); }}))),
         h("div",{class:"k"}, src(u)), h("h2",{id:"togname",text:u.name}),
         h("div",{class:"pills"}, known(u.family) ? h("span",{class:"pill plain",text:pretty(String(u.family))}) : null, u.status && u.status !== "done" ? h("span",{class:"pill bad",text:String(u.status).replace(/_/g, " ")}) : null, u.kind === "reported" ? h("span",{class:"pill plain",text:"reported elsewhere"}) : null),
-        h("div",{class:"insp-a"}, h("button",{class:"btn sm",type:"button",id:"togpin","aria-pressed":String(TOG.pin === TOG.sel),title:"Keep this model in the panel, so the next one you pick is shown beside it",text:TOG.pin === TOG.sel ? "✓ Pinned to compare" : "Pin to compare",onclick:()=>{ TOG.pin = TOG.pin === TOG.sel ? null : TOG.sel; TOG.focus = "togpin"; cbox._redraw(); }}),
+        h("div",{class:"insp-a"}, (b_ => { b_.id = "cmpinsp"; return b_; })(cmpBtn(u.study, u.run, u.name, true)), h("button",{class:"btn sm",type:"button",id:"togpin","aria-pressed":String(TOG.pin === TOG.sel),title:"Keep this model in the panel, so the next one you pick is shown beside it",text:TOG.pin === TOG.sel ? "✓ Pinned to compare" : "Pin to compare",onclick:()=>{ TOG.pin = TOG.pin === TOG.sel ? null : TOG.sel; TOG.focus = "togpin"; cbox._redraw(); }}),
           h("button",{class:"btn sm",type:"button",title:"The model, its training settings and recipe, its data and its results, as one JSON file",text:"Download run configuration (JSON)",onclick:e=>downloadModel(u.study, u.run, e.currentTarget)}),
           h("a",{class:"btn sm",id:"togsrc",href:"#/s/" + u.study + "/" + encodeURIComponent(u.run),title:"Leaves this view: the run on its own study's page, with its layers, graph, code and lineage",text:"Open source study ↗"}))), body);
-    if (TOG.focus){ const e = document.getElementById(TOG.focus); TOG.focus = null; if (e && !e.disabled) e.focus(); }   /* stepping through the list keeps the keyboard on the button */
     const want = TOG.sel + "|" + (pin ? TOG.pin : "");
     Promise.all([detail(u), pin ? detail(pin) : null]).then(([d, dp]) => {
       if (TOG.sel + "|" + (TOG.pin && TOG.pin !== TOG.sel && by[TOG.pin] ? TOG.pin : "") !== want || !body.isConnected) return;
-      const R = [], row = (label, f, g) => { const a = f(u, d), c = pin ? f(pin, dp) : null; if ((a == null || a === "") && (c == null || c === "")) return; R.push({label, a, c, own:g ? g(d) : false}); }, sec = t => R.push({sec:t});
-      sec("Results"); row("Run", x => x.run + (x.seed != null ? " · seed " + x.seed : "")); row("Validation", x => x.valid != null ? fmt(x.valid,4) : null); row("Test", x => x.test != null ? fmt(x.test,4) : null); row("Parameters", x => x.params != null ? fmtInt(x.params) : null); row("Training time", x => x.minutes != null ? dur(x.minutes) : null);
-      sec("Architecture"); row("Family", x => known(x.family) ? pretty(String(x.family)) : null); row("Parent", (x, e) => e.parent); row("Change it tested", (x, e) => e.change); row("Hypothesis", (x, e) => e.hyp); row("Model code", (x, e) => e.code ? `stored · ${fmtInt(e.code)} lines` : "not stored");
-      sec("Training settings"); row("Recipe", (x, e) => e.recipe);
-      for (const k of [...new Set(Object.keys(d.settings).concat(dp ? Object.keys(dp.settings) : []))].sort()) row(k.replace(/_/g, " "), (x, e) => e.settings[k] === undefined ? null : showV(e.settings[k]), e => e.own.has(k));
-      row("Still needed to retrain", (x, e) => e.missing.length ? pl(e.missing.length, "detail", "details") : "nothing listed");
-      const rows = R.filter((x, n) => !x.sec || (R[n + 1] && !R[n + 1].sec));
+      const rows = rowsFor(pin ? [{u, d}, {u:pin, d:dp}] : [{u, d}]).map(x => x.sec ? x : {label:x.label, a:x.vals[0], c:x.vals[1], own:x.own, dif:x.dif});
       put(body, pin ? h("p",{class:"q",id:"togvs",style:"margin:0 0 8px"}, "Beside it, pinned: ", src(pin), " · ", h("span",{class:"mono",text:pin.name}), " ", h("button",{class:"linkish",type:"button",text:"Unpin",onclick:()=>{ TOG.pin = null; cbox._redraw(); }})) : null,
         h("table",{class:"tog-cmp",id:"togcmp"}, pin ? h("thead",null, h("tr",null, h("th"), h("th",{scope:"col",text:"This model"}), h("th",{scope:"col",text:"Pinned"}))) : null,
           h("tbody",null, rows.map(x => x.sec ? h("tr",null, h("th",{colspan:pin ? "3" : "2",scope:"colgroup",style:"padding-top:12px;text-transform:uppercase;letter-spacing:.07em;font-size:11.5px;font-weight:600",text:x.sec}))
-            : h("tr",{class:pin && x.a != null && x.c != null && String(x.a) !== String(x.c) ? "dif" : ""}, h("th",{scope:"row"}, x.label, x.own ? h("span",{class:"own",title:"Set by this run, not by the study's defaults",text:"set by this run"}) : null), h("td",{text:x.a == null || x.a === "" ? "–" : String(x.a)}), pin ? h("td",{text:x.c == null || x.c === "" ? "–" : String(x.c)}) : null)))),
+            : h("tr",{class:pin && x.dif && x.a != null && x.c != null ? "dif" : ""}, h("th",{scope:"row"}, x.label, x.own ? h("span",{class:"own",title:"Set by this run, not by the study's defaults",text:"set by this run"}) : null), h("td",{text:x.a == null || x.a === "" ? "–" : String(x.a)}), pin ? h("td",{text:x.c == null || x.c === "" ? "–" : String(x.c)}) : null)))),
         pin ? h("p",{class:"fine",text:"Shaded rows differ between the two models."}) : null);
     }).catch(e => { if (body.isConnected) put(body, h("p",{class:"q",text:"The training settings did not load. (" + e.message + ")"})); });
   }
@@ -1432,7 +1508,7 @@ async function openTogether(r){
         h("section",{class:"card"}, h("div",{class:"card-h"}, chead), cbox),
         h("section",{class:"card"}, h("div",{class:"card-h"}, h("h2",{text:"Models"}), fq, tcnt,
           h("span",{class:"sp"}, h("button",{class:"btn sm",type:"button",id:"togcsv",title:"The rows listed here, as filtered and sorted, with the score on both splits",text:"Download listed rows (CSV)",onclick:()=>saveText(runsCsv({benchmark:b, studies:B.studies, runs:LIST.map(u => Object.assign({}, u, {name:u.name}))}), "cameo-" + b.id + "-listed-rows.csv", "text/csv")}))), tbox)), insp));
-  chartBox(B, col, cbox, chead, {onPick:p => pick(K(p)), sel:() => TOG.sel, match, after});
+  chartBox(B, col, cbox, chead, {onPick:p => pick(K(p)), sel:() => TOG.sel, marked:() => new Set(CMP.sel.map(K)), match, after, noCover:true});
 }
 function drawStudies(found, hit){
   const res = document.getElementById("results"), St = found.slice().sort(SORTS[STUD.sort][1]); DB.shown = St.map(x => x.id);
@@ -1640,16 +1716,18 @@ function renderTray(){
   if (hide){ if (t) t.remove(); }
   else {
     if (!t){ t = h("div",{class:"cmptray",id:"cmptray",role:"region","aria-label":"Selected runs"}); document.body.append(t); }
-    const n = CMP.sel.length, few = n <= CMP_MAX, can = n >= 2 && few;
+    const n = CMP.sel.length, few = n <= CMP_MAX, tog = ROUTE.view === "together", can = n >= 2 && (few || tog);
     put(t, h("div",{class:"wrap"}, h("b",{id:"selcount",text:`${n} selected`}),
       (few ? CMP.sel : CMP.sel.slice(0, 3)).map((x, i) => h("span",{class:"item"}, few ? h("span",{class:"cdot",style:`background:var(--s${i + 1})`}) : null, h("span",{class:"mono",text:x.name}),
         h("button",{class:"x",type:"button","aria-label":"Remove " + x.name + " from the selection",title:"Remove",text:"×",onclick:()=>cmpToggle(x.study, x.run, x.name)}))),
       few ? null : h("span",{class:"more",text:`and ${n - 3} more`}),
-      h("span",{class:"hint",text:n < 2 ? "Select another to compare" : few ? "" : `Compare takes 2 to ${CMP_MAX}`}),
+      h("span",{class:"hint",text:n < 2 ? "Select another to compare" : few || tog ? "" : `Compare takes 2 to ${CMP_MAX}`}),
       h("span",{class:"sp"}, h("button",{class:"linkish",type:"button",id:"selclear",text:"Clear",onclick:()=>{ CMP.sel = []; renderTray(); }}),
         h("button",{class:"btn" + (can ? "" : " pri"),type:"button",id:"seldl",title:"Each model with its code, the settings and recipe it was trained with, its data and its results",text:n === 1 ? "Download JSON" : `Download ${n} as JSON`,onclick:e=>downloadModels(CMP.sel.slice(), e.currentTarget)}),
-        can ? h("a",{class:"btn pri",id:"cmpgo",href:cmpHref(),text:`Compare ${n} runs`}) : h("button",{class:"btn",id:"cmpgo",type:"button",disabled:true,text:"Compare"}))));
+        can && tog ? h("button",{class:"btn pri",id:"cmpgo",type:"button",title:"The selected models side by side, over this page",text:`Compare ${n} models`,onclick:()=>{ if (TOG.compare) TOG.compare(); }})
+          : can ? h("a",{class:"btn pri",id:"cmpgo",href:cmpHref(),text:`Compare ${n} runs`}) : h("button",{class:"btn",id:"cmpgo",type:"button",disabled:true,text:"Compare"}))));
   }
+  if (ROUTE.view === "together" && TOG.redraw) TOG.redraw(); else if (ROUTE.view !== "together"){ TOG.redraw = null; TOG.compare = null; }
   document.querySelectorAll(".cmpb, #cmpinsp, #dlmods").forEach(b => { if (b._paint) b._paint(); });
 }
 const textOf = (v, key) => { let t = isObj(v) ? [key || "how", "scheme", "description", "kind"].map(k => v[k]).find(known) : v;
@@ -1871,7 +1949,7 @@ function boardView(B, O){
     const y = u[BCH.split], x = u[BCH.x], why = y == null ? (u.status && u.status !== "done" ? String(u.status).replace(/_/g, " ") : `with no ${SPLITN[BCH.split].toLowerCase()} score`) : !(x > 0) ? "with " + BX[BCH.x][2] : null;
     if (why){ c.why[why] = (c.why[why] || 0) + 1; continue; } c.n++;
     if (!BCH.off.has(u.study)) pts.push({x, y, study:u.study, run:u.run, name:u.name, study_title:c.title, kind:u.kind, cite:u.cite, dim:!!(O && O.match) && !O.match(u)}); }
-  return {all:src, onPick:O && O.onPick, sel:O && O.sel ? O.sel() : null, pts, cover:Object.values(cover), unit:perModel ? ["model","models"] : ["run","runs"], ylabel:SPLITN[BCH.split] + " " + metricBare(b), xlabel:BX[BCH.x][1], xname:BX[BCH.x][0], xshow:BX[BCH.x][3], low:b.direction === "minimize"};
+  return {all:src, onPick:O && O.onPick, sel:O && O.sel ? O.sel() : null, marked:O && O.marked ? O.marked() : null, pts, cover:Object.values(cover), unit:perModel ? ["model","models"] : ["run","runs"], ylabel:SPLITN[BCH.split] + " " + metricBare(b), xlabel:BX[BCH.x][1], xname:BX[BCH.x][0], xshow:BX[BCH.x][3], low:b.direction === "minimize"};
 }
 function boardChart(P, col, W, H0, V){
   const pts = P.pts; if (!pts.length) return null;
@@ -1897,6 +1975,7 @@ function boardChart(P, col, W, H0, V){
     const c = p.kind === "reported" ? s("rect",{x:cx-4.5,y:cy-4.5,width:9,height:9,fill:"var(--surface)",stroke:col[p.study] || "var(--other)","stroke-width":2,style:"cursor:pointer"}, tt)
       : s("circle",{cx,cy,r:4.5,fill:under ? "none" : col[p.study],"fill-opacity":.8,stroke:under ? col[p.study] : "var(--surface)","stroke-width":under ? 1.5 : 1,style:"cursor:pointer"}, tt);
     if (p.dim) c.setAttribute("opacity", ".13");
+    if (P.marked && P.marked.has(p.study + "~" + p.run)) marks.append(s("circle",{cx,cy,r:7.5,fill:"none",stroke:"var(--ink)","stroke-width":1.4,"stroke-dasharray":"2.5 2","pointer-events":"none"}));
     c.addEventListener("click", () => { if (svg._moved) return; if (P.onPick) P.onPick(p); else location.hash = "#/s/" + p.study + "/" + p.run; }); marks.append(c);
     if (P.sel && P.sel === p.study + "~" + p.run) svg._ring = s("circle",{cx,cy,r:9,fill:"none",stroke:"var(--ink)","stroke-width":2.2,"pointer-events":"none"}); }
   if (svg._ring) marks.append(svg._ring);
@@ -1908,17 +1987,17 @@ function boardChart(P, col, W, H0, V){
 function chartBox(B, col, cbox, head, O){
   let V = null, raf = 0; const b = B.benchmark, runs = B.runs || [];
   if (!B.rows.length && !runs.length) return false;
-  const bar = h("div",{class:"zbar"}), notes = h("div"), holder = h("div",{class:"zhold"}), cov = h("div",{id:"bcover"}), has = sp => runs.some(u => u[sp] != null) || b.split === sp;
+  const bar = h("span",{class:"zslot"}), notes = h("div"), holder = h("div",{class:"zhold"}), cov = h("div",{id:"bcover"}), has = sp => runs.some(u => u[sp] != null) || b.split === sp;
   const segOf = (label, key, opts) => { const el = h("div",{class:"seg",role:"group","aria-label":label}, opts.map(([v, t, off]) => h("button",{type:"button","data-v":v,id:"bch-" + key + "-" + v,disabled:off || null,title:off || null,text:t,onclick:()=>{ BCH[key] = v; V = null; draw(); }})));
     el._paint = () => el.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.v === BCH[key]))); return el; };
   const segMode = runs.length ? segOf("Points", "mode", [["run","Every run"],["model","Best run per model"]]) : null;
   const segSplit = runs.length ? segOf("Split", "split", [["valid","Validation", has("valid") ? null : "No study on this benchmark recorded a validation score"],["test","Test", has("test") ? null : "No study on this benchmark recorded a test score"]]) : null;
   const xsel = h("select",{id:"bch-x","aria-label":"Horizontal axis"}, [["params","Model size"],["minutes","Training time"]].map(([v, t]) => h("option",{value:v,text:t}))); xsel.addEventListener("change", () => { BCH.x = xsel.value; V = null; draw(); });
-  const ctl = h("div",{class:"bctl",id:"bctl"}, segMode, segSplit, h("label",null, "Against", xsel));
+  const ctl = h("div",{class:"bctl",id:"bctl"}, segMode, segSplit, h("label",null, "Against", xsel), bar);
   const draw = () => { raf = 0; const P = boardView(B, O), chart = boardChart(P, col, Math.max(320, cbox.clientWidth - 24), null, V);
     if (segMode) segMode._paint(); if (segSplit) segSplit._paint(); xsel.value = BCH.x; if (head) head.textContent = `${P.ylabel} vs. ${P.xname}`;
     const fid = cbox.contains(document.activeElement) ? document.activeElement.id : null; if (fid) requestAnimationFrame(() => { const e = document.getElementById(fid) || document.getElementById("bzin"); if (e) e.focus(); });
-    put(cov, P.cover.map(c => { const off = BCH.off.has(c.study), miss = c.total - c.n, why = Object.entries(c.why).sort((a, d) => d[1] - a[1]).map(([k, n]) => `${fmtInt(n)} ${k}`).join(", ");
+    put(cov, O && O.noCover ? [] : P.cover.map(c => { const off = BCH.off.has(c.study), miss = c.total - c.n, why = Object.entries(c.why).sort((a, d) => d[1] - a[1]).map(([k, n]) => `${fmtInt(n)} ${k}`).join(", ");
       return h("div",{class:"covrow"}, h("button",{class:"covt",type:"button",id:"cov-" + c.study,"aria-pressed":String(!off),title:off ? "Show this study on the chart" : "Hide this study on the chart",onclick:()=>{ if (off) BCH.off.delete(c.study); else BCH.off.add(c.study); V = null; draw(); }},
           h("span",{class:"dot",style:"background:" + (off ? "var(--other)" : col[c.study] || "var(--other)")}), c.title),
         h("span",{class:"covn"}, h("b",{text:`${fmtInt(c.n)} of ${fmtInt(c.total)}`}), ` ${P.unit[1]} plotted`), miss ? h("span",{class:"covw",text:`${fmtInt(miss)} not plotted: ${why}`}) : null, h("a",{href:"#/s/" + c.study,text:"Open the study"})); }));
@@ -1932,16 +2011,13 @@ function chartBox(B, col, cbox, head, O){
       window.addEventListener("mousemove", mv); window.addEventListener("mouseup", up); });
     chart.addEventListener("wheel", e => { if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); const [ux, uy] = unit(e); zoom(e.deltaY < 0 ? 0.8 : 1.25, Math.max(0, Math.min(1, ux)), Math.max(0, Math.min(1, uy))); }, {passive:false});
     chart.addEventListener("dblclick", () => { V = null; draw(); });
-    /* Reset sits first, so the zoom buttons never move under the pointer. */
-    put(bar, V ? h("button",{class:"btn sm",type:"button",id:"bzreset",text:"Reset",onclick:()=>{ V = null; draw(); }}) : null,
-      h("button",{class:"btn sm",type:"button",id:"bzout","aria-label":"Zoom out",title:"Zoom out",text:"−",onclick:()=>zoom(1.4, .5, .5)}), h("button",{class:"btn sm",type:"button",id:"bzin","aria-label":"Zoom in",title:"Zoom in",text:"+",onclick:()=>zoom(0.7, .5, .5)}));
+    put(bar, zoomGroup("bz", !!V, ()=>zoom(1.4, .5, .5), ()=>zoom(0.7, .5, .5), ()=>{ V = null; draw(); }));
     put(holder, chart);
-    bar.title = "Drag the chart to move it. Zoom with these buttons, by pinching, or with Ctrl and scroll. Double-click to reset.";
     const nl = +chart.dataset.low, full = chart._full;
     put(notes, +chart.dataset.rep ? h("p",{class:"fine",text:"Open squares are results reported elsewhere, not run by the depositor."}) : null,
       nl ? h("p",{class:"fine"}, `${nl} ${P.unit[nl === 1 ? 0 : 1]} scored below the axis and sit${nl === 1 ? "s" : ""} on the bottom edge as ${nl === 1 ? "an open circle" : "open circles"}. `, h("button",{class:"linkish",type:"button",id:"bzfull",text:"Show full range",onclick:()=>{ V = full; draw(); }})) : null);
     return true; };
-  put(cbox, ctl, h("div",{class:"zwrap"}, bar, holder), notes, cov); cbox._redraw = draw; return draw();
+  put(cbox, ctl, h("div",{class:"zwrap"}, holder), notes, cov); cbox._redraw = draw; return draw();
 }
 const BOARD = {mode:"study", key:"metric", dir:-1, q:"", all:false, rep:true};
 const dur = m => m == null ? "–" : m < 120 ? fmt(m, m < 10 ? 1 : 0) + " min" : m < 2880 ? fmt(m / 60, 1) + " h" : fmt(m / 1440, 1) + " d";
@@ -2930,9 +3006,16 @@ function startPan(e, dx, dy, iw, ih){
     for (const p of HIT){ const d = (p.px - mx) ** 2 + (p.py - my) ** 2; if (d < bd){ bd = d; best = p; } } if (best) select(best.r.id); };
   window.addEventListener("mousemove", mv); window.addEventListener("mouseup", up);
 }
+const ICON = {zoom:"M7 2.2a4.8 4.8 0 1 1 0 9.6a4.8 4.8 0 0 1 0-9.6zM10.6 10.6L14 14", eye:"M1.2 8S3.7 3.4 8 3.4 14.8 8 14.8 8 12.3 12.6 8 12.6 1.2 8 1.2 8zM8 6.1a1.9 1.9 0 1 1 0 3.8a1.9 1.9 0 0 1 0-3.8z", eyeoff:"M1.2 8S3.7 3.4 8 3.4 14.8 8 14.8 8 12.3 12.6 8 12.6 1.2 8 1.2 8zM2.5 2.5l11 11", out:"M6.5 3.2H3.2v9.6h9.6V9.5M9.2 2.8h4v4M13 3L7.6 8.4", x:"M3.5 3.5l9 9M12.5 3.5l-9 9"};
+const icon = k => s("svg",{viewBox:"0 0 16 16","aria-hidden":"true",fill:"none",stroke:"currentColor","stroke-width":1.6,"stroke-linecap":"round","stroke-linejoin":"round"}, s("path",{d:ICON[k]}));
+/* Zoom, with its name on it: out, in, and back to the whole chart. p is the prefix of the three ids. */
+function zoomGroup(p, zoomed, out, into, reset){
+  return h("div",{class:"zgrp",role:"group","aria-label":"Zoom",title:"Zoom with these buttons, by pinching, or with Ctrl and scroll. Drag the chart to move it. Double-click to reset."}, h("span",{class:"zl"}, icon("zoom"), "Zoom"),
+    h("button",{type:"button",id:p + "out","aria-label":"Zoom out",title:"Zoom out",text:"−",onclick:out}), h("button",{type:"button",id:p + "in","aria-label":"Zoom in",title:"Zoom in",text:"+",onclick:into}),
+    h("button",{class:"zr",type:"button",id:p + "reset",disabled:!zoomed || null,title:zoomed ? "Back to the whole chart" : "The chart shows everything",text:"Reset",onclick:reset}));
+}
 function zoomBar(manual){
-  return h("div",{class:"zbar"}, manual ? h("button",{class:"btn sm",type:"button",id:"pzreset",text:"Reset",onclick:()=>{ const A = curAxes(); for (const k of [A.x, A.y]) k.a.min = k.a.max = null; redraw(); }}) : null,
-    h("button",{class:"btn sm",type:"button",id:"pzout","aria-label":"Zoom out",title:"Zoom out",text:"−",onclick:()=>zoomPlot(1.4, .5, .5)}), h("button",{class:"btn sm",type:"button",id:"pzin","aria-label":"Zoom in",title:"Zoom in",text:"+",onclick:()=>zoomPlot(0.7, .5, .5)}));
+  return h("div",{class:"zbar"}, zoomGroup("pz", manual, ()=>zoomPlot(1.4, .5, .5), ()=>zoomPlot(0.7, .5, .5), ()=>{ const A = curAxes(); for (const k of [A.x, A.y]) k.a.min = k.a.max = null; redraw(); }));
 }
 
 /* ---------- model workflow, drawn from the structured entry ---------- */
