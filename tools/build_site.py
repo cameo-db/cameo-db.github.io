@@ -88,7 +88,7 @@ def prep_of(ds):
             "preprocessing": text_of(pre), "preprocessing_code": isinstance(pre, dict) and C.known(pre.get("code"))}
 
 
-index = {"site": SITE, "benchmarks": [], "studies": [], "depositors": []}; bundle = []; rows = {b["id"]: [] for b in BENCH}; prep = {b["id"]: [] for b in BENCH}; failed = 0; deps = {}
+index = {"site": SITE, "benchmarks": [], "studies": [], "depositors": []}; bundle = []; rows = {b["id"]: [] for b in BENCH}; prep = {b["id"]: [] for b in BENCH}; runs = {b["id"]: [] for b in BENCH}; cover = {b["id"]: [] for b in BENCH}; failed = 0; deps = {}
 paths = sorted(glob.glob(os.path.join(A.studies, "*.json"))) + (sorted(glob.glob(os.path.join(A.also, "*.json"))) if A.also else [])
 for path in paths:
     text = open(path, encoding="utf-8").read(); rep = C.check_text(text)
@@ -107,16 +107,26 @@ for path in paths:
     reported = [t for t in I["trials"] if res(t).get("status") == "done" and C.kind_of(t) == "reported"]   # numbers copied from a paper; never mixed with the study's own runs
     sign = -1 if C.get(I, "objective.optimize.direction") == "maximize" else 1
 
-    def metric_for(t, b):
-        """A run's value on a benchmark: from an evaluation on that benchmark's dataset, else from its test results on the main dataset."""
+    def metric_on(t, b, split):
+        """A run's value for a benchmark's metric on one split, and the name the study stored it under.
+        It comes from an evaluation on that benchmark's dataset, else from the run's results on the main dataset."""
         r = res(t)
         for e in (r.get("evaluations") if isinstance(r.get("evaluations"), list) else []):
-            if isinstance(e, dict) and dsb.get(e.get("dataset") if C.known(e.get("dataset")) else "main") is b and (not C.known(e.get("split")) or e.get("split") == b["split"]):
-                v = next((e["metrics"][k] for k in names_of(b) if isinstance(e.get("metrics"), dict) and num(e["metrics"].get(k))), None)
-                if v is not None:
-                    return v
-        own = r.get(b["split"]) if dsb.get("main") is b and isinstance(r.get(b["split"]), dict) else {}
-        return next((own[k] for k in names_of(b) if num(own.get(k))), None)
+            if isinstance(e, dict) and dsb.get(e.get("dataset") if C.known(e.get("dataset")) else "main") is b and (e.get("split") == split or (split == b["split"] and not C.known(e.get("split")))):
+                k = next((k for k in names_of(b) if isinstance(e.get("metrics"), dict) and num(e["metrics"].get(k))), None)
+                if k is not None:
+                    return e["metrics"][k], "performance.evaluations[].metrics." + k
+        own = r.get(split) if dsb.get("main") is b and isinstance(r.get(split), dict) else {}
+        k = next((k for k in names_of(b) if num(own.get(k))), None)
+        return (own[k], "performance.%s.%s" % (split, k)) if k is not None else (None, None)
+
+    metric_for = lambda t, b: metric_on(t, b, b["split"])[0]
+    study_dev = kn(C.D_(C.get(I, "evaluation.training_context")).get("device"))
+
+    def device_of(t):
+        """Where a run was trained: the study's stated device, else what the run itself recorded."""
+        r = res(t); comp = r.get("compute") if isinstance(r.get("compute"), dict) else {}
+        return study_dev or kn(r.get("gpu")) or kn(comp.get("gpu"))
 
     # runs that differ only in their seed are repeats of one configuration
     groups = {}
@@ -134,7 +144,7 @@ for path in paths:
             rows[b["id"]].append({"study": sid, "study_title": I["study"].get("title"), "depositor": C.get(I, "contributor.name"), "made_up": made_up, "star": rep["star"]["level"],
                                   "run": top["id"], "name": m.get("name") or mid, "family": m.get("family"), "kind": C.kind_of(top), "base": kn(base.get("name")), "weights": link_of(top.get("weights")),
                                   "score": r.get("score"), "metric": statistics.mean(vals), "sd": statistics.stdev(vals) if len(vals) > 1 else None, "n": len(vals),
-                                  "params": r.get("parameters"), "minutes": statistics.mean(mins) if mins else None, "train_device": C.D_(C.get(I, "evaluation.training_context")).get("device"),
+                                  "params": r.get("parameters"), "minutes": statistics.mean(mins) if mins else None, "train_device": device_of(top),
                                   "speed": C.get(m, "inference_speed.seq_per_s"), "speed_device": C.D_(C.get(I, "evaluation.speed_context")).get("device")})
         for t in reported:   # one row per reported result, marked as such, with its source
             v = metric_for(t, b)
@@ -146,6 +156,17 @@ for path in paths:
                                   "reported": {"citation": kn(src.get("citation")), "where": kn(src.get("where")), "note": kn(src.get("note")), "link": link_of(C.source_link(t))},
                                   "score": None, "metric": v, "sd": None, "n": 1, "params": res(t).get("parameters") if num(res(t).get("parameters")) else None, "minutes": None, "train_device": None,
                                   "speed": None, "speed_device": None})
+        fields = {}
+        for t in I["trials"]:   # every run, scored or not: a chart across studies plots the ones that have both of its values and counts the rest
+            r = res(t); m = mby.get(t.get("model")) or {}; vals = {}
+            for sp in ("valid", "test"):
+                vals[sp], f = metric_on(t, b, sp)
+                if f:
+                    fields[sp] = f
+            runs[b["id"]].append({"study": sid, "run": t["id"], "name": m.get("name") or t.get("model"), "family": kn(m.get("family")), "kind": C.kind_of(t), "status": kn(r.get("status")),
+                                  "valid": vals["valid"], "test": vals["test"], "params": r.get("parameters") if num(r.get("parameters")) else m.get("parameters") if num(m.get("parameters")) else None,
+                                  "minutes": r.get("runtime_minutes") if num(r.get("runtime_minutes")) else None, "seed": t.get("seed") if num(t.get("seed")) else None})
+        cover[b["id"]].append({"study": sid, "study_title": I["study"].get("title"), "runs": len(I["trials"]), "fields": fields})
         for k, ds in DS.items():
             if dsb.get(k) is b:
                 prep[b["id"]].append({"study": sid, "study_title": I["study"].get("title"), "depositor": C.get(I, "contributor.name"), "made_up": made_up, "only_reported": bool(reported) and not done, **prep_of(ds)})
@@ -171,7 +192,7 @@ flat = []
 for b in BENCH:
     low = b.get("direction") == "minimize"
     rs = sorted(rows[b["id"]], key=lambda r: r["metric"] if low else -r["metric"])
-    json.dump({"benchmark": b, "rows": rs, "prep": prep[b["id"]]}, open(os.path.join(out, "boards", b["id"] + ".json"), "w"), separators=(",", ":"), ensure_ascii=False)
+    json.dump({"benchmark": b, "rows": rs, "prep": prep[b["id"]], "runs": runs[b["id"]], "studies": cover[b["id"]]}, open(os.path.join(out, "boards", b["id"] + ".json"), "w"), separators=(",", ":"), ensure_ascii=False)
     st = [s for s in index["studies"] if b["id"] in s["benchmarks"]]
     if st:
         top = next((r for r in rs if r["kind"] != "reported"), rs[0] if rs else None)   # the headline number is a run someone deposited, when there is one
@@ -221,7 +242,7 @@ open(os.path.join(out, "llms.txt"), "w", encoding="utf-8").write("""# CAMEO
 
 - [index.json](%(b)sindex.json): every study, benchmark and depositor
 - [models.json](%(b)smodels.json): every model on every leaderboard, one row each
-- `%(b)sboards/<benchmark id>.json`: one leaderboard, and how each study on it prepared the data
+- `%(b)sboards/<benchmark id>.json`: one leaderboard, and how each study on it prepared the data. Its `runs` list has one row for every run of every study on the benchmark, with the benchmark's metric on the validation and test splits under one name, the parameter count and the status. Key a run by `study` and `run` together: run ids repeat between studies. `studies[].fields` says where each study's file stores the metric
 - `%(b)sstudies/<study id>.json`: one whole entry, in the format the instructions describe
 - [cameo-all.json](%(b)scameo-all.json): every entry in one file, as `{"studies": [...]}`. Use it to start a new search from what has been tried
 

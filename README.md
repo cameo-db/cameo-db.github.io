@@ -42,7 +42,7 @@ Then open http://localhost:8000.
 Everything the site shows is also a plain file that anyone, or any agent, can read:
 
 - `index.json`: every study, benchmark and depositor.
-- `boards/<benchmark>.json`: one leaderboard, and how each study on it prepared the data.
+- `boards/<benchmark>.json`: one leaderboard, and how each study on it prepared the data. Its `runs` list has one row for every run of every study on the benchmark, with the benchmark's metric on the validation and test splits under one name. Run ids repeat between studies, so key a run by `study` and `run` together.
 - `models.json`: every model on every leaderboard.
 - `studies/<id>.json`: one whole entry.
 - `cameo-all.json`: every entry in one file, as `{"studies": [...]}`. It is left out once it would pass 90 MB, because GitHub refuses files over 100 MB; the site then merges the study files in the browser.

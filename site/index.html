@@ -888,6 +888,25 @@ kbd{font-family:var(--font-mono);font-size:11px;color:var(--muted);border:1px so
 .across a{display:inline-flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:6px 12px;text-decoration:none;color:var(--ink);font-weight:600}
 .across a:hover{border-color:var(--accent)} .across a span{font-weight:400;font-size:12.5px;color:var(--muted)}
 @media (max-width:980px){ .hl{grid-template-columns:minmax(0,1fr);padding:32px 26px} .hl h2{font-size:32px} .hl li{font-size:21px} }
+/* the chart on a benchmark's page: what it plots, and how many of each study's runs are on it */
+.bctl{display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center;padding:4px 4px 10px;font-size:13px;color:var(--ink-2)}
+.bctl label{display:inline-flex;gap:8px;align-items:center} .bctl select{font:inherit;font-size:13.5px;padding:4px 8px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink)}
+.bctl .seg button[disabled]{opacity:.45;cursor:not-allowed}
+.covrow{display:flex;gap:2px 18px;flex-wrap:wrap;align-items:baseline;font-size:13.5px;padding:8px 4px;border-top:1px solid var(--line-2)}
+.covt{border:0;background:none;font:inherit;font-weight:600;color:var(--ink);cursor:pointer;padding:0;text-align:left}
+.covt[aria-pressed="false"]{color:var(--muted);font-weight:400;text-decoration:line-through}
+.covn b{font-variant-numeric:tabular-nums} .covw{color:var(--muted)} .covrow a{margin-left:auto;font-size:13px}
+.bempty{padding:36px 12px;color:var(--ink-2);text-align:center}
+.cmp .only{color:var(--muted);font-size:11px;font-weight:400;margin-left:6px;white-space:nowrap}
+.across .msg{color:var(--ink-2)}
+/* a study's first screen: its question, then what happened, in one sentence each */
+.squestion{font-size:17.5px;line-height:1.5;color:var(--ink);max-width:82ch;margin:8px 0 10px}
+.sfacts{font-size:15.5px;line-height:1.6;color:var(--ink-2);max-width:92ch;margin:0 0 12px}
+.sfacts b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.sfacts .linkish{font-size:inherit}
+.hero2 .sub.meta{font-size:13.5px;color:var(--muted)}
+.land-s{display:flex;gap:12px;flex-wrap:wrap;align-items:center;max-width:680px} .land .land-s .search{flex:1 1 300px;max-width:480px}
+.land .count + .fine{margin-top:6px}
 </style>
 </head>
 <body>
@@ -1047,7 +1066,7 @@ function parseHash(){
   const raw = location.hash.replace(/^#\/?/, ""), at = raw.indexOf("?"), path = decodeURIComponent(at < 0 ? raw : raw.slice(0, at)).split("/"), qs = new URLSearchParams(at < 0 ? "" : raw.slice(at + 1));
   const list = sub => ({view:"database", sub, has:at >= 0, q:qs.get("q") || "", tags:qs.get("tag") || "", stars:qs.get("star") || "", sort:qs.get("sort") || "", bench:qs.get("bench") || "",
     dep:qs.get("by") || "", family:qs.get("family") || "", pmin:qs.get("pmin") || "", pmax:qs.get("pmax") || "", kinds:qs.get("kind") || ""});
-  if (path[0] === "b" && path[1]) return {view:"bench", id:path[1]};
+  if (path[0] === "b" && path[1]) return {view:"bench", id:path[1], only:qs.get("s") || ""};
   if (path[0] === "s" && path[1]) return {view:"study", id:path[1], run:path.slice(2).join("/") || null};
   if (path[0] === "d" && path[1]) return {view:"dep", id:path[1]};
   if (path[0] === "database") return list(["studies","models","benchmarks"].includes(path[1]) ? path[1] : null);
@@ -1084,7 +1103,7 @@ async function route(){
   if (r.view === "study"){
     if (ENTRY && ENTRY.id === r.id && ENTRY.status === "published" && document.getElementById("insp")){ if (r.run && byId[r.run] && r.run !== state.sel) select(r.run, true); return; }
     await openStudy(r.id);
-  } else if (r.view === "bench") await openBench(r.id);
+  } else if (r.view === "bench") await openBench(r.id, r.only);
   else if (r.view === "database") openDatabase(r);
   else if (r.view === "about") openAbout(r.sub);
   else if (r.view === "deposit") openDepositPage();
@@ -1122,11 +1141,11 @@ function studyList(St, pick){
       h("div",{class:"srow-m"},
         x.depositor ? h("span",null, h("a",{href:"#/d/" + encodeURIComponent(x.depositor_slug),title:"All studies by this depositor",text:x.depositor}), x.lab ? " · " + x.lab : "") : null,
         x.benchmark ? h("span",null, h("a",{href:"#/b/" + x.benchmark,title:"The benchmark this study is on",text:x.benchmark_title}), (x.benchmarks || []).length > 1 ? ` +${x.benchmarks.length - 1}` : "") : null,
-        h("span",{text:[x.runs || !x.reported ? pl(x.runs,"run","runs") : null, x.reported ? pl(x.reported,"reported result","reported results") : null, pl(x.models,"model","models")].filter(Boolean).join(" · ")}),
+        h("span",{text:[x.runs || !x.reported ? pl(x.runs,"run","runs") : null, x.reported ? pl(x.reported,"reported result","reported results") : null, pl(x.models,"architecture","architectures")].filter(Boolean).join(" · ")}),
         x.created ? h("span",{text:x.created}) : null),
       x.summary || (x.tags || []).length ? descToggle(x.summary ? h("p",{text:x.summary}) : null,
         (x.tags || []).length ? h("div",{class:"tags"}, x.tags.map(t => h("button",{class:"pill plain tagb",type:"button",title:"Show studies with this tag",text:t,onclick:()=>goTo("#/database?tag=" + encodeURIComponent(t.toLowerCase()))}))) : null) : null),
-    pick ? h("label",{class:"spick",title:"Select this study for download"}, (c => { c.dataset.id = x.id; c.checked = DB.picked.has(x.id); c.addEventListener("change", () => { if (c.checked) DB.picked.add(x.id); else DB.picked.delete(x.id); paintPicked(); }); return c; })(h("input",{type:"checkbox"})), h("span",{class:"vh",text:"Select " + (x.title || "this study") + " for download"})) : null)));
+    pick ? h("label",{class:"spick",title:"Select this study, to plot it with others or to download it"}, (c => { c.dataset.id = x.id; c.checked = DB.picked.has(x.id); c.addEventListener("change", () => { if (c.checked) DB.picked.add(x.id); else DB.picked.delete(x.id); paintPicked(); }); return c; })(h("input",{type:"checkbox"})), h("span",{class:"vh",text:"Select " + (x.title || "this study")})) : null)));
 }
 /* ---------- front page ---------- */
 let FIELD_STOP = null;
@@ -1144,13 +1163,15 @@ function openHome(){
     for (const [sx, sy, bulge] of [[cx + 50, 6 * pitch - bh / 2 - 5, 76], [cx - 14, 5 * pitch, 26]])   /* the skip connections of a U-Net: thin lines inside the letter */
       relief.append(s("path",{class:"wire skip",d:`M${sx} ${cy - sy}A${bulge} ${sy} 0 0 0 ${sx} ${cy + sy}`}), s("circle",{cx:sx,cy:cy - sy,r:3,class:"dot"}), s("circle",{cx:sx,cy:cy + sy,r:3,class:"dot"})); }
   const uses = [["Keep what failed","Runs that did not work are stored beside the ones that did.","#/database","Open the database"],
-    ["Start a search warm","Download studies, or the models you pick, and merge them. A new search begins from what has been tried.","#/about/data","How to download"],
-    ["Reproduce from the entry","An entry is a specification, not a code base. The JSON is meant to be enough to rebuild a model; DOIs for code and data add to it.","#/about/entry","What an entry holds"]];
+    ["Reuse a training configuration","Download a study, or the runs you pick, with the architecture and the training settings each one used. A new search begins from what has been tried.","#/about/data","How to download"],
+    ["See what you can rebuild","An entry holds the recorded model code, settings and results, and lists what is still needed to reproduce training.","#/about/entry","What an entry holds"]];
   put(document.getElementById("app"),
     h("section",{class:"land"}, h("div",{class:"land-t"},
         h("h1",{text:"Most models never make the paper."}),
-        h("p",{class:"lede",text:"A study trains many models and its paper reports one. The others make only a cameo. CAMEO keeps the record of every model a study trained: what it was, how it was trained and how it performed."}),
-        q, h("p",{class:"count",id:"totals",text:[pl(T.studies,"study","studies"), pl(T.models,"model","models"), pl(T.runs,"training run","training runs")].join(" · ")})), art),
+        h("p",{class:"lede",text:"CAMEO is an open database of model architectures, training settings and experimental results. Explore baselines, ablations and unsuccessful runs across studies to decide what to try next."}),
+        h("div",{class:"land-s"}, q, h("a",{class:"btn big",id:"browse",href:"#/database",text:"Browse the database"})),
+        h("p",{class:"count",id:"totals",text:[pl(T.studies,"study","studies"), pl(T.models,"architecture recorded","architectures recorded"), pl(T.runs,"training run","training runs")].join(" · ")}),
+        h("p",{class:"fine",text:"A study is one experimental campaign. An architecture can have several training runs."})), art),
     h("section",{class:"hl",id:"learn","aria-label":"Learn across studies"},
       h("div",null, h("div",{class:"eyebrow",text:"Why keep every model"}), h("h2",{text:"Learn across studies"}),
         h("p",{text:"A leaderboard says which model did best on one task. Someone planning an experiment wants to know something else: which design choices have helped before, under what conditions, and what is worth trying next."}),
@@ -1266,10 +1287,14 @@ function paintPicked(){
 /* Studies that a search found, or that the visitor ticked, may share a benchmark. Then the next step is its leaderboard, where they can be compared. */
 function paintAcross(){
   const box = document.getElementById("xact"); if (!box) return;
-  const ids = DB.picked.size ? [...DB.picked] : (DB.q.trim() || fltAny()) ? (DB.shown || []) : [], St = ids.map(id => INDEX.studies.find(x => x.id === id)).filter(Boolean), out = [];
-  if (St.length > 1) for (const b of INDEX.benchmarks){ const n = St.filter(x => (x.benchmarks || [x.benchmark]).includes(b.id)).length;
-    if (n > 1) out.push(h("a",{href:"#/b/" + b.id}, "Compare on " + b.title, h("span",{text:(n === St.length ? (n === 2 ? "Both studies" : `All ${n} studies`) : `${n} of these studies`) + " share this benchmark"}))); }
-  put(box, out.length ? h("div",{class:"across",id:"across"}, h("span",{class:"fl",text:DB.picked.size ? "Across the selected studies" : "Across these studies"}), out) : null);
+  const ids = DB.picked.size ? [...DB.picked] : (DB.q.trim() || fltAny()) ? (DB.shown || []) : [], St = ids.map(id => INDEX.studies.find(x => x.id === id)).filter(Boolean), out = [], on = x => x.benchmarks || (x.benchmark ? [x.benchmark] : []);
+  if (St.length > 1){
+    for (const b of INDEX.benchmarks){ const mine = St.filter(x => on(x).includes(b.id));
+      if (mine.length > 1) out.push(h("a",{href:"#/b/" + b.id + "?s=" + mine.map(x => encodeURIComponent(x.id)).join(",")}, "Plot results on " + b.title, h("span",{text:(mine.length === St.length ? (mine.length === 2 ? "Both studies" : `All ${mine.length} studies`) : `${mine.length} of these studies`) + " share this benchmark"}))); }
+    /* nothing shared: their scores cannot go on one chart, so say that and offer each benchmark's own */
+    if (!out.length && DB.picked.size){ const bs = INDEX.benchmarks.filter(b => St.some(x => on(x).includes(b.id)));
+      if (bs.length) out.push(h("span",{class:"msg",text:"These studies use different benchmarks, so their scores do not share a chart. Plot each benchmark, or download the studies."}), bs.map(b => h("a",{href:"#/b/" + b.id}, "Plot " + b.title, h("span",{text:St.filter(x => on(x).includes(b.id)).map(x => x.title).join(", ")})))); } }
+  put(box, out.length ? h("div",{class:"across",id:"across"}, h("span",{class:"fl",text:DB.picked.size ? pl(St.length, "study", "studies") + " selected" : "Across these studies"}), out) : null);
 }
 function drawStudies(found, hit){
   const res = document.getElementById("results"), St = found.slice().sort(SORTS[STUD.sort][1]); DB.shown = St.map(x => x.id);
@@ -1314,11 +1339,30 @@ function drawModels(found){
     b._paint(); put(document.getElementById("dlbox"), b); }
   const shown = M.slice(0, MOD.more ? M.length : 50);
   put(res, h("div",{class:"reshead"}, h("h2",{class:"q",id:"nres",text:pl(M.length,"model","models")})),
-    h("p",{class:"viewnote",text:"Results are comparable only within one benchmark."}),
+    h("p",{class:"viewnote",id:"modelnote",text:`Each row is a model on a benchmark leaderboard: one architecture, with the run its study chose. The studies record ${fmtInt(INDEX.totals.models)} architectures in all; the ones on no leaderboard are listed in their study. Results are comparable only within one benchmark.`}),
     M.length ? modelTable(shown) : h("p",{class:"empty",text:"No model matches."}),
     M.length > shown.length ? h("button",{class:"linkish",type:"button",style:"margin:14px 0",text:`Show all ${M.length} models`,onclick:()=>{ MOD.more = true; drawDatabase(); }}) : null);
 }
 /* ---------- downloads: one model, one study, or several studies merged into one file ---------- */
+/* A file a person can open: the outer structure is indented, one key to a line, and what lies deeper stays on its line.
+   Indenting everything would double a study's size, because the layer trees are deep. The files the site serves stay compact. */
+function prettyJSON(v, depth, ind){
+  ind = ind || ""; if (depth <= 0 || v === null || typeof v !== "object") return JSON.stringify(v === undefined ? null : v);
+  const arr = Array.isArray(v), keys = arr ? v : Object.keys(v).filter(k => v[k] !== undefined), n = ind + " "; if (!keys.length) return arr ? "[]" : "{}";
+  return (arr ? "[" : "{") + "\n" + (arr ? v.map(x => n + prettyJSON(x, depth - 1, n)) : keys.map(k => n + JSON.stringify(k) + ": " + prettyJSON(v[k], depth - 1, n))).join(",\n") + "\n" + ind + (arr ? "]" : "}");
+}
+/* What a merged file needs so that it can be analysed without the site: which studies it holds, which benchmark each is on and where each stored that benchmark's metric,
+   and one row per run with the metric under one name. Run ids repeat between studies, so a run is keyed by study and run together. */
+async function bundleGuide(ids){
+  const contents = [], rows = [], boards = {};
+  for (const id of ids){ const x = INDEX.studies.find(q => q.id === id); if (!x) continue; const bl = [];
+    for (const bid of x.benchmarks || []){ try{ if (!boards[bid]) boards[bid] = await getJSON("boards/" + bid + ".json"); }catch(e){ continue; }
+      const B = boards[bid], b = B.benchmark, c = (B.studies || []).find(q => q.study === id) || {};
+      bl.push({id:b.id, title:b.title, metric:b.metric, metric_label:b.metric_label, ranked_on:b.split, direction:b.direction, stored_as:c.fields || {}});
+      for (const u of B.runs || []) if (u.study === id) rows.push({study:id, run:u.run, benchmark:b.id, metric:b.metric, valid:u.valid, test:u.test, parameters:u.params, training_minutes:u.minutes, status:u.status, kind:u.kind, model:u.name, family:u.family, seed:u.seed}); }
+    contents.push({study:id, title:x.title, depositor:x.depositor, license:x.license, created:x.created, runs:x.runs, architectures:x.models, benchmarks:bl}); }
+  return {about:"studies holds each study's whole entry, unchanged. rows has one line per run and benchmark, with the benchmark's metric on the validation and test splits under one name; null means the study recorded no value. Run ids repeat between studies: key a run by study and run together. contents lists the studies and says where each one's entry stores the metric.", contents, rows};
+}
 const loadStudy = async id => { if (!STUDIES[id]) STUDIES[id] = toInternal(await getJSON("studies/" + id + ".json")); return STUDIES[id]; };
 /* everything the entry holds about one model and one of its runs, as a file that stands on its own */
 function modelEntry(S, runId){
@@ -1327,7 +1371,7 @@ function modelEntry(S, runId){
   const src = pathGet(m, SRCP), model = {}; for (const k of ["id","name","family","parent","inputs","outputs","base_model","adaptation","parameters","inference_speed","constants"]) if (known(m[k])) model[k] = m[k];   /* constants: what the code reads from its training script */
   model.code = known(src) ? src : null;
   const recOut = {}; for (const k in rec) if (k !== "source" && k !== "settings") recOut[k] = rec[k];
-  return {cameo_model:RULES.format_version, from:{study:S.study.id, study_title:S.study.title, run:t.id, depositor:pathGet(S, "contributor.name"), license:S.study.license, address:siteBase() + "#/s/" + S.study.id + "/" + t.id},
+  return {cameo_model:RULES.format_version, from:{study:S.study.id, study_title:S.study.title, run:t.id, benchmarks:(((INDEX || {}).studies || []).find(q => q.id === S.study.id) || {}).benchmarks, depositor:pathGet(S, "contributor.name"), license:S.study.license, address:siteBase() + "#/s/" + S.study.id + "/" + t.id},
     model, training:none ? {kind:kindOf(t)} : {kind:kindOf(t), seed:t.seed, settings:resolvedSet(t, rec), set_by_this_run:Object.keys(t.training || {}), recipe:implied ? "study defaults" : rid, details:recOut, code:known(pathGet(rec, "source.code")) ? pathGet(rec, "source.code") : null},
     data:S.dataset || null, performance:t.result || null, reported_in:t.reported_in || undefined, weights:t.weights || undefined,
     rebuild:{model_code:known(src), training:none ? "none" : rebuildLevel(rec, miss), missing:miss.map(x => x.message)}};
@@ -1343,7 +1387,7 @@ async function downloadModels(list, btn){
   try{ const out = []; for (const x of list){ const e = modelEntry(await loadStudy(x.study), x.run); if (e) out.push(e); }
     if (!out.length) throw new Error("nothing to download");
     if (out.length === 1) saveText(JSON.stringify(out[0], null, 1), (list[0].study + "__" + list[0].run).replace(/[^A-Za-z0-9._-]+/g, "-") + ".json", "application/json");
-    else saveText(JSON.stringify({cameo_models:RULES.format_version, from:siteBase(), models:out}), `cameo-${out.length}-models.json`, "application/json");
+    else saveText(JSON.stringify({cameo_models:RULES.format_version, from:siteBase(), models:out}, null, 1), `cameo-${out.length}-models.json`, "application/json");
     if (btn){ btn.disabled = false; if (btn._paint) btn._paint(); else btn.textContent = old; } }
   catch(err){ if (btn){ btn.textContent = "The download failed"; btn.disabled = false; } }
 }
@@ -1351,8 +1395,10 @@ async function downloadModels(list, btn){
 async function downloadStudies(ids, btn){
   if (!ids.length) return; const old = btn.textContent; btn.disabled = true; btn.textContent = "Preparing…";
   try{ const out = []; for (const id of ids) out.push(await getJSON("studies/" + id + ".json"));
-    if (out.length === 1) saveText(JSON.stringify(out[0]), ids[0] + ".json", "application/json");   /* one study is just its own file */
-    else saveText(JSON.stringify({cameo_bundle:RULES.format_version, from:siteBase(), studies:out}), `cameo-${ids.length}-studies.json`, "application/json");
+    if (out.length === 1) saveText(prettyJSON(out[0], 3) + "\n", ids[0] + ".json", "application/json");   /* one study is just its own file */
+    else { const g = await bundleGuide(ids), line = (k, v) => " " + JSON.stringify(k) + ": " + v;
+      saveText("{\n" + [line("cameo_bundle", JSON.stringify(RULES.format_version)), line("from", JSON.stringify(siteBase())), line("about", JSON.stringify(g.about)), line("contents", prettyJSON(g.contents, 3, " ")),
+        line("rows", "[\n" + g.rows.map(r => "  " + JSON.stringify(r)).join(",\n") + "\n ]"), line("studies", "[\n" + out.map(S => "  " + prettyJSON(S, 3, "  ")).join(",\n") + "\n ]")].join(",\n") + "\n}\n", `cameo-${ids.length}-studies.json`, "application/json"); }
     btn.textContent = old; btn.disabled = false; }
   catch(err){ btn.textContent = "The download failed"; btn.disabled = false; }
 }
@@ -1365,7 +1411,7 @@ function openDepositor(slug){
   const tile = (k, v, sub) => h("div",{class:"stat"}, h("span",{class:"k",text:k}), h("b",{text:v}), h("span",{class:"s",text:sub || ""}));
   put(app, pageHead("Depositor", d.name, [d.lab, d.institution].filter(Boolean).join(" · ") || null,
       /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/.test(d.orcid || "") ? h("div",{class:"links"}, h("a",{class:"lk",href:"https://orcid.org/" + d.orcid,target:"_blank",rel:"noopener",text:"ORCID " + d.orcid + " ↗"})) : null),
-    h("div",{class:"stats three"}, tile("Studies", String(st.length), stars.map(([k, n]) => `${n} ${RULES.stars[k].label.toLowerCase()}`).join(" · ")), tile("Models", fmtInt(d.models)), tile("Training runs", fmtInt(d.runs))),
+    h("div",{class:"stats three"}, tile("Studies", String(st.length), stars.map(([k, n]) => `${n} ${RULES.stars[k].label.toLowerCase()}`).join(" · ")), tile("Architectures", fmtInt(d.models)), tile("Training runs", fmtInt(d.runs))),
     h("div",{class:"reshead"}, h("h2",{class:"q",text:"Studies"})), studyList(st, false));
 }
 /* ---------- about ---------- */
@@ -1403,11 +1449,11 @@ function openAbout(sub){
         p("An entry can include baselines: the model the study started from, and results reported in papers. Reported results are marked, link to their source and carry no star, because the depositor did not run them.")),
       sec("data", "Download", p("Everything in CAMEO can be downloaded as JSON. There is no sign-in."),
         h("ul",null,
-          h("li",null, h("b",{text:"One study. "}), "Use Download JSON on the study's page, or fetch ", mono("studies/<study id>.json"), "."),
-          h("li",null, h("b",{text:"Several studies, merged. "}), "In the ", inl("#/database", "database"), ", tick the studies you want and choose Download. With nothing ticked, the same button takes every study listed, so a search or a filter also picks a subset. The result is one file with a list of whole entries."),
+          h("li",null, h("b",{text:"One study. "}), "Use Download study (JSON) on the study's page. The file is indented so that it can be read. The same entry, on one line, is at ", mono("studies/<study id>.json"), "."),
+          h("li",null, h("b",{text:"Several studies, merged. "}), "In the ", inl("#/database", "database"), ", tick the studies you want and choose Download. With nothing ticked, the same button takes every study listed, so a search or a filter also picks a subset. The result is one file. Its ", mono("studies"), " list holds the whole entries, unchanged. Its ", mono("rows"), " list has one line per run with the benchmark's metric on the validation and test splits under one name, the parameter count and the status, ready to plot. Run ids repeat between studies, so key a run by study and run together. Its ", mono("contents"), " list says where each study's entry stores the metric."),
           h("li",null, h("b",{text:"Everything. "}), "With no filter and nothing ticked the button reads Download all. The same file is at ", mono("cameo-all.json"), "."),
-          h("li",null, h("b",{text:"One model, or several. "}), "Tick models on a leaderboard, in the Models list or in a study's table. A bar appears at the foot of the page that downloads them as one file, or compares two to four of them side by side. A run's panel also has Download this model. Each model comes with its code, the settings and recipe it was trained with, the data it was trained on and its results.")),
-        p("A merged file is a starting point for a new search. An agentic loop can read the models and runs of earlier studies, with their scores, and begin from them rather than from nothing. A single model file is enough for an agent to rebuild that model and try it on new data."),
+          h("li",null, h("b",{text:"One model, or several. "}), "Tick models on a leaderboard, in the Models list or in a study's table. A bar appears at the foot of the page that downloads them as one file, or compares two to four of them side by side. A run's panel also has Download run configuration (JSON). Each model comes with its code, the settings and recipe it was trained with, the data it was trained on and its results.")),
+        p("A merged file is a starting point for a new search. An agentic loop can read the models and runs of earlier studies, with their scores, and begin from them rather than from nothing. A single model file includes the recorded model code, settings and results, and lists what is still needed to reproduce training."),
         h("div",{class:"card scrollx",tabindex:"0",role:"region","aria-label":"Data files"}, h("table",{class:"lb",id:"filetable"}, h("thead",null, h("tr",null, h("th",{text:"File"}), h("th",{text:"What it holds"}), h("th",null, h("span",{class:"vh",text:"Open"})))),
           h("tbody",null, files.map(([name, href, what]) => h("tr",null, h("td",null, mono(name)), h("td",{text:what}), h("td",null, href ? h("a",{class:"plainlink",href,target:"_blank",rel:"noopener",text:name.includes("<") ? "Open an example" : "Open"}) : "")))))),
         p("The files are at ", mono(base), " and are rebuilt whenever a study is added.")),
@@ -1496,12 +1542,12 @@ async function openCompare(r){
     const none = run.kind === "evaluate" || run.kind === "reported", rec = none ? {} : (d.F.meta.recipes[run.recipe] || {}), raw = d.S.trials.find(t => t.id === x.run) || {}, ev = d.F.meta.evaluation || {};
     const ds = d.F.meta.datasets[known(raw.data) ? raw.data : "main"] || {}; x.name = run.name;
     return Object.assign(base, {run, none, rec, ds, M:d.F.meta, mdl:d.F.models.find(m => m.id === run.model) || {}, set:none ? {} : Object.assign({}, rec.settings || {}, run.hp || {}),
-      trainDev:known((ev.training_context || {}).device) ? String(ev.training_context.device) : null, speedDev:known((ev.speed_context || {}).device) ? String(ev.speed_context.device) : null, unit:(benchOfDataset(ds) || {}).example_unit || "examples"}); });
+      trainDev:known((ev.training_context || {}).device) ? String(ev.training_context.device) : run.dev, speedDev:known((ev.speed_context || {}).device) ? String(ev.speed_context.device) : null, unit:(benchOfDataset(ds) || {}).example_unit || "examples"}); });
   const good = cols.filter(c => !c.error), nSt = new Set(good.map(c => c.sel.study)).size;
   /* rows: a label, one value per run, and whether the runs differ on it */
   const R = [], sec = t => R.push({sec:t});
   const add = (label, f, el) => { const vals = cols.map(c => c.error ? null : f(c)); if (vals.every(v => v == null || v === "")) return;
-    R.push({label, vals, els:el ? cols.map(c => c.error ? null : el(c)) : null, diff:new Set(good.map(c => { const v = f(c); return v == null ? "" : String(v); })).size > 1}); };
+    R.push({label, vals, els:el ? cols.map(c => c.error ? null : el(c)) : null, diff:new Set(good.map(c => { const v = f(c); return v == null ? "" : String(v); })).size > 1, only:new Set(good.map(c => { const v = f(c); return v == null || v === "" ? null : String(v); }).filter(v => v != null)).size < 2}); };
   const order = Object.keys(BASE), rk = k => { const i = order.indexOf(k.split(":").pop()); return i < 0 ? 99 : i; };
   /* a benchmark may list other names its studies used for its metric: those share one row */
   const aka = c => { const b = benchOfDataset(c.ds); return b ? {to:b.metric, from:b.metric_aliases || []} : {to:null, from:[]}; }, canon = (c, k) => aka(c).from.includes(k) ? aka(c).to : k;
@@ -1565,7 +1611,7 @@ async function openCompare(r){
     put(tbox, h("table",{class:"lb cmp",id:"cmptable"},
       h("thead",null, h("tr",null, h("td",{class:"rowh"}), cols.map(c => h("th",{scope:"col"}, headCell(c))))),
       h("tbody",null, rows.length ? rows.map(x => x.sec ? h("tr",{class:"sect"}, h("th",{colspan:String(cols.length + 1),scope:"colgroup",text:x.sec}))
-        : h("tr",{class:x.diff && good.length > 1 ? "dif" : ""}, h("th",{class:"rowh",scope:"row"}, x.label, x.diff && good.length > 1 ? [h("span",{class:"ne","aria-hidden":"true",title:"The runs differ here",text:"≠"}), h("span",{class:"vh",text:" (differs)"})] : null),
+        : h("tr",{class:x.diff && good.length > 1 ? "dif" : ""}, h("th",{class:"rowh",scope:"row"}, x.label, x.diff && good.length > 1 ? (x.only ? h("span",{class:"only",title:"Not every run recorded this, so there is nothing to compare it with",text:"not in every run"}) : [h("span",{class:"ne","aria-hidden":"true",title:"The runs differ here",text:"≠"}), h("span",{class:"vh",text:" (differs)"})]) : null),
           cols.map((c, i) => h("td",null, c.error ? "" : (x.els && x.els[i]) || (x.vals[i] == null || x.vals[i] === "" ? "–" : String(x.vals[i]))))))
         : h("tr",null, h("td",{colspan:String(cols.length + 1),class:"q",text:"These runs do not differ on anything recorded."})))));
   }
@@ -1671,73 +1717,115 @@ function downloadStudy(reason){   /* the staged entry as a file, for the pull re
   const a = h("a",{href:URL.createObjectURL(new Blob([exportText(reason)],{type:"application/json"})),download:name}); document.body.append(a); a.click(); a.remove(); return name;
 }
 /* the leaderboard chart: result against size. It can be moved and zoomed, so one outlier does not set the scale. */
-function boardChart(B, col, W, H0, V){
-  const pts = B.rows.filter(r => r.metric != null && r.params > 0); if (pts.length < 2) return null;
-  const H = H0 || 320, m = {l:52, r:16, t:12, b:42}, xs = pts.map(p => Math.log10(p.params)), ys = pts.map(p => p.metric), srt = ys.slice().sort((a, c) => a - c);
+/* What the benchmark's chart plots: every run of every study, or the one run that stands for each model on the leaderboard;
+   on the validation or the test split; against size or training time. A run needs both values to be a point. The rest are counted, by study and by reason. */
+const BCH = {for:null, mode:"run", split:"valid", x:"params", off:new Set()};
+const SPLITN = {valid:"Validation", test:"Test"}, BX = {params:["model size","Parameters, log scale","no parameter count", v => fmtInt(v) + " parameters"], minutes:["training time","Training time in minutes, log scale","no training time", v => dur(v) + " of training"]};
+const metricBare = b => String(b.metric_short || b.metric_label || "score").replace(/^(validation|test)\s+/i, "");
+function boardView(B){
+  const b = B.benchmark, runs = B.runs || [], key = r => r.study + "~" + r.run, rowBy = {}, runBy = {}, title = {}; for (const r of B.rows){ rowBy[key(r)] = r; title[r.study] = r.study_title; } for (const u of runs) runBy[key(u)] = u;
+  for (const x of B.studies || []) title[x.study] = x.study_title;
+  const perModel = BCH.mode === "model" || !runs.length;
+  const src = perModel ? B.rows.map(r => { const u = runBy[key(r)] || {}; return {study:r.study, run:r.run, name:r.name, kind:r.kind, status:u.status || "done", params:r.params, minutes:r.minutes, valid:b.split === "valid" ? r.metric : u.valid, test:b.split === "test" ? r.metric : u.test, cite:(r.reported || {}).citation}; })
+    : runs.map(u => Object.assign({cite:((rowBy[key(u)] || {}).reported || {}).citation}, u));
+  const cover = {}, pts = [];
+  for (const u of src){ const c = cover[u.study] || (cover[u.study] = {study:u.study, title:title[u.study] || "Untitled study", total:0, n:0, why:{}}); c.total++;
+    const y = u[BCH.split], x = u[BCH.x], why = y == null ? (u.status && u.status !== "done" ? String(u.status).replace(/_/g, " ") : `with no ${SPLITN[BCH.split].toLowerCase()} score`) : !(x > 0) ? "with " + BX[BCH.x][2] : null;
+    if (why){ c.why[why] = (c.why[why] || 0) + 1; continue; } c.n++;
+    if (!BCH.off.has(u.study)) pts.push({x, y, study:u.study, run:u.run, name:u.name, study_title:c.title, kind:u.kind, cite:u.cite}); }
+  return {pts, cover:Object.values(cover), unit:perModel ? ["model","models"] : ["run","runs"], ylabel:SPLITN[BCH.split] + " " + metricBare(b), xlabel:BX[BCH.x][1], xname:BX[BCH.x][0], xshow:BX[BCH.x][3], low:b.direction === "minimize"};
+}
+function boardChart(P, col, W, H0, V){
+  const pts = P.pts; if (!pts.length) return null;
+  const H = H0 || 320, m = {l:52, r:16, t:12, b:42}, xs = pts.map(p => Math.log10(p.x)), ys = pts.map(p => p.y), srt = ys.slice().sort((a, c) => a - c);
   const xlo = Math.min(...xs), xhi = Math.max(...xs), xpad = Math.max(0.06, (xhi - xlo) * 0.05);
   /* a few very low runs would flatten everything else, so the axis covers the main body and the rest sit on the bottom edge */
-  const yhi = srt[srt.length-1], q = srt[Math.floor(srt.length * 0.08)], ylo = pts.length > 10 ? Math.max(srt[0], q - (yhi - q) * 0.6) : srt[0], span0 = (yhi - ylo) || 0.01;
+  const yhi = srt[srt.length-1], q = srt[Math.floor(srt.length * 0.08)], ylo = pts.length > 10 && !P.low ? Math.max(srt[0], q - (yhi - q) * 0.6) : srt[0], span0 = (yhi - ylo) || 0.01;
   const x0 = V ? V.x0 : xlo - xpad, x1 = V ? V.x1 : xhi + xpad, span = V ? V.y1 - V.y0 : span0, step = [0.0001,0.0002,0.0005,0.001,0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5].find(v => span / v <= 7) || 1;
   const y0 = V ? V.y0 : Math.floor((ylo - span0 * 0.04) / step) * step, y1 = V ? V.y1 : Math.ceil((yhi + span0 * 0.04) / step) * step, xticks = [];
   for (let e = Math.floor(x0); e <= Math.ceil(x1); e++) for (const k of (x1 - x0 < 1.7 ? [1, 2, 5] : [1])){ const v = k * Math.pow(10, e); if (Math.log10(v) >= x0 && Math.log10(v) <= x1) xticks.push(v); }
   const X = v => m.l + (Math.log10(v) - x0) / (x1 - x0) * (W - m.l - m.r), Y = v => H - m.b - (v - y0) / (y1 - y0) * (H - m.t - m.b);
-  const svg = s("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":`${B.benchmark.metric_label} against parameter count, one point per model`,style:"width:100%;height:auto;display:block;cursor:grab;touch-action:none"});
+  const svg = s("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":`${P.ylabel} against ${P.xname}, one point per ${P.unit[0]}`,style:"width:100%;height:auto;display:block;cursor:grab;touch-action:none"});
   svg.append(s("defs",null, s("clipPath",{id:"bclip"}, s("rect",{x:m.l,y:m.t - 6,width:W - m.l - m.r,height:H - m.t - m.b + 12}))));
   const lab = v => v >= 1e9 ? v / 1e9 + "B" : v >= 1e6 ? v / 1e6 + "M" : v >= 1e3 ? v / 1e3 + "k" : String(v), dp = step < 0.001 ? 4 : step < 0.01 ? 3 : 2;
   for (const v of xticks){ const x = X(v); svg.append(s("line",{x1:x,x2:x,y1:m.t,y2:H-m.b,stroke:"var(--line-2)"}), s("text",{x,y:H-m.b+16,"text-anchor":"middle","font-size":11,fill:"var(--muted)"}, lab(v))); }
   for (let v = Math.ceil(y0 / step - 1e-9) * step; v <= y1 + 1e-9; v += step){ const y = Y(v); svg.append(s("line",{x1:m.l,x2:W-m.r,y1:y,y2:y,stroke:"var(--line-2)"}), s("text",{x:m.l-8,y:y+4,"text-anchor":"end","font-size":11,fill:"var(--muted)"}, v.toFixed(dp))); }
   let low = 0, nrep = 0; const marks = s("g",{"clip-path":"url(#bclip)"});
-  svg.append(s("text",{x:(m.l+W-m.r)/2,y:H-6,"text-anchor":"middle","font-size":12,fill:"var(--ink-2)"}, "Parameters, log scale"),
-    s("text",{x:14,y:(m.t+H-m.b)/2,"text-anchor":"middle","font-size":12,fill:"var(--ink-2)",transform:`rotate(-90 14 ${(m.t+H-m.b)/2})`}, (B.benchmark.metric_short || B.benchmark.metric_label) + " ↑ better"), marks);
-  for (const p of pts){ const under = !V && p.metric < y0; if (under) low++;
-    const tt = s("title",null, `${p.name} · ${p.study_title} · ${fmt(p.metric,3)} · ${fmtInt(p.params)} parameters` + (p.kind === "reported" ? " · reported in " + ((p.reported || {}).citation || "its source") : "")), cx = X(p.params), cy = Y(under ? y0 : p.metric);
+  svg.append(s("text",{x:(m.l+W-m.r)/2,y:H-6,"text-anchor":"middle","font-size":12,fill:"var(--ink-2)"}, P.xlabel),
+    s("text",{x:14,y:(m.t+H-m.b)/2,"text-anchor":"middle","font-size":12,fill:"var(--ink-2)",transform:`rotate(-90 14 ${(m.t+H-m.b)/2})`}, P.ylabel + (P.low ? " ↓ better" : " ↑ better")), marks);
+  for (const p of pts){ const under = !V && p.y < y0; if (under) low++;
+    const tt = s("title",null, `${p.name} · ${p.study_title} · ${fmt(p.y,3)} · ${P.xshow(p.x)}` + (p.kind === "reported" ? " · reported in " + (p.cite || "its source") : "")), cx = X(p.x), cy = Y(under ? y0 : p.y);
     if (p.kind === "reported") nrep++;
     const c = p.kind === "reported" ? s("rect",{x:cx-4.5,y:cy-4.5,width:9,height:9,fill:"var(--surface)",stroke:col[p.study] || "var(--other)","stroke-width":2,style:"cursor:pointer"}, tt)
       : s("circle",{cx,cy,r:4.5,fill:under ? "none" : col[p.study],"fill-opacity":.8,stroke:under ? col[p.study] : "var(--surface)","stroke-width":under ? 1.5 : 1,style:"cursor:pointer"}, tt);
     c.addEventListener("click", () => { if (!svg._moved) location.hash = "#/s/" + p.study + "/" + p.run; }); marks.append(c); }
   svg.dataset.low = low; svg.dataset.rep = nrep; svg._v = {x0, x1, y0, y1, pw:W - m.l - m.r, ph:H - m.t - m.b, ml:m.l, mt:m.t};
+  { const pad = ((yhi - srt[0]) || 0.01) * 0.05; svg._full = {x0:xlo - xpad, x1:xhi + xpad, y0:srt[0] - pad, y1:yhi + pad}; }
   return svg;
 }
-/* move, zoom and reset for the leaderboard chart */
-function chartBox(B, col, cbox){
-  let V = null, raf = 0;
-  const bar = h("div",{class:"zbar"}), notes = h("div"), holder = h("div",{class:"zhold"});
-  const draw = () => { raf = 0; const chart = boardChart(B, col, Math.max(320, cbox.clientWidth - 24), null, V); if (!chart) return false;
-    const g = chart._v, unit = e => { const b = chart.getBoundingClientRect(), k = (chart.viewBox.baseVal.width || 1) / b.width; return [((e.clientX - b.left) * k - g.ml) / g.pw, 1 - ((e.clientY - b.top) * k - g.mt) / g.ph]; };
+/* the benchmark's chart with its controls: what to plot, move and zoom, and each study's share of the points */
+function chartBox(B, col, cbox, head){
+  let V = null, raf = 0; const b = B.benchmark, runs = B.runs || [];
+  if (!B.rows.length && !runs.length) return false;
+  const bar = h("div",{class:"zbar"}), notes = h("div"), holder = h("div",{class:"zhold"}), cov = h("div",{id:"bcover"}), has = sp => runs.some(u => u[sp] != null) || b.split === sp;
+  const segOf = (label, key, opts) => { const el = h("div",{class:"seg",role:"group","aria-label":label}, opts.map(([v, t, off]) => h("button",{type:"button","data-v":v,id:"bch-" + key + "-" + v,disabled:off || null,title:off || null,text:t,onclick:()=>{ BCH[key] = v; V = null; draw(); }})));
+    el._paint = () => el.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.v === BCH[key]))); return el; };
+  const segMode = runs.length ? segOf("Points", "mode", [["run","Every run"],["model","Best run per model"]]) : null;
+  const segSplit = runs.length ? segOf("Split", "split", [["valid","Validation", has("valid") ? null : "No study on this benchmark recorded a validation score"],["test","Test", has("test") ? null : "No study on this benchmark recorded a test score"]]) : null;
+  const xsel = h("select",{id:"bch-x","aria-label":"Horizontal axis"}, [["params","Model size"],["minutes","Training time"]].map(([v, t]) => h("option",{value:v,text:t}))); xsel.addEventListener("change", () => { BCH.x = xsel.value; V = null; draw(); });
+  const ctl = h("div",{class:"bctl",id:"bctl"}, segMode, segSplit, h("label",null, "Against", xsel));
+  const draw = () => { raf = 0; const P = boardView(B), chart = boardChart(P, col, Math.max(320, cbox.clientWidth - 24), null, V);
+    if (segMode) segMode._paint(); if (segSplit) segSplit._paint(); xsel.value = BCH.x; if (head) head.textContent = `${P.ylabel} vs. ${P.xname}`;
+    const fid = cbox.contains(document.activeElement) ? document.activeElement.id : null; if (fid) requestAnimationFrame(() => { const e = document.getElementById(fid) || document.getElementById("bzin"); if (e) e.focus(); });
+    put(cov, P.cover.map(c => { const off = BCH.off.has(c.study), miss = c.total - c.n, why = Object.entries(c.why).sort((a, d) => d[1] - a[1]).map(([k, n]) => `${fmtInt(n)} ${k}`).join(", ");
+      return h("div",{class:"covrow"}, h("button",{class:"covt",type:"button",id:"cov-" + c.study,"aria-pressed":String(!off),title:off ? "Show this study on the chart" : "Hide this study on the chart",onclick:()=>{ if (off) BCH.off.delete(c.study); else BCH.off.add(c.study); V = null; draw(); }},
+          h("span",{class:"dot",style:"background:" + (off ? "var(--other)" : col[c.study] || "var(--other)")}), c.title),
+        h("span",{class:"covn"}, h("b",{text:`${fmtInt(c.n)} of ${fmtInt(c.total)}`}), ` ${P.unit[1]} plotted`), miss ? h("span",{class:"covw",text:`${fmtInt(miss)} not plotted: ${why}`}) : null, h("a",{href:"#/s/" + c.study,text:"Open the study"})); }));
+    if (!chart){ put(bar); put(holder, h("p",{class:"bempty",id:"bempty",text:P.cover.some(c => c.n) ? "Every study with points here is hidden. Click a study below to show it." : `No ${P.unit[0]} has both a ${SPLITN[BCH.split].toLowerCase()} score and a ${BCH.x === "params" ? "parameter count" : "training time"}.`})); put(notes); return true; }
+    const g = chart._v, unit = e => { const r_ = chart.getBoundingClientRect(), k = (chart.viewBox.baseVal.width || 1) / r_.width; return [((e.clientX - r_.left) * k - g.ml) / g.pw, 1 - ((e.clientY - r_.top) * k - g.mt) / g.ph]; };
     const zoom = (f, ux, uy) => { const w = g.x1 - g.x0, hgt = g.y1 - g.y0, cx = g.x0 + ux * w, cy = g.y0 + uy * hgt; V = {x0:cx - ux * w * f, x1:cx + (1 - ux) * w * f, y0:cy - uy * hgt * f, y1:cy + (1 - uy) * hgt * f}; draw(); };
-    chart.addEventListener("mousedown", e => { if (e.button !== 0) return; e.preventDefault(); const sx = e.clientX, sy = e.clientY, b = chart.getBoundingClientRect(), k = (chart.viewBox.baseVal.width || 1) / b.width, g0 = g; let last = null; chart._moved = false;
+    chart.addEventListener("mousedown", e => { if (e.button !== 0) return; e.preventDefault(); const sx = e.clientX, sy = e.clientY, r_ = chart.getBoundingClientRect(), k = (chart.viewBox.baseVal.width || 1) / r_.width, g0 = g; let last = null; chart._moved = false;
       const mv = ev => { if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 4) chart._moved = true; if (!chart._moved) return; last = ev; if (!raf) raf = requestAnimationFrame(() => { const du = (last.clientX - sx) * k / g0.pw * (g0.x1 - g0.x0), dv = (last.clientY - sy) * k / g0.ph * (g0.y1 - g0.y0); V = {x0:g0.x0 - du, x1:g0.x1 - du, y0:g0.y0 + dv, y1:g0.y1 + dv}; draw(); }); };
       const up = () => { window.removeEventListener("mousemove", mv); window.removeEventListener("mouseup", up); };
       window.addEventListener("mousemove", mv); window.addEventListener("mouseup", up); });
     chart.addEventListener("wheel", e => { if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); const [ux, uy] = unit(e); zoom(e.deltaY < 0 ? 0.8 : 1.25, Math.max(0, Math.min(1, ux)), Math.max(0, Math.min(1, uy))); }, {passive:false});
     chart.addEventListener("dblclick", () => { V = null; draw(); });
-    /* Reset sits first, so the zoom buttons never move under the pointer. A button that had the keyboard focus keeps it. */
-    const fid = bar.contains(document.activeElement) ? document.activeElement.id : null; if (fid) requestAnimationFrame(() => { const e = document.getElementById(fid) || document.getElementById("bzin"); if (e) e.focus(); });
+    /* Reset sits first, so the zoom buttons never move under the pointer. */
     put(bar, V ? h("button",{class:"btn sm",type:"button",id:"bzreset",text:"Reset",onclick:()=>{ V = null; draw(); }}) : null,
       h("button",{class:"btn sm",type:"button",id:"bzout","aria-label":"Zoom out",title:"Zoom out",text:"−",onclick:()=>zoom(1.4, .5, .5)}), h("button",{class:"btn sm",type:"button",id:"bzin","aria-label":"Zoom in",title:"Zoom in",text:"+",onclick:()=>zoom(0.7, .5, .5)}));
     put(holder, chart);
     bar.title = "Drag the chart to move it. Zoom with these buttons, by pinching, or with Ctrl and scroll. Double-click to reset.";
+    const nl = +chart.dataset.low, full = chart._full;
     put(notes, +chart.dataset.rep ? h("p",{class:"fine",text:"Open squares are results reported elsewhere, not run by the depositor."}) : null,
-      +chart.dataset.low ? h("p",{class:"fine",text:`${chart.dataset.low} model${+chart.dataset.low === 1 ? "" : "s"} scored below the axis and sit${+chart.dataset.low === 1 ? "s" : ""} on the bottom edge as open circles. Zoom out to see ${+chart.dataset.low === 1 ? "it" : "them"} in place.`}) : null);
+      nl ? h("p",{class:"fine"}, `${nl} ${P.unit[nl === 1 ? 0 : 1]} scored below the axis and sit${nl === 1 ? "s" : ""} on the bottom edge as ${nl === 1 ? "an open circle" : "open circles"}. `, h("button",{class:"linkish",type:"button",id:"bzfull",text:"Show full range",onclick:()=>{ V = full; draw(); }})) : null);
     return true; };
-  put(cbox, bar, holder, notes); return draw();
+  put(cbox, ctl, h("div",{class:"zwrap"}, bar, holder), notes, cov); return draw();
 }
 const BOARD = {mode:"study", key:"metric", dir:-1, q:"", all:false, rep:true};
 const dur = m => m == null ? "–" : m < 120 ? fmt(m, m < 10 ? 1 : 0) + " min" : m < 2880 ? fmt(m / 60, 1) + " h" : fmt(m / 1440, 1) + " d";
 function saveText(text, name, type){ const a = h("a",{href:URL.createObjectURL(new Blob([text],{type})),download:name}); document.body.append(a); a.click(); a.remove(); }
+/* every run of every study on the benchmark, one row each, with the benchmark's metric under one name on both splits */
+function runsCsv(B){
+  const b = B.benchmark, t = {}; for (const x of B.studies || []) t[x.study] = x.study_title;
+  const cols = ["study_id","study","run","model","family","kind","status","benchmark","metric","validation","test","parameters","training_minutes","seed"], esc = v => v == null ? "" : /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
+  return [cols.join(",")].concat((B.runs || []).map(u => [u.study, t[u.study], u.run, u.name, u.family, u.kind, u.status, b.id, b.metric, u.valid, u.test, u.params, u.minutes, u.seed].map(esc).join(","))).join("\n") + "\n";
+}
 function csvOf(B){
   const cols = ["rank","model","family","how","base_model","study","depositor","run",B.benchmark.metric,"spread_over_seeds","seeds","study_objective","parameters","examples_per_s","speed_device","training_minutes","training_device","star","reported_in","source"];
   const esc = v => v == null ? "" : /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
   return [cols.join(",")].concat(B.rows.map((r, i) => [i + 1, r.name, r.family, r.kind, r.base, r.study_title, r.depositor, r.run, r.metric, r.sd, r.n, r.score, r.params, r.speed, r.speed_device, r.minutes, r.train_device, r.kind === "reported" ? "" : r.star, (r.reported || {}).citation, ((r.reported || {}).link || {}).href].map(esc).join(","))).join("\n") + "\n";
 }
-async function openBench(id){
+async function openBench(id, only){
   const app = document.getElementById("app"), b = INDEX.benchmarks.find(x => x.id === id); leave();
   if (!b){ setCrumbs([["Database","#/database/benchmarks"]]); put(app, h("div",{class:"err",text:"No such benchmark."})); return; }
   document.title = b.title + " · CAMEO"; setCrumbs([["Database","#/database/benchmarks"],[b.title,null]]); put(app, h("div",{class:"loading",role:"status",text:"Loading the leaderboard…"}));
   let B; try{ B = await getJSON("boards/" + id + ".json"); }catch(e){ put(app, h("div",{class:"err"}, h("b",{text:"The leaderboard did not load. "}), "Reload the page to try again. (" + e.message + ")")); return; }
   if (ROUTE.view !== "bench" || ROUTE.id !== id) return;
   const studies = INDEX.studies.filter(x => (x.benchmarks || [x.benchmark]).includes(id)), col = {}; studies.forEach((x, i) => { col[x.id] = `var(--s${(i % 3) + 1})`; });
-  const better = b.direction === "minimize" ? 1 : -1, RANK = {gold:0, silver:1, bronze:2, none:3}, nRep = B.rows.filter(r => r.kind === "reported").length; BOARD.key = "metric"; BOARD.dir = better; BOARD.all = false; BOARD.rep = true; if (BOARD.for !== id){ BOARD.for = id; BOARD.mode = studies.length > 1 ? "study" : "model"; BOARD.q = ""; }
+  const better = b.direction === "minimize" ? 1 : -1, RANK = {gold:0, silver:1, bronze:2, none:3}, nRep = B.rows.filter(r => r.kind === "reported").length; BOARD.key = "metric"; BOARD.dir = better; BOARD.all = false; BOARD.rep = true;
+  if (BCH.for !== id || only){ const keep = String(only || "").split(",").filter(x => studies.some(q => q.id === x));   /* a link from a selection of studies shows those; the others stay one click away */
+    BCH.for = id; BCH.mode = (B.runs || []).length ? "run" : "model"; BCH.split = b.split === "test" ? "test" : "valid"; BCH.x = "params"; BCH.off = new Set(keep.length ? studies.map(q => q.id).filter(x => !keep.includes(x)) : []); }
+  if (BOARD.for !== id){ BOARD.for = id; BOARD.mode = studies.length > 1 ? "study" : "model"; BOARD.q = ""; }
   const repChip = nRep ? h("button",{class:"fchip",type:"button",id:"repchip",title:"Show or hide results copied from papers",onclick:()=>{ BOARD.rep = !BOARD.rep; BOARD.all = false; draw(); }}, "Reported results", h("span",{class:"n",text:String(nRep)})) : null;
   const tbox = h("div",{class:"scrollx",tabindex:"0",role:"region","aria-label":"Leaderboard"}), seg = h("div",{class:"seg"}), cnt = h("span",{class:"q",style:"margin:0"});
   const fq = h("input",{class:"search sm",type:"search",id:"boardq",value:BOARD.q,placeholder:"Filter by model, family, study…","aria-label":"Filter the leaderboard"});
@@ -1767,7 +1855,7 @@ async function openBench(id){
         hasCol("minutes") ? h("td",{class:"num",title:r.train_device ? "Trained on " + r.train_device : "Training device not recorded",text:dur(r.minutes)}) : null, h("td",null, r.kind === "reported" ? repStar() : starPill(r.star)))))) : h("p",{class:"q",style:"padding:14px 16px",text:"No model matches."}),
       rows.length > shown.length ? h("button",{class:"linkish",style:"margin:10px 16px",text:`Show all ${rows.length} rows`,onclick:()=>{ BOARD.all = true; draw(); }}) : null);
   }
-  const cbox = h("div",{class:"zwrap",style:"padding:8px 12px"}), ext = (href, text) => h("a",{class:"lk",href,target:"_blank",rel:"noopener",text:text + " ↗"});
+  const cbox = h("div",{style:"padding:8px 12px"}), chead = h("h2",{id:"bchead",text:"Score vs. model size"}), ext = (href, text) => h("a",{class:"lk",href,target:"_blank",rel:"noopener",text:text + " ↗"});
   const topRep = B.rows.slice().sort((x, y) => (x.metric - y.metric) * better).find(r => r.kind === "reported");
   /* the same dataset can be split and processed differently by each study; show the facts next to the numbers */
   const P = B.prep || [], tests = [...new Set(P.map(q => (q.examples || {}).test).filter(v => typeof v === "number"))];
@@ -1793,14 +1881,14 @@ async function openBench(id){
         h("span",{class:"s",text:[b.best_by ? (b.best_reported ? "listed by " : "from ") + b.best_by : null, !b.best_reported && topRep ? `${fmt(topRep.metric,3)} is the highest reported elsewhere` : null].filter(Boolean).join(" · ")})),
       h("div",{class:"stat"}, h("span",{class:"k",text:"Studies"}), h("b",{text:String(b.studies)}), h("span",{class:"s",text:studies.map(x => x.depositor).filter((v, i, a) => v && a.indexOf(v) === i).join(", ")})),
       h("div",{class:"stat"}, h("span",{class:"k",text:"Models"}), h("b",{text:fmtInt(b.models)}), h("span",{class:"s",text:"best run of each architecture" + (nRep ? ` · ${nRep} reported elsewhere` : "")}))),
-    h("section",{class:"card"}, h("div",{class:"card-h"}, h("h2",{text:"Accuracy against size"}),
-        h("span",{class:"legend2"}, studies.map(x => h("a",{href:"#/s/" + x.id}, h("span",{class:"dot",style:"background:" + col[x.id]}), x.title || "Untitled study")))), cbox),
+    h("section",{class:"card"}, h("div",{class:"card-h"}, chead,
+        (B.runs || []).length ? h("span",{class:"sp"}, h("button",{class:"btn sm",id:"runcsv",title:"Every run of every study on this benchmark, one row each, with the score on both splits under one name",text:`Download all ${fmtInt(B.runs.length)} run rows (CSV)`,onclick:()=>saveText(runsCsv(B), id + "-runs.csv", "text/csv")})) : null), cbox),
     h("section",{class:"card"}, h("div",{class:"card-h"}, h("h2",{text:"Leaderboard"}), seg, repChip, fq, cnt,
-        h("span",{class:"sp"}, h("button",{class:"btn sm",id:"csvbtn",title:"Every model on this benchmark, as a spreadsheet file",text:"Download CSV",onclick:()=>saveText(csvOf(B), id + "-leaderboard.csv", "text/csv")}))), tbox,
+        h("span",{class:"sp"}, h("button",{class:"btn sm",id:"csvbtn",title:"Every model on this benchmark, as a spreadsheet file",text:`Download all ${fmtInt(B.rows.length)} model rows (CSV)`,onclick:()=>saveText(csvOf(B), id + "-leaderboard.csv", "text/csv")}))), tbox,
       h("div",{class:"cardfoot"}, fold("Notes", h("p",{id:"lbnotes",text:"Each model is listed with the configuration its own study chose on validation. Repeated seeds show as a mean and spread. Speed and training time come from each study's own hardware: sort by them, but compare only within one device. Hover for the device." + (nRep ? " Rows marked Reported were copied from a paper and were not run by the depositor." : "") + " Tick rows to compare them side by side, or to download those models as one file."})))),
     prepCard);
   draw();
-  if (!chartBox(B, col, cbox)) cbox.parentNode.remove();
+  if (!chartBox(B, col, cbox, chead)) cbox.parentNode.remove();
 }
 async function openStudy(id){
   const app = document.getElementById("app"), meta = INDEX.studies.find(x => x.id === id);
@@ -1843,7 +1931,7 @@ function init(meta, runs, models, entry){
     const scored = RUNS.filter(r => r.score != null), most = k => scored.length && scored.filter(r => Q[k].get(r) != null).length * 2 >= scored.length;
     state.ax = {x:blankAxis(RUNS.some(r => r.speed) ? "speed" : ["params","mins"].find(most) || "order"), y:yAxis()}; }
   state.hx = blankAxis("order"); state.hy = blankAxis(Q[OBJ.metric] ? OBJ.metric : acc[0], OBJ.split === "test" ? "test" : "valid");
-  state.tab = (RUNS.some(r => (r.evals || []).length) && Object.keys(META.datasets || {}).length > 1) ? "datasets" : "compare"; state.dsSort = null; state.rowsAll = false; state.mode = "family"; state.sort = RUNS.some(r => r.score != null) ? {key:"score", dir:OBJ.dir} : {key:"tp", dir:-1}; state.hidden = new Set(); state.q = ""; state.corrOpen = false;
+  state.tab = (RUNS.some(r => (r.evals || []).length) && Object.keys(META.datasets || {}).length > 1) ? "datasets" : "compare"; state.dsSort = null; state.rowsAll = false; state.mode = "family"; state.sort = RUNS.some(r => r.score != null) ? {key:"score", dir:OBJ.dir} : {key:"tp", dir:-1}; state.hidden = new Set(); state.q = ""; state.noScore = false; state.corrOpen = false;
   for (const f of FIELDS) f._other = false;
   snapshot(); state.editorOpen = staged() && checklist().block.length > 0;
   build(); wire();
@@ -1916,11 +2004,23 @@ function build(){
   const last = ENTRY.history[ENTRY.history.length-1];
   const where = ENTRY.status === "published" ? (ENTRY.madeUp ? "Made-up data, for the demo" : (ENTRY.example && ENTRY.version === 1) ? "Example entry" : `Version ${ENTRY.version} · published ${last.date}`) : ENTRY.status === "submitted" ? "Submitted, waiting for approval"
     : ENTRY.status === "staged-edit" ? `Editing version ${ENTRY.version}` : "Staged, not published";
-  /* the study at a glance: what it is, who deposited it, four numbers */
+  /* the study at a glance: its question, then what happened in a sentence, then who deposited it */
+  const noRes = nOwn - ti.total, bold = t => h("b",{text:t}), bt = best ? (best.t || {})[ym] : null;
+  const showNoScore = () => { state.mode = "all"; state.noScore = true; state.rowsAll = true; state.q = ""; const q_ = document.getElementById("q"); if (q_) q_.value = ""; renderMode(); renderTable(); drawMain(); const t_ = document.getElementById("tnote"); if (t_){ t_.scrollIntoView({block:"start"}); } };
+  const lcm = t => /^[A-Z][a-z]/.test(t) && !/^(Pearson|Spearman)/.test(t) ? lowerFirst(t) : t, fp = [];   /* a metric's name inside a sentence */
+  if (ti.best != null){ fp.push("Best " + lowerFirst(OBJ.label) + " ", bold(fmt(ti.best,4))); if (base && base.score != null) fp.push(", baseline ", bold(fmt(base.score,4))); else fp.push(", with no baseline run in the file"); fp.push(". "); }
+  fp.push(bold(`${ti.total} of ${nOwn}`), nOwn === 1 ? " run finished with a score" : " runs finished with a score");
+  if (noRes) fp.push(" (", h("button",{class:"linkish",type:"button",id:"noscore",text:noRes === 1 ? "see the one that did not" : `see the ${noRes} that did not`,onclick:showNoScore}), ")");
+  fp.push(". "); if (ti.total > 1 && ti.nf) fp.push((ti.n < 2 ? "No other run is" : ti.n === 2 ? "One other run is" : `${ti.n - 1} other runs are`) + ` within the study's ${fmtSmall(ti.nf)} margin of the best. `);
+  if (!hasTest(ym)) fp.push("This deposit contains validation results only.");
+  else if (bt == null) fp.push("Some runs have held-out test results. The best run does not.");
+  else { fp.push(`The best run's held-out test ${lcm(Q[ym].short)} is `, bold(fmt(bt,4))); if (base && (base.t||{})[ym] != null) fp.push(`, baseline ${fmt(base.t[ym],4)}`); fp.push("."); }
+  const facts = !nOwn ? null : h("p",{class:"sfacts",id:"sfacts"}, fp);
   const hero = h("section",{class:"hero2"},
     h("div",{class:"hrow"},
       h("div",null, h("div",{class:"eyebrow",text:BM ? "Study · " + BM.title : "Study"}), h("h1",{id:"studyline",text:blank(m.study.title) ? "Untitled study" : m.study.title}),
-        h("p",{class:"sub",text:[KIND[(m.objective||{}).kind] || "Study", nOwn || !reps.length ? pl(nOwn,"run","runs") : null, reps.length ? pl(reps.length,"reported result","reported results") : null, pl(cn.models,"architecture","architectures"), pl(cn.families,"family","families")].filter(Boolean).join(" · ")}), reproTag(), linksRow()),
+        blank(m.study.question) && !(m.objective||{}).goal ? null : h("p",{class:"squestion",id:"squestion",text:blank(m.study.question) ? m.objective.goal : m.study.question}), facts,
+        h("p",{class:"sub meta",text:[KIND[(m.objective||{}).kind] || "Study", nOwn || !reps.length ? pl(nOwn,"run","runs") : null, reps.length ? pl(reps.length,"reported result","reported results") : null, pl(cn.models,"architecture","architectures"), pl(cn.families,"family","families")].filter(Boolean).join(" · ")}), reproTag(), linksRow()),
       h("div",{class:"whobox"},
         h("div",{class:"who","aria-label":"Deposited by"}, h("div",{class:"avatar",text:initials,"aria-hidden":"true"}),
           h("div",null, c.name ? (dep_ => dep_ ? h("a",{class:"wholink",href:"#/d/" + encodeURIComponent(dep_.slug),title:"All studies by this depositor"}, h("b",{text:c.name})) : h("b",{text:c.name}))(((INDEX || {}).depositors || []).find(x => ENTRY.id && x.studies.includes(ENTRY.id))) : h("b",{text:"Depositor not named"}), h("span",{text:[c.lab, c.institution].filter(x => !blank(x)).join(" · ")}), h("span",{class:"dep",text:where}))),
@@ -1929,17 +2029,12 @@ function build(){
       stat("Reported results", String(reps.length), "copied from where they were published"),
       stat("Sources", String(new Set(reps.map(r => r.reported.link ? r.reported.link.href : r.reported.citation)).size), "each result links to its source"),
       (top => stat("Highest reported test " + Q[ym].short, top ? fmt(top.t[ym],3) : "–", top ? top.name : "no test value in the file"))(reps.filter(r => (r.t||{})[ym] != null).sort((a, b) => (b.t[ym] - a.t[ym]) * (Q[ym].better === "low" ? -1 : 1))[0]))
-    : h("div",{class:"stats"},
-      stat("Best " + lowerFirst(OBJ.label), fmt(ti.best,3), pct != null ? (gain >= 0 ? `${pct}% ${OBJ.dir > 0 ? "below" : "above"} the baseline (${fmt(base.score,3)})` : `baseline ${fmt(base.score,3)}`) : "no baseline run in the file"),
-      hasTest(ym) ? stat(`Its test ${Q[ym].short}`, best ? fmt((best.t||{})[ym],3) : "–", base ? `baseline ${fmt((base.t||{})[ym],3)}` : "")
-        : stat("Test results", "None", "the file records validation results only"),
-      stat("Runs with a result", `${ti.total} of ${nOwn}`, `${nOwn - ti.total} gave no result` + (reps.length ? ` · ${reps.length} more reported elsewhere` : "")),
-      stat("Tied with the best", String(ti.n), ti.nf ? `within the noise floor (${fmt(ti.nf,3)})` : "no noise floor in the file")));
+    : null);
   const parts = [hero];
   if (staged() && state.editorOpen) parts.push(editorCard());
   const f = (m.summary.findings || [])[0];
   if (f){
-    const ftext = h("p",{class:"clamp1"}, h("b",{text:"Finding. "}), f.statement);
+    const ftext = h("p",{class:"clamp1"}, h("b",{title:"Written by the depositor, or by the search that produced the study",text:"Finding, as deposited. "}), f.statement);
     const fbtn = h("button",{class:"linkish","aria-expanded":"false",text:"more",onclick:()=>{ const c1 = ftext.classList.toggle("clamp1"); fbtn.textContent = c1 ? "more" : "less"; fbtn.setAttribute("aria-expanded", String(!c1)); }});
     parts.push(h("div",{class:"brief"}, ftext, fbtn));
   }
@@ -1947,8 +2042,7 @@ function build(){
   const missing = FIELDS.filter(x => !fval(x) && x.level !== "optional").map(x => x.todo.replace(/^(a|an|the|your) /, "")).concat(notInDeposit());
   parts.push(h("details",{class:"about"}, h("summary",{text:"About this study"}),
     h("dl",{class:"about-grid"},
-      blank(m.study.question) ? null : row("Summary", m.study.question),
-      (m.objective||{}).goal ? row("Goal", m.objective.goal) : null,
+      (m.objective||{}).goal && !blank(m.study.question) ? row("Goal", m.objective.goal) : null,
       row("Data", ds.name || "not named"),
       row("Input and output", `${stop(textOf(ds.input) || "not described")} Output: ${stop(textOf(ds.output) || "not described")}`),
       exLine(ds.examples) ? row("Examples", exLine(ds.examples)) : null,
@@ -1991,7 +2085,7 @@ function setCap(items, notes){
   if (state.notes && notes.length) kids_.push(h("div",{class:"notes"}, notes.map(t => h("p",{text:t}))));
   document.getElementById("cap").replaceChildren(...kids_);
 }
-const TABS = [["compare","Compare"],["datasets","By dataset"],["history","Search history"],["lineage","Lineage"]];
+const TABS = [["compare","Chart"],["datasets","By dataset"],["history","Search history"],["lineage","Lineage"]];
 function renderTabs(){
   /* search history and lineage only mean something when runs descend from one another */
   const hasPar = RUNS.some(r => r.parent), hasEv = RUNS.some(r => (r.evals || []).length), tabs = TABS.filter(t => t[0] === "compare" || (t[0] === "datasets" ? hasEv : hasPar)); if (!tabs.some(t => t[0] === state.tab)) state.tab = "compare";
@@ -2404,11 +2498,11 @@ const COLS = [
 ];
 function renderMode(){
   document.getElementById("mode").replaceChildren(...[["family","Best per family"],["arch","Best per architecture"],["all","Every run"]].map(([v,t]) =>
-    h("button",{"aria-pressed":String(state.mode===v),text:t,onclick:()=>{state.mode=v; renderMode(); renderTable();}})));
+    h("button",{"aria-pressed":String(state.mode===v),text:t,onclick:()=>{state.mode=v; state.noScore = false; renderMode(); renderTable();}})));
 }
 function tableRows(){
   const vis = visible(); let rows;
-  if (state.mode === "all") rows = vis.map(r => ({r, k:1}));
+  if (state.mode === "all") rows = vis.filter(r => !state.noScore || (r.kind !== "reported" && !(r.status === "done" && r.score != null))).map(r => ({r, k:1}));
   else { const key = state.mode === "family" ? "fam" : "model", g = {};
     for (const r of vis){ if (r.status !== "done" || (r.score == null && r.kind !== "reported")) continue; const e = g[r[key]] || (g[r[key]] = {r, k:0}); e.k++; if (r.score != null && r.kind !== "reported" && (e.r.kind === "reported" || e.r.score == null || better(r.score, e.r.score))) e.r = r; }
     rows = Object.values(g); }
@@ -2421,7 +2515,8 @@ const tcols = () => COLS.filter(c => (c.key !== "tp" || hasTest(YM())) && (c.key
 function renderTable(){
   const t = document.getElementById("tbl"), all = tableRows(), ti = tieInfo(), LIMIT = 10;
   const rows = state.rowsAll ? all : all.slice(0, LIMIT);
-  document.getElementById("tnote").replaceChildren(...(ti.total ? [h("b",{text:`${ti.n} of ${ti.total} scored runs are tied with the best`}), h("span",{class:"m",text:` · within the noise floor, one seed per run`})]
+  document.getElementById("tnote").replaceChildren(...(state.noScore && state.mode === "all" ? [h("b",{text:all.length === 1 ? "1 run did not finish with a score" : `${fmtInt(all.length)} runs did not finish with a score`}), h("span",{class:"m",text:" · the first column says how each one ended · "}), h("button",{class:"linkish",type:"button",id:"noscoreoff",text:"Show every run",onclick:()=>{ state.noScore = false; renderTable(); }})]
+    : ti.total ? [h("b",{text:!ti.nf ? pl(ti.total,"scored run","scored runs") : ti.n < 2 ? `No other scored run is within the study's ${fmtSmall(ti.nf)} margin of the best` : `${ti.n} of ${ti.total} scored runs are within the study's ${fmtSmall(ti.nf)} margin of the best`}), h("span",{class:"m",text:ti.nf ? ` · one seed per run, so this is not a statistical tie` : ` · the file gives no margin to judge ties by`})]
     : [h("span",{class:"m",text:RUNS.some(r => r.kind === "reported") ? "These results were reported elsewhere. Nothing was run in this study." : "No run has a score yet."})]));
   const pickable = ENTRY.status === "published" && !!ENTRY.id;
   const head = h("thead",null, h("tr",null, pickable ? h("th",{scope:"col",class:"cmpc"}, h("span",{style:"position:absolute;left:-9999px",text:"Select"})) : null, tcols().map(c => {
@@ -2436,7 +2531,7 @@ function renderTable(){
       onkeydown:e=>{ if (e.target !== tr) return; if (e.key==="Enter"||e.key===" "){ e.preventDefault(); select(r.id); }
         else if (e.key==="ArrowDown"||e.key==="ArrowUp"){ e.preventDefault(); const n = e.key==="ArrowDown" ? tr.nextElementSibling : tr.previousElementSibling; if (n){ n.focus(); select(n.dataset.id, true); } } }},
       pickable ? h("td",{class:"cmpc"}, cmpBtn(ENTRY.id, r.id, r.name)) : null,
-      h("td",null, r.kind === "reported" ? h("span",{class:"pill plain",title:"Copied from " + (r.reported.citation || "its source") + ". Not run in this study.",text:"reported"}) : r.status !== "done" ? h("span",{class:"pill bad",text:"no result"}) : isTie(r) ? h("span",{class:"pill tie",text:"tied"}) : "",
+      h("td",null, r.kind === "reported" ? h("span",{class:"pill plain",title:"Copied from " + (r.reported.citation || "its source") + ". Not run in this study.",text:"reported"}) : r.status !== "done" ? h("span",{class:"pill bad",title:(META.failures || {})[r.id] || r.note || "The file gives no reason",text:known(r.status) ? String(r.status).replace(/_/g, " ") : "no result"}) : isTie(r) ? h("span",{class:"pill tie",text:"tied"}) : "",
         isRevised(r) ? h("span",{class:"pill rev",style:"margin-left:4px",title:revisedNote(r),text:"revised"}) : null),
       h("td",{class:"name",title:r.name}, r.name),
       h("td",{class:"fam",title:pretty(r.fam)}, h("span",{class:"dot",style:`background:${sr.color}`}), pretty(r.fam), (state.mode==="family" && k>1) ? h("span",{style:"color:var(--muted)",text:` · ${k} runs`}) : ""),
@@ -2484,7 +2579,7 @@ function renderInspector(){
       okRun ? (isTie(r) && !rp ? h("span",{class:"pill tie",text:"tied with the best"}) : null) : h("span",{class:"pill bad",text:"no result"}),
       isRevised(r) ? h("span",{class:"pill rev",text:"revised"}) : null),
     h("div",{class:"insp-a"}, ENTRY.status === "published" && ENTRY.id ? (b_ => { b_.id = "cmpinsp"; return b_; })(cmpBtn(ENTRY.id, r.id, r.name, true)) : null,
-      h("button",{class:"btn sm",type:"button",id:"dlmodel",title:"The model, its training settings and recipe, its data and its results, as one JSON file",text:"Download this model",onclick:()=>{ const e = modelEntry(ENTRY.raw, r.id); if (e) saveText(JSON.stringify(e, null, 1), (String(pathGet(ENTRY.raw, "study.id") || "study") + "__" + r.id).replace(/[^A-Za-z0-9._-]+/g, "-") + ".json", "application/json"); }})));
+      h("button",{class:"btn sm",type:"button",id:"dlmodel",title:"The model, its training settings and recipe, its data and its results, as one JSON file",text:"Download run configuration (JSON)",onclick:()=>{ const e = modelEntry(ENTRY.raw, r.id); if (e) saveText(JSON.stringify(e, null, 1), (String(pathGet(ENTRY.raw, "study.id") || "study") + "__" + r.id).replace(/[^A-Za-z0-9._-]+/g, "-") + ".json", "application/json"); }})));
   const metric = (k, v, key) => h("div",{class:"metric" + (key ? " obj" : "")}, h("span",{text:k}), h("b",{text:v}));
   /* four numbers first; the rest on request */
   const mets = rp ? h("div",{class:"sec"}, h("h3",{text:"Results"}),
@@ -3027,8 +3122,10 @@ function linksRow(){
   const items = [["Dataset", first("dataset.doi", "dataset.accession", "dataset.url")], ["Code", first("study.code_url")], ["Paper", first("study.publication")], ["Weights", first("study.weights_url")]];
   const out = items.filter(x => known(x[1])).map(([k, v]) => { const L = weightLink(v); return L ? h("a",{class:"lk",href:L.href,target:"_blank",rel:"noopener",title:L.label}, k + " ↗") : h("span",{class:"lk",text:k + ": " + String(v)}); });
   const nW = RUNS.filter(r => r.weights).length; if (nW) out.push(h("span",{class:"lk",text:`Weights linked for ${nW} run${nW === 1 ? "" : "s"}`}));
+  if (ENTRY.id && ENTRY.status === "published" && BM){ const n = (((INDEX.benchmarks || []).find(b => b.id === BM.id) || {}).studies || 1) - 1;   /* where this study meets the others */
+    out.push(h("a",{class:"lk",id:"benchlk",href:"#/b/" + BM.id,title:"Every study on " + BM.title + ", on one chart and one leaderboard",text:n > 0 ? `Compare with ${n === 1 ? "the other study" : n + " other studies"} on this benchmark` : "Open this benchmark"})); }
   if (ENTRY.id && ENTRY.status === "published") out.push(h("button",{class:"lk",type:"button",id:"citebtn",title:"How to cite this study",text:"Cite",onclick:openCite}));
-  if (ENTRY.id && ENTRY.status === "published") out.push(h("a",{class:"lk",href:"studies/" + encodeURIComponent(ENTRY.id) + ".json",download:ENTRY.id + ".json",title:"The whole entry as one file"}, "Download JSON ↓"));
+  if (ENTRY.id && ENTRY.status === "published") out.push(h("button",{class:"lk",type:"button",id:"dlstudy",title:"The whole entry as one file: every model, the training settings and every run",text:"Download study (JSON)",onclick:e=>downloadStudies([ENTRY.id], e.currentTarget)}));
   return out.length ? h("div",{class:"links"}, out) : null;
 }
 
@@ -3295,7 +3392,7 @@ function fromStudy(S){
     const p = fin(r.parameters); if (p != null) (recBy[t.model] = recBy[t.model] || new Set()).add(p);
     return {id:t.id, n:i+1, model:t.model, name:known(m.name) ? m.name : t.model, fam:known(m.family) ? m.family : "unknown", lin:known(t.lineage) ? t.lineage : "none", parent:known(t.parent_trial) ? t.parent_trial : null,
       move:known(t.move) ? t.move : null, purpose:t.purpose, status:r.status, cls:known(r.classification) ? r.classification : null, seed:t.seed, score:fin(r.score), v:valid, t:test, diverged:[...div],
-      bestEp:fin(r.best_epoch), ep:fin(r.epochs_run), params:p != null ? p : fin(m.parameters), mins:fin(r.runtime_minutes),
+      bestEp:fin(r.best_epoch), ep:fin(r.epochs_run), params:p != null ? p : fin(m.parameters), mins:fin(r.runtime_minutes), dev:known(r.gpu) ? String(r.gpu) : isObj(r.compute) && known(r.compute.gpu) ? String(r.compute.gpu) : null,
       recipe:recipeId(t, recipes), sp:isObj(t.second_parent) ? t.second_parent : null,
       hp:isObj(t.training) ? t.training : {}, hyp:known(t.hypothesis) ? t.hypothesis : null, pred:t.predicted_effect, note,
       weights:weightLink(t.weights), kind:kindOf(t), evals, reported:kindOf(t) === "reported" ? {citation:isObj(t.reported_in) && known(t.reported_in.citation) ? String(t.reported_in.citation) : null, where:isObj(t.reported_in) && known(t.reported_in.where) ? String(t.reported_in.where) : null, note:isObj(t.reported_in) && known(t.reported_in.note) ? String(t.reported_in.note) : null, link:weightLink(sourceLink(t))} : null, op:isCross(t) ? "crossover" : (mm ? mm[2] : null), speed:fin((m.inference_speed || {}).seq_per_s)}; });
