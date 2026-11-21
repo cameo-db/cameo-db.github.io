@@ -1,7 +1,7 @@
 name: Check studies
 on:
   pull_request:
-    paths: ["studies/**", "benchmarks.json", "kit/**", "tools/**"]
+    paths: ["studies/**", "benchmarks.json", "findings.json", "kit/**", "tools/**"]
 jobs:
   check:
     runs-on: ubuntu-latest
