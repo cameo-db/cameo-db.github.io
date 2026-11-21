@@ -11,7 +11,7 @@ The format is in `CAMEO_LOOP_SPEC.md`. Read it first. This file is the procedure
 3. `python3 cameo.py check study.json --json`
 4. Fix every item under `blocking`. Each has a `fix` that says what to do. Run `check` again until `"ok": true`.
 5. `python3 cameo.py fix study.json --profile depositor.json` applies the repairs that are safe to automate.
-6. `python3 cameo.py add-layers study.json` if PyTorch is installed. It builds each model and stores its layer list.
+6. `python3 cameo.py add-layers study.json` if PyTorch is installed. It builds each model and stores its layer list and which layer feeds which. If the model code reads a value that the training script set, pass it with `--define NAME=VALUE`.
 7. `python3 cameo.py add-speed study.json` only on the machine whose speed the depositor wants reported. Otherwise skip it and say so.
 8. Work down `suggested` and `reproduce.recipes.<id>.missing` as far as the project's files allow.
 9. Tell the person what you filled, and what you left as `not_reported` and why.
@@ -26,7 +26,7 @@ The format is in `CAMEO_LOOP_SPEC.md`. Read it first. This file is the procedure
 - License: use the one in `depositor.json`. If it names none, keep the default, MIT, and say so in your report. Pick no other yourself.
 - Record what each run actually used. Take settings from the run's own config or log.
 - One entry per training run, including runs that failed.
-- A number the project quotes from a paper is a `reported` run with its source. Never enter it as a run the project made.
+- Include the baselines the project has. The run the search started from gets `history.move` set to `"baseline"`. A number the project quotes from a paper is a `reported` run with its source. Never enter it as a run the project made.
 - Keep the project's ids if it has them.
 
 ## Where values come from

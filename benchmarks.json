@@ -41,5 +41,100 @@
    }
   ],
   "metric_short": "Test Pearson r"
+ },
+ {
+  "id": "k562-atac",
+  "title": "K562 ATAC-seq profiles",
+  "dataset": "K562 ATAC-seq, ChromBPNet fold 0",
+  "task": "Profile and count prediction from 2,114 bp of DNA",
+  "domain": "Genomics",
+  "task_type": "Profile prediction",
+  "example_unit": "seq",
+  "match": "k562 atac-seq",
+  "metric": "score_mean_profile_r_count_r2_pooled_count_r2",
+  "metric_aliases": [
+   "score"
+  ],
+  "split": "valid",
+  "metric_label": "Validation score (mean of profile Pearson r, count R² and pooled count R²)",
+  "metric_short": "Validation score",
+  "direction": "maximize",
+  "description": "Predict base-resolution ATAC-seq profiles and total counts in K562 cells from 2,114 bp of DNA, with the peaks, non-peaks and chromosome split of ChromBPNet fold 0.",
+  "note": "Ranked on validation data, which each search also used to choose its models.",
+  "links": [
+   {
+    "label": "ChromBPNet preprint",
+    "href": "https://doi.org/10.1101/2024.12.25.630221"
+   }
+  ]
+ },
+ {
+  "id": "k562-procap",
+  "title": "K562 PRO-cap profiles",
+  "dataset": "K562 PRO-cap, ProCapNet data, fold 1",
+  "task": "Profile and count prediction from 2,114 bp of DNA",
+  "domain": "Genomics",
+  "task_type": "Profile prediction",
+  "example_unit": "seq",
+  "match": "pro-cap",
+  "metric": "score_mean_profile_r_count_r2",
+  "split": "valid",
+  "metric_label": "Validation score (mean of profile Pearson r and count R²)",
+  "metric_short": "Validation score",
+  "direction": "maximize",
+  "description": "Predict base-resolution PRO-cap profiles on both strands and total counts in K562 cells from 2,114 bp of DNA, with the data and chromosome split of ProCapNet fold 1.",
+  "note": "Ranked on validation data, which each search also used to choose its models.",
+  "links": [
+   {
+    "label": "ProCapNet preprint",
+    "href": "https://doi.org/10.1101/2024.05.28.596138"
+   }
+  ]
+ },
+ {
+  "id": "parm-k562",
+  "title": "PARM promoter MPRA, K562",
+  "dataset": "PARM promoter MPRA, library v2_MH4, K562",
+  "task": "Regression from DNA fragments of 93 to 600 bp",
+  "domain": "Genomics",
+  "task_type": "Regression",
+  "example_unit": "seq",
+  "match": "parm promoter",
+  "metric": "val_fragment_r2",
+  "split": "valid",
+  "metric_label": "Validation R² per fragment",
+  "metric_short": "Validation R²",
+  "direction": "maximize",
+  "description": "Predict the promoter activity of MPRA fragments in K562 cells, as log2 of reporter RNA over plasmid DNA, with the folds deposited by the PARM authors.",
+  "note": "Ranked on validation data, which each search also used to choose its models.",
+  "links": [
+   {
+    "label": "PARM paper",
+    "href": "https://doi.org/10.1038/s41586-025-10093-z"
+   }
+  ]
+ },
+ {
+  "id": "humanbraindev",
+  "title": "HumanBrainDev cell-state accessibility",
+  "dataset": "HumanBrainDev, as released with Bolero",
+  "task": "Accessibility per cell state from 524,288 bp of DNA",
+  "domain": "Genomics",
+  "task_type": "Profile prediction",
+  "example_unit": "window",
+  "match": "humanbraindev",
+  "metric": "across_sample_corr",
+  "split": "valid",
+  "metric_label": "Validation across-sample correlation",
+  "metric_short": "Validation correlation",
+  "direction": "maximize",
+  "description": "Predict chromatin accessibility at 32 bp resolution in each cell state of the developing human cortex, from 524,288 bp of DNA and a cell-state embedding.",
+  "note": "Ranked on validation data, which each search also used to choose its models.",
+  "links": [
+   {
+    "label": "Bolero preprint",
+    "href": "https://www.biorxiv.org/content/10.64898/2026.10.19.760026v1"
+   }
+  ]
  }
 ]

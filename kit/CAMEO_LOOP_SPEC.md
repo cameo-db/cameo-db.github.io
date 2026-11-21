@@ -15,6 +15,8 @@ A run is the link. It names a model and a recipe by id, and its performance sits
 
 The file is complete when a reader can rebuild each model, train it the same way, and compare its results with other studies, from the file alone. Datasets and trained weights stay outside the file. The file links to them.
 
+Record every model the loop trains, not only the best one. People download entries, merge them across studies and use them to start new searches, and a model that lost is as useful to them as the one that won.
+
 A partial file is still accepted. CAMEO gives each entry a star, worked out from the file itself:
 
 - **Gold**: all four parts are complete.
@@ -33,6 +35,7 @@ These cannot be recovered afterwards. Capture them when each run happens.
 - The parent run or runs, and why the run was tried.
 - Metrics, parameter count and wall-clock training time.
 - Failed runs too. One entry per run, with its status.
+- The baselines: the model the loop started from, and any published result on the same data with its source. See Baselines.
 
 ## `experiment`
 
@@ -66,8 +69,9 @@ Say exactly how the data was prepared. Two studies on one dataset can only be co
 | `parent` | the model it was derived from, or `null` |
 | `inputs`, `outputs` | name → `{kind, shape}` |
 | `code` | the whole model file as text. It defines `build_model()`, which returns the network. If the model does not take one float tensor, it also defines `example_inputs(batch)`, which returns what to call the model with |
+| `constants` | values the code reads but does not set, because the training script set them: `{"IN_LEN": 2114}`. Leave it out when the code stands alone |
 | `inference_speed` | `{"examples_per_s": n}`. See Performance |
-| `layers` | optional layer list, for drawing the model |
+| `layers`, `flow` | optional. `layers` is the layer list. `flow` is which layer feeds which, so that skip connections and branches can be drawn. `python3 cameo.py add-layers study.json` writes both from `code`. If the code needs a value from the training script, give it with `--define IN_LEN=2114`; it is stored under `constants` |
 | `base_model` | for a model built on published weights: `{name, link, revision}`, where `link` is an https address or a DOI |
 | `adaptation` | how the base model was adapted, such as `LoRA, rank 8`, `full fine-tune` or `none` |
 
@@ -147,6 +151,15 @@ Not every run trains from scratch. Say which kind each run is, and link the weig
           "performance": {"status": "done", "score": 0.63, "valid": {"spearman": 0.63}, "parameters": 655000000,
             "training_minutes": 62, "evaluations": [{"dataset": "main", "split": "test", "metrics": {"spearman": 0.61}}]}}]
 ```
+
+## Baselines
+
+A score is hard to read without something to compare it with. Include both kinds of baseline when you have them.
+
+- **Your own.** The model the search started from, or a reference model you trained. It is an ordinary run with `history.move` set to `"baseline"`.
+- **Published.** A result that a paper reports on the same data. Enter it as a `reported` run, described next.
+
+If the project has neither, leave them out. Do not train or look up a baseline only to fill this in.
 
 ## Results reported elsewhere
 
@@ -228,6 +241,7 @@ Before you hand the file over, confirm each of these.
 - Every recipe has its `script`, and the fields above are filled.
 - Every finished run of your own has `score`, metrics, `parameters` and `training_minutes`.
 - Every model with a finished run has `inference_speed`.
+- The run the search started from has `history.move` set to `"baseline"`. Results that papers report on the same data are in as `reported` runs.
 - `environment` has versions, and the device for training and for inference. `data.splits` has code or files, and `data.preprocessing` says what was done.
 
 The CAMEO kit checks all of this. It is two files, `cameo.py` and `rules.json`, kept in one folder. Both are at https://cameo-db.github.io/kit/.
@@ -249,3 +263,16 @@ Then prove it once. Take one run, train it again from the file alone (its model 
 ## Not PyTorch?
 
 Everything above applies. Store the model and training code in your framework and name it under `environment.framework`.
+
+`cameo.py add-layers` needs PyTorch. In another framework you can write `flow` yourself:
+
+```json
+"flow": {"in": [4, 240],
+         "nodes": [{"cls": "Conv1d", "label": "4 → 64", "kind": "weights", "out": [64, 240]},
+                   {"cls": "Conv1d", "label": "64 → 64", "kind": "weights", "out": [64, 240]},
+                   {"op": "add", "kind": "op", "out": [64, 240]}],
+         "edges": [[-1, 0], [0, 1], [0, 2], [1, 2], [2, 3]],
+         "out": [64, 240]}
+```
+
+A node is a layer, or an operation that combines the outputs of several (`add`, `concatenate`, `multiply`). An edge is `[from, to]`: `-1` is the model's input and the number of nodes is its output. Shapes leave out the batch.

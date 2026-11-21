@@ -4,8 +4,9 @@
  "label": "Early preview",
  "url": "https://cameo-db.github.io",
  "doi": "",
- "cite": {
-  "authors": "Koo P, CAMEO contributors",
-  "bibtex_authors": "Koo, Peter and {CAMEO contributors}"
+ "maintainer": {
+  "name": "Peter Koo",
+  "affiliation": "Cold Spring Harbor Laboratory",
+  "email": "koo@cshl.edu"
  }
 }

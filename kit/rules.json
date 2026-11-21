@@ -286,6 +286,21 @@
    "level": "block",
    "message": "{n} reported result(s) have no link to where they were reported",
    "fix": "Set runs[].reported_in to {\"citation\": \"Author et al. Year\", \"doi\": \"10....\"}. Use \"url\" with an https address when there is no DOI."
+  },
+  "baseline-run": {
+   "level": "suggest",
+   "message": "No run is marked as the baseline",
+   "fix": "On the run the search started from, set history.move to \"baseline\". If the study had a reference model, enter it as a run and mark it the same way."
+  },
+  "published-baseline": {
+   "level": "suggest",
+   "message": "No published result is included for comparison",
+   "fix": "If a paper reports a result on this dataset and split, add it as a run with kind \"reported\" and reported_in. Leave this as it is if there is none."
+  },
+  "placeholder": {
+   "level": "suggest",
+   "message": "{n} name(s) or value(s) start with TODO, which marks template text that was never filled in. One is: {first}",
+   "fix": "Replace each with the real name or value, or with \"not_reported\"."
   }
  },
  "recipe_details": {

@@ -1,10 +1,12 @@
 """Build the site from the study files.
 Usage: python3 tools/build_site.py OUTDIR [--also DIR] [--benchmarks FILE] [--site FILE]
 Reads studies/*.json (and DIR/*.json), benchmarks.json and site.json.
-Writes the pages, studies/, index.json, models.json, boards/, kit/ and llms.txt into OUTDIR."""
+Writes the pages, studies/, index.json, models.json, cameo-all.json, boards/, kit/ and llms.txt into OUTDIR."""
 import argparse, copy, glob, importlib.util, json, os, re, shutil, statistics, sys, zipfile
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ap = argparse.ArgumentParser(); ap.add_argument("out"); ap.add_argument("--also"); ap.add_argument("--benchmarks", default=os.path.join(root, "benchmarks.json")); ap.add_argument("--site", default=os.path.join(root, "site.json"))
+ap.add_argument("--studies", default=os.path.join(root, "studies"), help="the folder of study files, when it is not this repository's")
+ap.add_argument("--max-bundle-mb", type=float, default=90, help="leave cameo-all.json out when the studies together are larger than this")
 A = ap.parse_args(); out = A.out; sys.argv = sys.argv[:1]
 sp = importlib.util.spec_from_file_location("cameo", os.path.join(root, "kit", "cameo.py")); C = importlib.util.module_from_spec(sp); sp.loader.exec_module(C)
 BENCH = json.load(open(A.benchmarks)); SITE = json.load(open(A.site)); BY_ID = {b["id"]: b for b in BENCH}
@@ -25,7 +27,8 @@ def tags_of(I, benches):
     add(I["study"].get("tags"))
     for b in benches:
         add(b.get("domain")); add(b.get("task_type"))
-    add(C.get(I, "dataset.domain")); add(C.get(I, "objective.kind"))
+    dom = C.get(I, "dataset.domain")
+    add(str(dom).split(":")[0] if isinstance(dom, str) else dom); add(C.get(I, "objective.kind"))   # "genomics: promoter activity ..." is filed under genomics
     return out[:8]
 
 
@@ -47,13 +50,31 @@ def bench_of(ds):
     return BY_ID.get(ds.get("benchmark")) if C.known(ds.get("benchmark")) and ds.get("benchmark") in BY_ID else next((b for b in BENCH if b.get("match") and b["match"] in str(ds.get("name") or "").lower()), None)
 
 
+def names_of(b):
+    """The names a benchmark's metric goes by: its own, then any other name a study used for the same quantity."""
+    return [b["metric"]] + [k for k in (b.get("metric_aliases") or []) if isinstance(k, str)]
+
+
+def examples_text(ex):
+    """Example counts that a study gave in words, as one line."""
+    if isinstance(ex, str):
+        return ex if C.known(ex) else None
+    if not isinstance(ex, dict) or not any(isinstance(ex.get(k), str) and C.known(ex.get(k)) for k in ("train", "valid", "test")):
+        return None
+    word = {"train": "train", "valid": "validation", "test": "test"}
+    return " · ".join(("{:,} {}".format(ex[k], word[k]) if num(ex[k]) else "{}: {}".format(word[k], ex[k])) for k in ("train", "valid", "test") if C.known(ex.get(k)))
+
+
 def slug_of(name, orcid):
     return str(orcid) if C.known(orcid) else re.sub(r"[^a-z0-9]+", "-", str(name or "unnamed").lower()).strip("-")
 
 
 def text_of(v, key="how"):
     """A short description that may be stored as text or as an object with the text under one key."""
-    v = v.get(key) if isinstance(v, dict) else v
+    if isinstance(v, dict):
+        v = next((v[k] for k in (key, "scheme", "description", "kind") if C.known(v.get(k))), None)
+    if isinstance(v, list):   # a list of sentences reads as one paragraph
+        v = " ".join(str(x).rstrip(".") + "." for x in v if isinstance(x, str) and C.known(x)) or None
     return str(v) if C.known(v) and not isinstance(v, (dict, list)) else None
 
 
@@ -63,18 +84,19 @@ def prep_of(ds):
     acc = next((ds.get(k) for k in ("doi", "accession", "url") if C.known(ds.get(k))), None)
     pre = ds.get("preprocessing")
     return {"dataset": kn(ds.get("name")), "accession": str(acc) if acc is not None else None, "link": link_of(acc), "input": kn(ds.get("input")), "output": kn(ds.get("output")),
-            "examples": {k: ex[k] for k in ("train", "valid", "test") if num(ex.get(k))}, "split": text_of(ds.get("splits")), "split_shared": C.split_shared(ds),
+            "examples": {k: ex[k] for k in ("train", "valid", "test") if num(ex.get(k))}, "examples_text": examples_text(ds.get("examples")), "split": text_of(ds.get("splits")), "split_shared": C.split_shared(ds),
             "preprocessing": text_of(pre), "preprocessing_code": isinstance(pre, dict) and C.known(pre.get("code"))}
 
 
-index = {"site": SITE, "benchmarks": [], "studies": [], "depositors": []}; rows = {b["id"]: [] for b in BENCH}; prep = {b["id"]: [] for b in BENCH}; failed = 0; deps = {}
-paths = sorted(glob.glob(os.path.join(root, "studies", "*.json"))) + (sorted(glob.glob(os.path.join(A.also, "*.json"))) if A.also else [])
+index = {"site": SITE, "benchmarks": [], "studies": [], "depositors": []}; bundle = []; rows = {b["id"]: [] for b in BENCH}; prep = {b["id"]: [] for b in BENCH}; failed = 0; deps = {}
+paths = sorted(glob.glob(os.path.join(A.studies, "*.json"))) + (sorted(glob.glob(os.path.join(A.also, "*.json"))) if A.also else [])
 for path in paths:
     text = open(path, encoding="utf-8").read(); rep = C.check_text(text)
     if not rep["ok"]:
         print("SKIPPED %s: %s" % (path, "; ".join(x["message"] for x in rep["blocking"]))); failed += 1; continue
     S = json.loads(text); made_up = bool(S.pop("_made_up", False)); I = C.to_internal(copy.deepcopy(S)); sid = I["study"]["id"]
     json.dump(C.to_external(S), open(os.path.join(out, "studies", sid + ".json"), "w", encoding="utf-8"), separators=(",", ":"), ensure_ascii=False)
+    bundle.append(sid)
     DS = C.datasets_of(I); dsb = {k: bench_of(v) for k, v in DS.items()}; benches = []
     for b in dsb.values():
         if b and b not in benches:
@@ -90,11 +112,11 @@ for path in paths:
         r = res(t)
         for e in (r.get("evaluations") if isinstance(r.get("evaluations"), list) else []):
             if isinstance(e, dict) and dsb.get(e.get("dataset") if C.known(e.get("dataset")) else "main") is b and (not C.known(e.get("split")) or e.get("split") == b["split"]):
-                v = (e.get("metrics") or {}).get(b["metric"])
-                if num(v):
+                v = next((e["metrics"][k] for k in names_of(b) if isinstance(e.get("metrics"), dict) and num(e["metrics"].get(k))), None)
+                if v is not None:
                     return v
-        v = (r.get(b["split"]) or {}).get(b["metric"]) if dsb.get("main") is b and isinstance(r.get(b["split"]), dict) else None
-        return v if num(v) else None
+        own = r.get(b["split"]) if dsb.get("main") is b and isinstance(r.get(b["split"]), dict) else {}
+        return next((own[k] for k in names_of(b) if num(own.get(k))), None)
 
     # runs that differ only in their seed are repeats of one configuration
     groups = {}
@@ -160,6 +182,18 @@ json.dump(flat, open(os.path.join(out, "models.json"), "w"), separators=(",", ":
 index["studies"].sort(key=lambda s: str(s.get("created") or ""), reverse=True)
 index["depositors"] = sorted(deps.values(), key=lambda d: d["name"].lower())
 index["totals"] = {"studies": len(index["studies"]), "benchmarks": len(index["benchmarks"]), "models": sum(s["models"] for s in index["studies"]), "runs": sum(s["runs"] for s in index["studies"])}
+# every study in one file, for a merged download. It is written piece by piece so that the build never holds two copies of the database.
+# GitHub refuses files over 100 MB. Past 90 MB the file is left out, and the page merges the study files in the browser instead.
+size = sum(os.path.getsize(os.path.join(out, "studies", sid + ".json")) for sid in bundle); allp = os.path.join(out, "cameo-all.json")
+if bundle and size < A.max_bundle_mb * 1e6:
+    with open(allp, "w", encoding="utf-8") as f:
+        f.write('{"cameo_bundle":"%s","from":%s,"studies":[' % (C.FORMAT, json.dumps(str(SITE.get("url") or ""))))
+        for i, sid in enumerate(bundle):
+            f.write(("," if i else "") + open(os.path.join(out, "studies", sid + ".json"), encoding="utf-8").read())
+        f.write("]}")
+    index["site"] = {**SITE, "bundle": "cameo-all.json"}
+elif os.path.exists(allp):
+    os.remove(allp)
 json.dump(index, open(os.path.join(out, "index.json"), "w"), indent=1, ensure_ascii=False)
 
 # what a training loop or an agent needs to write entries, served beside the site
@@ -173,7 +207,7 @@ with zipfile.ZipFile(os.path.join(out, "kit", "cameo-agent-kit.zip"), "w", zipfi
 base = (str(SITE.get("url")).rstrip("/") + "/") if C.known(SITE.get("url")) else ""
 open(os.path.join(out, "llms.txt"), "w", encoding="utf-8").write("""# CAMEO
 
-> Catalog of Architecture Metadata and Experimental Outcomes: an open catalog of machine-learning experiments. Each entry is one JSON file that holds the models, how they were trained and what they scored.
+> Catalog of Architecture Metadata and Experimental Outcomes: an open database of the models that studies train, including the ones that never reach the paper. Each entry is one JSON file that holds the models, how they were trained and how they performed.
 
 ## Write an entry
 
@@ -183,12 +217,13 @@ open(os.path.join(out, "llms.txt"), "w", encoding="utf-8").write("""# CAMEO
 - [Example entry](%(b)skit/example_minimal.json): a complete entry that passes every check
 - [All of these as one zip](%(b)skit/cameo-agent-kit.zip)
 
-## Read the catalog
+## Read the database
 
 - [index.json](%(b)sindex.json): every study, benchmark and depositor
 - [models.json](%(b)smodels.json): every model on every leaderboard, one row each
 - `%(b)sboards/<benchmark id>.json`: one leaderboard, and how each study on it prepared the data
 - `%(b)sstudies/<study id>.json`: one whole entry, in the format the instructions describe
+- [cameo-all.json](%(b)scameo-all.json): every entry in one file, as `{"studies": [...]}`. Use it to start a new search from what has been tried
 
 Benchmark and study ids are listed in index.json. Results marked `"kind": "reported"` were copied from a paper, not run by the depositor.
 """ % {"b": base})

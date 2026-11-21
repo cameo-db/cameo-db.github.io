@@ -1,10 +1,9 @@
 cff-version: 1.2.0
 title: "CAMEO: Catalog of Architecture Metadata and Experimental Outcomes"
 message: "If you use CAMEO, please cite it as below. To credit one study, use Cite on that study's page."
-abstract: "An open catalog of machine-learning experiments: models, how they were trained, and what they scored. Each entry is one JSON file."
+abstract: "An open database of the models that studies train, including those that never reach the paper: what each model was, how it was trained, and how it performed. Each entry is one JSON file."
 authors:
-  - given-names: Peter
-    family-names: Koo
+  - name: "CAMEO contributors"
 license: "MIT"
 url: "https://cameo-db.github.io"
 repository-code: "https://github.com/cameo-db/cameo-db.github.io"

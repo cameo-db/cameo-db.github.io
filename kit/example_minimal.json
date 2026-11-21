@@ -244,6 +244,84 @@
    "inference_speed": {
     "examples_per_s": 471621.6
    },
+   "flow": {
+    "in": [
+     4,
+     100
+    ],
+    "nodes": [
+     {
+      "name": "body.0",
+      "cls": "Conv1d",
+      "label": "4 → 16",
+      "kind": "weights",
+      "out": [
+       16,
+       100
+      ],
+      "params": 336,
+      "then": [
+       "ReLU"
+      ]
+     },
+     {
+      "name": "body.2",
+      "cls": "AdaptiveAvgPool1d",
+      "label": "to length 1",
+      "kind": "shape",
+      "out": [
+       16,
+       1
+      ],
+      "params": 0
+     },
+     {
+      "name": "body.3",
+      "cls": "Flatten",
+      "label": "",
+      "kind": "shape",
+      "out": [
+       16
+      ],
+      "params": 0
+     },
+     {
+      "name": "out",
+      "cls": "Linear",
+      "label": "16 → 1",
+      "kind": "weights",
+      "out": [
+       1
+      ],
+      "params": 17
+     }
+    ],
+    "edges": [
+     [
+      -1,
+      0
+     ],
+     [
+      0,
+      1
+     ],
+     [
+      1,
+      2
+     ],
+     [
+      2,
+      3
+     ],
+     [
+      3,
+      4
+     ]
+    ],
+    "out": [
+     1
+    ]
+   },
    "code": "class Net(nn.Module):\n    def __init__(self, width=16):\n        super().__init__()\n        self.body = nn.Sequential(nn.Conv1d(4, width, 5, padding=2), nn.ReLU(), nn.AdaptiveAvgPool1d(1), nn.Flatten())\n        self.out = nn.Linear(width, 1)\n\n    def forward(self, x):\n        return self.out(self.body(x))\n\n\ndef build_model():\n    return Net(16)\n"
   },
   {
@@ -376,6 +454,84 @@
    "parameters": 705,
    "inference_speed": {
     "examples_per_s": 194865.9
+   },
+   "flow": {
+    "in": [
+     4,
+     100
+    ],
+    "nodes": [
+     {
+      "name": "body.0",
+      "cls": "Conv1d",
+      "label": "4 → 32",
+      "kind": "weights",
+      "out": [
+       32,
+       100
+      ],
+      "params": 672,
+      "then": [
+       "ReLU"
+      ]
+     },
+     {
+      "name": "body.2",
+      "cls": "AdaptiveAvgPool1d",
+      "label": "to length 1",
+      "kind": "shape",
+      "out": [
+       32,
+       1
+      ],
+      "params": 0
+     },
+     {
+      "name": "body.3",
+      "cls": "Flatten",
+      "label": "",
+      "kind": "shape",
+      "out": [
+       32
+      ],
+      "params": 0
+     },
+     {
+      "name": "out",
+      "cls": "Linear",
+      "label": "32 → 1",
+      "kind": "weights",
+      "out": [
+       1
+      ],
+      "params": 33
+     }
+    ],
+    "edges": [
+     [
+      -1,
+      0
+     ],
+     [
+      0,
+      1
+     ],
+     [
+      1,
+      2
+     ],
+     [
+      2,
+      3
+     ],
+     [
+      3,
+      4
+     ]
+    ],
+    "out": [
+     1
+    ]
    },
    "code": "class Net(nn.Module):\n    def __init__(self, width=16):\n        super().__init__()\n        self.body = nn.Sequential(nn.Conv1d(4, width, 5, padding=2), nn.ReLU(), nn.AdaptiveAvgPool1d(1), nn.Flatten())\n        self.out = nn.Linear(width, 1)\n\n    def forward(self, x):\n        return self.out(self.body(x))\n\n\ndef build_model():\n    return Net(32)\n"
   }

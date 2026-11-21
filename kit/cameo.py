@@ -394,6 +394,26 @@ def rebuild_level(rec, miss):
     return "exact" if has_code(rec) else ("partial" if miss else "faithful")
 
 
+def placeholders(S):
+    """Names and values, outside the stored code, that still start with TODO: template text nobody filled in."""
+    out = []
+
+    def walk(o):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if isinstance(k, str) and k.startswith("TODO"):
+                    out.append(k)
+                if k not in ("code", "script", "reference_implementation"):
+                    walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+        elif isinstance(o, str) and o.startswith("TODO"):
+            out.append(o)
+    walk(S)
+    return out
+
+
 def check_text(text):
     C = RULES["checks"]
     rep = {"ok": False, "blocking": [], "suggested": [], "checked": [], "reproduce": {}}
@@ -565,6 +585,13 @@ def check_text(text):
             add("recipe", recipe=rid, runs=len(mine), n=len(miss))
         if mine and not has_code(rec):
             add("recipe-source", recipe=rid, runs=len(mine))
+    if own and not any(t.get("purpose") == "baseline" or t.get("move") == "baseline" for t in own):
+        add("baseline-run")
+    if own and not any(kind_of(t) == "reported" for t in trials):
+        add("published-baseline")
+    ph = placeholders(S)
+    if ph:
+        add("placeholder", n=len(ph), first=min(ph)[:70])
     rep["sufficient"] = {
         "experiment": {"ok": known(get(S, "contributor.name")) and known(get(S, "dataset.name")) and has_link and has_split and has_env,
                        "dataset_link": has_link, "data_split_shared": has_split, "software_versions": has_env},
@@ -738,7 +765,8 @@ def source_of(m):
 def input_shape(m, override):
     if override:
         return [int(x) for x in override.split(",")]
-    s = get(m, "inputs.x.shape") or next((v.get("shape") for v in (m.get("inputs") or {}).values() if isinstance(v, dict)), None)
+    ins = m.get("inputs") if isinstance(m.get("inputs"), dict) else {}
+    s = get(ins, "x.shape") or next((v.get("shape") for v in ins.values() if isinstance(v, dict)), None)
     if isinstance(s, list):
         return [int(x) for x in s if isinstance(x, int)]
     nums = [int(x) for x in re.findall(r"\d+", str(s or ""))]
@@ -752,7 +780,48 @@ def make_input(shape, batch):
     return torch.randn(batch, *shape)
 
 
-def build_model(src):
+def defines_of(items):
+    """--define NAME=VALUE, for names the model code expects its training script to have set (an input length, say)."""
+    import ast
+    out = {}
+    for it in items or []:
+        k, eq, v = it.partition("=")
+        if not eq or not k.strip().isidentifier():
+            raise SystemExit("--define takes NAME=VALUE, for example --define IN_LEN=2114")
+        try:
+            out[k.strip()] = ast.literal_eval(v.strip())
+        except Exception:
+            out[k.strip()] = v.strip()
+    return out
+
+
+def constants_used(src, defines):
+    """The defined names this code reads without setting them itself."""
+    import ast
+    if not defines:
+        return {}
+    try:
+        tree = ast.parse(src)
+    except Exception:
+        return {}
+    own = set()
+
+    def top(body):   # names the file sets itself at the top level, also inside try, if, with and loops, but not inside functions or classes
+        for n in body:
+            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                continue
+            if isinstance(n, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
+                own.update(t.id for t in ast.walk(n) if isinstance(t, ast.Name) and isinstance(t.ctx, ast.Store))
+            for part in ("body", "orelse", "finalbody"):
+                top(getattr(n, part, None) or [])
+            for h in getattr(n, "handlers", None) or []:
+                top(h.body)
+    top(tree.body)
+    read = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)}
+    return {k: v for k, v in defines.items() if k in read and k not in own}
+
+
+def build_model(src, defines=None):
     import torch
     pre = PRE
     try:
@@ -760,12 +829,21 @@ def build_model(src):
         pre += "import numpy as np\n"
     except Exception:
         pass
-    ns = {}
+    ns = dict(defines or {})
     exec(compile(pre + src, "<model_source>", "exec"), ns)
     torch.manual_seed(0)
-    net = ns["build_model"]()
+    if not callable(ns.get("build_model")):
+        raise ValueError("the code defines no build_model()")
+    build, length = ns["build_model"], None
+    import inspect
+    need = [q for q in inspect.signature(build).parameters.values() if q.default is q.empty and q.kind in (q.POSITIONAL_ONLY, q.POSITIONAL_OR_KEYWORD)]
+    if len(need) == 1 and callable(ns.get("input_length")):   # build_model(input_len), with the length given by the file's own input_length()
+        length = int(ns["input_length"]()); net = build(length)
+    else:
+        net = build()
     net.eval()
     net._cameo_example = ns.get("example_inputs")   # the model file may say what to call the model with
+    net._cameo_length = length
     return net
 
 
@@ -774,6 +852,9 @@ def example_of(net, shape, batch):
     f = getattr(net, "_cameo_example", None)
     if f:
         return f(batch)
+    if getattr(net, "_cameo_length", None):   # the model file gives its own length through input_length(); it wins over a length given by hand
+        ch = shape[0] if shape and len(shape) == 2 else next((m.in_channels for m in net.modules() if hasattr(m, "in_channels")), None)
+        shape = [ch, net._cameo_length] if ch else None
     if not shape:
         raise ValueError("no input shape in the file, and the model file defines no example_inputs(batch)")
     return make_input(shape, batch)
@@ -910,6 +991,200 @@ def trace(net, x):
     return tree, sum(p.numel() for p in net.parameters())
 
 
+OPS = {"Add": "add", "Sub": "subtract", "Mul": "multiply", "Div": "divide", "Cat": "concatenate", "Stack": "stack", "Maximum": "max", "Minimum": "min", "Bmm": "matmul", "Mm": "matmul",
+       "Matmul": "matmul", "Einsum": "einsum", "ScaledDotProduct": "attention", "Where": "where"}
+MERGE = ("add", "multiply", "max", "min", "concatenate")   # a chain of these is drawn as one operation
+
+
+def trace_flow(net, x):
+    """How data moves through the model in one forward pass: which layer feeds which, with skip connections, branches and merges.
+    A node is an innermost module that ran, or an operation that combines the outputs of two or more nodes (add, concatenate, multiply, ...).
+    An edge is [from, to]; -1 is the model's input and len(nodes) is its output.
+    Normalisation and activation layers that simply follow one node are folded into it, under "then"."""
+    import torch
+    names, calls, stack = {m: n for n, m in net.named_modules()}, [], []
+
+    def tensors(o):
+        if isinstance(o, torch.Tensor):
+            return [o]
+        if isinstance(o, (tuple, list)):
+            return [t for i in o for t in tensors(i)]
+        if isinstance(o, dict):
+            return [t for i in o.values() for t in tensors(i)]
+        return []
+
+    def shape_of(o):
+        ts = tensors(o)
+        return list(ts[0].shape[1:]) if ts else None
+
+    def pre(mod, inp):
+        stack.append({"mod": mod, "inner": 0, "tin": tensors(inp)})
+
+    def post(mod, inp, out):
+        rec = stack.pop()
+        if stack:
+            stack[-1]["inner"] += 1
+        if rec["inner"] == 0 and mod is not net and mod in names:
+            rec["fout"] = [t.grad_fn for t in tensors(out) if t.grad_fn is not None]; rec["shape"] = shape_of(out); calls.append(rec)
+
+    hs = [m.register_forward_pre_hook(pre) for m in net.modules()] + [m.register_forward_hook(post) for m in net.modules()]
+    xs = each(x, lambda v: v.clone().requires_grad_(True) if v.is_floating_point() else v)
+    inputs = tensors(xs)
+    try:
+        with torch.enable_grad():
+            y = call(net, xs)
+    finally:
+        for h in hs:
+            h.remove()
+
+    OUT = -2
+    nodes, edges, owner, memo, opof = [], [], {}, {}, {}
+    src_of = lambda f: frozenset([owner[id(f)]]) if id(f) in owner else memo.get(id(f), frozenset())
+
+    def resolve(f0):
+        """The nodes whose output reaches this point: a layer, the input, or an operation that combined several."""
+        todo = [(f0, False)]
+        while todo:
+            f, done = todo.pop(); k = id(f)
+            if k in owner or k in memo:
+                continue
+            kind = type(f).__name__
+            if kind == "AccumulateGrad":   # a leaf: the model's input, or a parameter
+                memo[k] = frozenset([-1]) if any(f.variable is i for i in inputs) else frozenset(); continue
+            nxt = [g for g, _ in f.next_functions if g is not None]
+            if not done:
+                todo.append((f, True)); todo.extend((g, False) for g in nxt if id(g) not in owner and id(g) not in memo); continue
+            srcs = []
+            for g in nxt:
+                srcs += [v for v in sorted(src_of(g)) if v not in srcs]
+            if len(srcs) >= 2:   # it combines two or more nodes, so it is a node itself
+                op = next((v for n_, v in OPS.items() if kind.startswith(n_)), None) or re.sub(r"Backward\d*$", "", kind).lower()
+                j = len(nodes); nodes.append({"op": op, "kind": "op", "out": None, "_f": f, "_dim": getattr(f, "_saved_dim", None)})
+                edges.extend([v, j] for v in srcs); memo[k] = frozenset([j]); opof[k] = j
+            else:
+                memo[k] = frozenset(srcs)
+        return src_of(f0)
+
+    def feeds(ts):
+        srcs = [-1] if any(t is i for t in ts for i in inputs) else []
+        for t in ts:
+            f = t.grad_fn
+            if f is None:
+                continue
+            srcs += [v for v in sorted(resolve(f)) if v not in srcs]
+            if id(f) in opof and id(f) not in owner and nodes[opof[id(f)]]["out"] is None:
+                nodes[opof[id(f)]]["out"] = list(t.shape[1:])   # an operation's output has the shape of what the next layer received
+        return srcs
+
+    for rec in calls:
+        srcs = feeds(rec["tin"]); i = len(nodes)
+        edges.extend([v, i] for v in srcs)
+        for f in rec["fout"]:
+            owner[id(f)] = i
+        label, detail, kind = describe(rec["mod"])
+        nodes.append({"name": names[rec["mod"]], "cls": type(rec["mod"]).__name__, "label": label, "kind": kind, "out": rec["shape"], "params": sum(p.numel() for p in rec["mod"].parameters())})
+    edges.extend([v, OUT] for v in feeds(tensors(y)))
+
+    # shapes of operations that feed another operation: read them from one backward pass, or else work them out from what went in
+    pend = [n for n in nodes if n["kind"] == "op" and n["out"] is None]
+    if pend:
+        hooks = []
+        try:
+            def note(n):
+                def hook(grads):
+                    if n["out"] is None and grads and grads[0] is not None:
+                        n["out"] = list(grads[0].shape[1:])
+                return hook
+            hooks = [n["_f"].register_prehook(note(n)) for n in pend]
+            outs = [t for t in tensors(y) if t.grad_fn is not None]
+            torch.autograd.backward([t.sum() for t in outs])
+        except Exception:
+            pass
+        finally:
+            for h in hooks:
+                h.remove()
+            net.zero_grad(set_to_none=True)
+    for j, n in enumerate(nodes):
+        if n["kind"] == "op" and n["out"] is None:
+            shp = [nodes[a]["out"] if a >= 0 else shape_of(inputs) for a, b in edges if b == j]
+            shp = [v for v in shp if v]; top = max((len(v) for v in shp), default=0); same = [v for v in shp if len(v) == top]
+            if same:
+                o = [max(v[d] for v in same) for d in range(top)]; d = n["_dim"]
+                if n["op"] == "concatenate" and isinstance(d, int) and d != 0 and -top <= (d - 1 if d > 0 else d) < top:
+                    d = d - 1 if d > 0 else top + d; o[d] = sum(v[d] for v in same)
+                n["out"] = o
+
+    N = len(nodes); alive, into = [True] * N, list(range(N))
+    users = lambda i: [e for e in edges if e[0] >= 0 and into[e[0]] == i and (e[1] == OUT or alive[e[1]])]
+    # a + b + c is traced as two additions; draw it as one
+    for j, n in enumerate(nodes):
+        if n["kind"] != "op" or n["op"] not in MERGE:
+            continue
+        for e in [e for e in edges if e[1] == j and e[0] >= 0]:
+            a = nodes[e[0]]
+            if a["kind"] == "op" and alive[e[0]] and a["op"] == n["op"] and a["_dim"] == n["_dim"] and len(users(e[0])) == 1:
+                alive[e[0]] = False
+                for e2 in edges:
+                    if e2[1] == e[0]:
+                        e2[1] = j
+                e[0] = e[1] = j   # a self-edge, dropped below
+    # fold a normalisation or activation into the single node it follows
+    for j, n in enumerate(nodes):
+        if n["kind"] not in ("norm", "light") or not alive[j]:
+            continue
+        ins = [e for e in edges if e[1] == j and e[0] != j]
+        if len(ins) != 1 or ins[0][0] < 0:
+            continue
+        i = into[ins[0][0]]
+        if len(users(i)) != 1:
+            continue
+        t = nodes[i]; t.setdefault("then", []).append(n["cls"]); t["out"] = n["out"]; alive[j] = False; into[j] = i
+        if n["params"]:
+            t["params"] = t.get("params", 0) + n["params"]
+    keep = [j for j in range(N) if alive[j]]; new = {j: k for k, j in enumerate(keep)}; new[OUT] = len(keep); new[-1] = -1
+    out_edges, seen = [], set()
+    for a, b in edges:
+        if a >= 0 and not alive[into[a]] or b != OUT and not alive[b]:
+            continue
+        key = (new[into[a]] if a >= 0 else -1, new[b])
+        if key not in seen and key[0] != key[1]:
+            seen.add(key); out_edges.append(list(key))
+    return {"in": shape_of(inputs), "nodes": [{k: v for k, v in nodes[j].items() if not k.startswith("_")} for j in keep], "edges": out_edges, "out": shape_of(y)}
+
+
+def shapes_only():
+    """A PyTorch mode in which tensors carry sizes and types but no numbers. None when this PyTorch does not have it."""
+    try:
+        from torch._subclasses.fake_tensor import FakeTensorMode
+        return FakeTensorMode(allow_non_fake_inputs=True)
+    except Exception:
+        return None
+
+
+def trace_both(net, shape, real=False):
+    """One model's layer list, parameter count and data flow, and the error if the flow could not be followed.
+    Layer shapes and connections do not depend on the numbers, so the passes are first made with tensors that carry sizes only.
+    That is many times faster on a CPU and gives the same lists and graphs. A model that needs real numbers
+    (it branches on a value, say) fails that way and is then run for real, as is every model with --real."""
+    def run():
+        tree, n = trace(net, example_of(net, shape, 2))
+        try:
+            return tree, n, trace_flow(net, example_of(net, shape, 2)), None
+        except Exception as e:
+            return tree, n, None, e
+    mode = None if real else shapes_only()
+    if mode is not None:
+        try:
+            with mode:
+                out = run()
+            if out[3] is None:
+                return out
+        except Exception:
+            pass
+        net.zero_grad(set_to_none=True)
+    return run()
+
+
 def cmd_add_layers(a):
     if not need_torch():
         return 0
@@ -920,14 +1195,22 @@ def cmd_add_layers(a):
         if isinstance(p, int):
             rec.setdefault(t["model"], set()).add(p)
     ok = bad = same = diff = norec = 0
+    defines = defines_of(a.define)
     for m in S["models"]:
         src, shape = source_of(m), input_shape(m, a.input_shape)
         if not known(src):
             bad += 1; print("skipped %s: no source code in the file" % m.get("id")); continue
         try:
-            net = build_model(src)
-            tree, n = trace(net, example_of(net, shape, 2))
+            net = build_model(src, {**(m.get("constants") if isinstance(m.get("constants"), dict) else {}), **defines})
+            tree, n, flow, e = trace_both(net, shape, a.real)
             m["layers"], m["parameters"] = tree, n; ok += 1
+            used = constants_used(src, defines)
+            if used:
+                m["constants"] = used   # what the code needs from outside, kept with the model so that it can be rebuilt from the entry
+            if flow is not None:
+                m["flow"] = flow
+            else:   # the layer list is kept even when the data flow cannot be followed
+                m.pop("flow", None); print("note: no data flow for %s: %s: %s" % (m.get("id"), type(e).__name__, str(e)[:120]))
             if m["id"] in rec:
                 if n in rec[m["id"]]: same += 1
                 else: diff += 1; print("note: %s has %d parameters; its runs recorded %s" % (m["id"], n, sorted(rec[m["id"]])))
@@ -958,7 +1241,7 @@ def cmd_add_speed(a):
         if not known(src):
             bad += 1; continue
         try:
-            net = build_model(src).to(dev)
+            net = build_model(src, {**defines_of(a.define), **(m.get("constants") if isinstance(m.get("constants"), dict) else {})}).to(dev)
             x = each(example_of(net, shape, a.batch), lambda v: v.to(dev))
             sync = (lambda: torch.cuda.synchronize()) if dev == "cuda" else (lambda: None)
             with torch.no_grad():
@@ -1039,12 +1322,16 @@ def main():
     s = sub.add_parser("init", help="write a blank study file"); s.add_argument("-o", "--output", default="study.json"); s.add_argument("--profile"); s.set_defaults(fn=cmd_init)
     s = sub.add_parser("check", help="what blocks publishing, what is suggested, what is missing to rebuild training"); s.add_argument("file"); s.add_argument("--json", action="store_true"); s.set_defaults(fn=cmd_check)
     s = sub.add_parser("fix", help="safe automatic repairs"); s.add_argument("file"); s.add_argument("--profile"); s.add_argument("-o", "--output"); s.set_defaults(fn=cmd_fix)
-    s = sub.add_parser("add-layers", help="store each model's layer list (needs PyTorch)"); s.add_argument("file"); s.add_argument("--input-shape"); s.add_argument("-o", "--output"); s.set_defaults(fn=cmd_add_layers)
+    s = sub.add_parser("add-layers", help="store each model's layer list (needs PyTorch)"); s.add_argument("file"); s.add_argument("--input-shape"); s.add_argument("--define", action="append", metavar="NAME=VALUE", help="a name the model code expects its training script to set; repeat for more")
+    s.add_argument("--real", action="store_true", help="run every model on real numbers; slower, same result"); s.add_argument("-o", "--output"); s.set_defaults(fn=cmd_add_layers)
     s = sub.add_parser("add-speed", help="measure inference speed (needs PyTorch)"); s.add_argument("file"); s.add_argument("--batch", type=int, default=64)
-    s.add_argument("--device", default="auto", choices=["auto", "cpu", "cuda"]); s.add_argument("--input-shape"); s.add_argument("-o", "--output"); s.set_defaults(fn=cmd_add_speed)
+    s.add_argument("--device", default="auto", choices=["auto", "cpu", "cuda"]); s.add_argument("--input-shape"); s.add_argument("--define", action="append", metavar="NAME=VALUE"); s.add_argument("-o", "--output"); s.set_defaults(fn=cmd_add_speed)
     s = sub.add_parser("export-run", help="write one run's model, settings and recipe to a folder"); s.add_argument("file"); s.add_argument("trial"); s.add_argument("-o", "--output", default="rebuild"); s.set_defaults(fn=cmd_export_run)
     a = p.parse_args()
-    sys.exit(a.fn(a))
+    try:
+        sys.exit(a.fn(a))
+    except BrokenPipeError:   # the output was piped to a command that stopped reading, such as head
+        sys.stderr.close(); sys.exit(0)
 
 
 if __name__ == "__main__":
