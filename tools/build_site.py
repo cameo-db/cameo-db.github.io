@@ -163,7 +163,16 @@ for path in paths:
                 vals[sp], f = metric_on(t, b, sp)
                 if f:
                     fields[sp] = f
-            runs[b["id"]].append({"study": sid, "run": t["id"], "name": m.get("name") or t.get("model"), "family": kn(m.get("family")), "kind": C.kind_of(t), "status": kn(r.get("status")),
+            alias = set(names_of(b)); allm = {}
+            if dsb.get("main") is b:   # every metric the run recorded, by the name the study gave it; the benchmark's own goes under the benchmark's name
+                for sp in ("valid", "test"):
+                    own = r.get(sp) if isinstance(r.get(sp), dict) else {}
+                    got = {(b["metric"] if k in alias else k): v for k, v in own.items() if num(v)}
+                    if vals[sp] is not None:
+                        got[b["metric"]] = vals[sp]
+                    if got:
+                        allm[sp] = got
+            runs[b["id"]].append({"study": sid, "run": t["id"], "m": allm, "name": m.get("name") or t.get("model"), "family": kn(m.get("family")), "kind": C.kind_of(t), "status": kn(r.get("status")),
                                   "valid": vals["valid"], "test": vals["test"], "params": r.get("parameters") if num(r.get("parameters")) else m.get("parameters") if num(m.get("parameters")) else None,
                                   "minutes": r.get("runtime_minutes") if num(r.get("runtime_minutes")) else None, "seed": t.get("seed") if num(t.get("seed")) else None})
         cover[b["id"]].append({"study": sid, "study_title": I["study"].get("title"), "runs": len(I["trials"]), "fields": fields})
@@ -242,7 +251,7 @@ open(os.path.join(out, "llms.txt"), "w", encoding="utf-8").write("""# CAMEO
 
 - [index.json](%(b)sindex.json): every study, benchmark and depositor
 - [models.json](%(b)smodels.json): every model on every leaderboard, one row each
-- `%(b)sboards/<benchmark id>.json`: one leaderboard, and how each study on it prepared the data. Its `runs` list has one row for every run of every study on the benchmark, with the benchmark's metric on the validation and test splits under one name, the parameter count and the status. Key a run by `study` and `run` together: run ids repeat between studies. `studies[].fields` says where each study's file stores the metric
+- `%(b)sboards/<benchmark id>.json`: one leaderboard, and how each study on it prepared the data. Its `runs` list has one row for every run of every study on the benchmark, with the benchmark's metric on the validation and test splits under one name, the parameter count and the status. Each row's `m` holds every other metric the run recorded, under the name its study gave it. Key a run by `study` and `run` together: run ids repeat between studies. `studies[].fields` says where each study's file stores the metric
 - `%(b)sstudies/<study id>.json`: one whole entry, in the format the instructions describe
 - [cameo-all.json](%(b)scameo-all.json): every entry in one file, as `{"studies": [...]}`. Use it to start a new search from what has been tried
 
