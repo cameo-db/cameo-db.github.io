@@ -1,12 +1,11 @@
 """Build the site from the study files.
-Usage: python3 tools/build_site.py OUTDIR [--also DIR] [--benchmarks FILE] [--site FILE] [--findings FILE]
-Reads studies/*.json (and DIR/*.json), benchmarks.json, site.json and findings.json.
-Writes the pages, studies/, index.json, models.json, findings.json, cameo-all.json, boards/, kit/ and llms.txt into OUTDIR."""
+Usage: python3 tools/build_site.py OUTDIR [--also DIR] [--benchmarks FILE] [--site FILE]
+Reads studies/*.json (and DIR/*.json), benchmarks.json and site.json.
+Writes the pages, studies/, index.json, models.json, cameo-all.json, boards/, kit/ and llms.txt into OUTDIR."""
 import argparse, copy, glob, importlib.util, json, os, re, shutil, statistics, sys, zipfile
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ap = argparse.ArgumentParser(); ap.add_argument("out"); ap.add_argument("--also"); ap.add_argument("--benchmarks", default=os.path.join(root, "benchmarks.json")); ap.add_argument("--site", default=os.path.join(root, "site.json"))
 ap.add_argument("--studies", default=os.path.join(root, "studies"), help="the folder of study files, when it is not this repository's")
-ap.add_argument("--findings", default=os.path.join(root, "findings.json"), help="the reviewed comparisons across studies; left out when the file is absent")
 ap.add_argument("--max-bundle-mb", type=float, default=90, help="leave cameo-all.json out when the studies together are larger than this")
 A = ap.parse_args(); out = A.out; sys.argv = sys.argv[:1]
 sp = importlib.util.spec_from_file_location("cameo", os.path.join(root, "kit", "cameo.py")); C = importlib.util.module_from_spec(sp); sp.loader.exec_module(C)
@@ -64,50 +63,6 @@ def examples_text(ex):
         return None
     word = {"train": "train", "valid": "validation", "test": "test"}
     return " · ".join(("{:,} {}".format(ex[k], word[k]) if num(ex[k]) else "{}: {}".format(word[k], ex[k])) for k in ("train", "valid", "test") if C.known(ex.get(k)))
-
-
-# Learning across studies. findings.json names pairs of runs, a parent and the run that changed one thing, grouped under a question.
-# It holds the wording and the run ids. Every number shown is read here from the study files, so a finding cannot drift from its evidence.
-FIND = json.load(open(A.findings, encoding="utf-8")) if os.path.exists(A.findings) else []
-NEED = {}; FACTS = {}
-for f_ in FIND:
-    for g_ in f_.get("groups") or []:
-        for c_ in g_.get("comparisons") or []:
-            NEED.setdefault(c_["study"], set()).update([c_["run"], c_["parent"]])
-
-
-def run_fact(t, mby):
-    """What a comparison shows about one run."""
-    r = t.get("result") if isinstance(t.get("result"), dict) else {}; m = mby.get(t.get("model")) or {}; cost = r.get("cost") if isinstance(r.get("cost"), dict) else {}
-    nums = lambda d: {k: v for k, v in d.items() if num(v)} if isinstance(d, dict) else {}
-    return {"id": t["id"], "status": r.get("status"), "score": r.get("score") if num(r.get("score")) else None, "valid": nums(r.get("valid")), "test": nums(r.get("test")),
-            "parent": kn(t.get("parent_trial")), "model": m.get("name") or t.get("model"), "family": kn(m.get("family")), "parameters": r.get("parameters") if num(r.get("parameters")) else None,
-            "minutes": r.get("runtime_minutes") if num(r.get("runtime_minutes")) else None, "gpu_hours": cost.get("gpu_hours_estimate") if num(cost.get("gpu_hours_estimate")) else None,
-            "classification": kn(r.get("classification")), "seed": t.get("seed"), "recipe": t.get("recipe"), "settings": t.get("training") if isinstance(t.get("training"), dict) else {},
-            "hypothesis": kn(t.get("hypothesis")), "change_summary": kn(m.get("change_summary"))}
-
-
-def comparison_of(c, where):
-    """One reviewed comparison with its measurements, or None when a study no longer holds what it names."""
-    F = FACTS.get(c["study"]); a = (F or {}).get("runs", {}).get(c["parent"]); b = (F or {}).get("runs", {}).get(c["run"])
-    if not a or not b or a["score"] is None or b["score"] is None:
-        print("note: %s leaves out %s %s against %s: %s" % (where, c["study"], c["run"], c["parent"], "the study is not in this build" if not F else "a run is missing or has no score")); return None
-    low = F["direction"] == "minimize"; delta = round(b["score"] - a["score"], 9); gain = -delta if low else delta; nf = F["noise_floor"]
-    verdict = "no_threshold" if nf is None else "improved" if gain > nf else "declined" if gain < -nf else "little_change"
-    key = next((k for k, v in b["valid"].items() if v == b["score"] and a["valid"].get(k) == a["score"]), None)   # the objective under the name its other results use, to find the same quantity on the test split
-    test = {"metric": key, "parent": a["test"][key], "variant": b["test"][key]} if key and key in a["test"] and key in b["test"] else None
-    rv = c.get("reviewed_values") if isinstance(c.get("reviewed_values"), dict) else {}
-    stale = any(num(rv.get(k)) and abs(rv[k] - x["score"]) > 1e-9 for k, x in (("parent", a), ("variant", b)))
-    if stale:
-        print("REVIEW %s: %s %s against %s no longer has the scores it was reviewed with" % (where, c["study"], c["run"], c["parent"]))
-    side = lambda x: {k: x[k] for k in ("id", "model", "family", "score", "parameters", "minutes", "gpu_hours", "classification")}
-    return {"study": c["study"], "study_title": F["title"], "depositor": F["depositor"], "lab": F["lab"], "benchmark": F["benchmark"], "benchmark_title": F["benchmark_title"], "dataset": F["dataset"],
-            "change": c.get("change"), "component": c.get("component"), "architecture": c.get("architecture"), "note": c.get("note"),
-            "metric": F["metric"], "metric_label": c.get("metric_label") or F["metric"], "split": F["split"], "direction": F["direction"], "threshold": nf,
-            "parent": side(a), "variant": side(b), "delta": delta, "verdict": verdict, "test": test,
-            "recorded_parent": b["parent"] == c["parent"], "same_seed": a["seed"] == b["seed"], "same_recipe": a["recipe"] == b["recipe"],
-            "settings_changed": sorted(k for k in set(a["settings"]) | set(b["settings"]) if a["settings"].get(k) != b["settings"].get(k)),
-            "hypothesis": b["hypothesis"], "change_summary": b["change_summary"], "needs_review": stale}
 
 
 def slug_of(name, orcid):
@@ -207,11 +162,6 @@ for path in paths:
              "families": sorted({str(m.get("family")).replace("_", " ") for m in I["models"] if C.known(m.get("family"))}), "bases": bases,
              "kinds": sorted({C.kind_of(t) for t in I["trials"]}), "reported": len(reported), "best": best_here}
     index["studies"].append(entry)
-    if sid in NEED:
-        nf = C.get(I, "evaluation.noise_floor")
-        FACTS[sid] = {"title": I["study"].get("title"), "depositor": kn(con.get("name")), "lab": kn(con.get("lab")), "benchmark": entry["benchmark"], "benchmark_title": entry["benchmark_title"],
-                      "dataset": kn(C.get(I, "dataset.name")), "metric": kn(C.get(I, "objective.optimize.metric")), "split": kn(C.get(I, "objective.optimize.split")),
-                      "direction": C.get(I, "objective.optimize.direction"), "noise_floor": nf if num(nf) and nf > 0 else None, "runs": {t["id"]: run_fact(t, mby) for t in I["trials"] if t.get("id") in NEED[sid]}}
     d = deps.setdefault(slug, {"slug": slug, "name": kn(con.get("name")) or "Depositor not named", "lab": None, "institution": None, "orcid": None, "studies": [], "runs": 0, "models": 0})
     d["studies"].append(sid); d["runs"] += entry["runs"]; d["models"] += entry["models"]
     for k in ("lab", "institution", "orcid"):
@@ -232,27 +182,6 @@ json.dump(flat, open(os.path.join(out, "models.json"), "w"), separators=(",", ":
 index["studies"].sort(key=lambda s: str(s.get("created") or ""), reverse=True)
 index["depositors"] = sorted(deps.values(), key=lambda d: d["name"].lower())
 index["totals"] = {"studies": len(index["studies"]), "benchmarks": len(index["benchmarks"]), "models": sum(s["models"] for s in index["studies"]), "runs": sum(s["runs"] for s in index["studies"])}
-# the questions asked across studies: the full comparisons in findings.json, and a short form in index.json for the front page, the search and each study's page
-found = []
-for f_ in FIND:
-    groups = []
-    for g_ in f_.get("groups") or []:
-        rows_ = [r for r in (comparison_of(c_, "finding " + str(f_.get("id"))) for c_ in g_.get("comparisons") or []) if r]
-        if rows_:
-            groups.append({"title": g_.get("title"), "note": g_.get("note"), "comparisons": rows_})
-    every = [r for g_ in groups for r in g_["comparisons"]]
-    if not every:
-        continue
-    uniq = lambda vals: sorted({str(v).strip().lower() for v in vals if v})
-    counts = {"comparisons": len(every), "studies": len({r["study"] for r in every}), "datasets": len(uniq(r["benchmark"] or r["dataset"] for r in every)), "labs": len(uniq(r["lab"] or r["depositor"] for r in every))}
-    found.append({**{k: f_.get(k) for k in ("id", "question", "decision", "variant_label", "finding", "exception", "coverage", "reading", "next", "reviewed")}, "counts": counts, "studies": sorted({r["study"] for r in every}), "groups": groups})
-if found:
-    json.dump({"findings": found}, open(os.path.join(out, "findings.json"), "w", encoding="utf-8"), indent=1, ensure_ascii=False)
-    index["findings"] = [{**{k: f_[k] for k in ("id", "question", "decision", "finding", "counts", "studies")},
-                          "lead": [{k: r[k] for k in ("study", "study_title", "benchmark_title", "change", "delta", "verdict", "direction")} for r in f_["groups"][0]["comparisons"]]} for f_ in found]
-    print("findings: %d question%s, %d comparisons" % (len(found), "" if len(found) == 1 else "s", sum(f_["counts"]["comparisons"] for f_ in found)))
-elif os.path.exists(os.path.join(out, "findings.json")):
-    os.remove(os.path.join(out, "findings.json"))
 # every study in one file, for a merged download. It is written piece by piece so that the build never holds two copies of the database.
 # GitHub refuses files over 100 MB. Past 90 MB the file is left out, and the page merges the study files in the browser instead.
 size = sum(os.path.getsize(os.path.join(out, "studies", sid + ".json")) for sid in bundle); allp = os.path.join(out, "cameo-all.json")
@@ -292,7 +221,6 @@ open(os.path.join(out, "llms.txt"), "w", encoding="utf-8").write("""# CAMEO
 
 - [index.json](%(b)sindex.json): every study, benchmark and depositor
 - [models.json](%(b)smodels.json): every model on every leaderboard, one row each
-- [findings.json](%(b)sfindings.json): questions asked across studies. Each holds reviewed comparisons of a run with its parent, with both scores, the change made and each study's own threshold
 - `%(b)sboards/<benchmark id>.json`: one leaderboard, and how each study on it prepared the data
 - `%(b)sstudies/<study id>.json`: one whole entry, in the format the instructions describe
 - [cameo-all.json](%(b)scameo-all.json): every entry in one file, as `{"studies": [...]}`. Use it to start a new search from what has been tried

@@ -44,7 +44,6 @@ Everything the site shows is also a plain file that anyone, or any agent, can re
 - `index.json`: every study, benchmark and depositor.
 - `boards/<benchmark>.json`: one leaderboard, and how each study on it prepared the data.
 - `models.json`: every model on every leaderboard.
-- `findings.json`: the questions asked across studies, each with its reviewed comparisons and their scores.
 - `studies/<id>.json`: one whole entry.
 - `cameo-all.json`: every entry in one file, as `{"studies": [...]}`. It is left out once it would pass 90 MB, because GitHub refuses files over 100 MB; the site then merges the study files in the browser.
 - `kit/`: the instructions file, the checker, an example entry, and all of them as `cameo-agent-kit.zip`.
@@ -65,9 +64,3 @@ Make a new release whenever you want a citable snapshot, for example after a bat
 ## Licenses
 
 The code and the site are under the MIT license. Each study file carries its own open license, under `experiment.license`.
-
-## Questions across studies
-
-`findings.json` at the top of the repository lists the questions on the Learn across studies page. Each question groups comparisons, and each comparison names a study, a run and the parent run it changed one thing in, with a sentence saying what changed. It holds the wording and the run ids only. The build reads every score, threshold, parameter count and cost from the study files.
-
-Each comparison also records the two scores it was reviewed with, under `reviewed_values`. If a study later changes those scores, the build prints a line starting with `REVIEW` and the page marks the comparison until it is reviewed again. A comparison whose study or run is missing is left out, with a note.
