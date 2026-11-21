@@ -907,6 +907,33 @@ kbd{font-family:var(--font-mono);font-size:11px;color:var(--muted);border:1px so
 .hero2 .sub.meta{font-size:13.5px;color:var(--muted)}
 .land-s{display:flex;gap:12px;flex-wrap:wrap;align-items:center;max-width:680px} .land .land-s .search{flex:1 1 300px;max-width:480px}
 .land .count + .fine{margin-top:6px}
+/* the bar that appears when studies are ticked: it stays at the foot of the screen while the list scrolls */
+.stray{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--band-bg);color:var(--band-ink);box-shadow:0 -8px 28px #0003;padding:12px 0}
+.stray .wrap{display:flex;gap:8px 18px;align-items:center;flex-wrap:wrap}
+.stray b{font-size:15px;font-weight:600} .stray .hint{color:var(--band-muted);font-size:13.5px}
+.stray .sp{margin-left:auto;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.stray .linkish{color:var(--band-ink)} .stray .btn{background:transparent;border-color:var(--band-muted);color:var(--band-ink)} .stray .btn:hover{border-color:var(--band-ink);color:var(--band-ink)}
+.stray .btn.go{background:var(--band-ink);border-color:var(--band-ink);color:var(--band-bg);font-weight:600;padding:8px 18px;font-size:14.5px} .stray .btn.go:hover{opacity:.88;color:var(--band-bg)}
+body.has-stray{padding-bottom:72px} body.has-stray .cmptray{bottom:62px}
+/* several studies on one page */
+.tog-st{display:flex;gap:8px 10px;flex-wrap:wrap;align-items:center;margin:0 0 6px}
+.tog-st .item{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 4px 3px 12px;font-size:13.5px}
+.tog-st .item a{color:var(--ink);text-decoration:none;font-weight:500} .tog-st .item a:hover{text-decoration:underline}
+.tog-b{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0 4px}
+.tog-note{color:var(--muted);font-size:13px;margin:6px 0 14px;max-width:90ch}
+.tog-t td.nm{max-width:280px;overflow:hidden;text-overflow:ellipsis}
+.tog-t .nmb{border:0;background:none;padding:0;font-family:var(--font-mono);font-size:12.5px;font-weight:500;color:var(--ink);cursor:pointer;text-align:left;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.tog-t .nmb:hover{text-decoration:underline} .tog-t tr{cursor:pointer} .tog-t td{white-space:nowrap}
+.tog-t thead th{position:sticky;top:0;background:var(--surface);z-index:2}
+.tog-t td.st{max-width:210px;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2)}
+.tog-nav{display:flex;gap:6px;align-items:center;margin-bottom:8px;font-size:12.5px;color:var(--muted)} .tog-nav .sp{margin-left:auto;display:flex;gap:4px;align-items:center}
+.tog-cmp{width:100%;font-size:13px;table-layout:fixed} .tog-cmp th,.tog-cmp td{white-space:normal;word-break:break-word;padding:5px 6px;vertical-align:top;position:static}
+.tog-cmp th{font-weight:500;color:var(--muted);font-size:12.5px;background:none;width:34%} .tog-cmp thead th{font-size:11.5px;color:var(--ink-2);font-weight:600}
+.tog-cmp tr.dif td{background:var(--warn-fill)} .tog-cmp .own{color:var(--accent);font-size:11px;margin-left:4px;white-space:nowrap}
+.tog-empty{padding:28px 18px;color:var(--ink-2)}
+.tog-empty b{display:block;color:var(--ink);font-family:var(--font-display);font-weight:500;font-size:20px;margin-bottom:6px}
+@media (max-width:1100px){ .tog-work{grid-template-columns:minmax(0,1fr)} .tog-work .insp{position:static;max-height:none} }
+@media (max-width:700px){ .stray{padding:10px 0 calc(10px + env(safe-area-inset-bottom))} .stray .sp{margin-left:0;flex:1 1 100%} .stray .sp .btn{flex:1 1 auto;text-align:center} .stray .hint{flex:1 1 100%} body.has-stray{padding-bottom:124px} body.has-stray .cmptray{bottom:112px} }
 </style>
 </head>
 <body>
@@ -1069,6 +1096,7 @@ function parseHash(){
   if (path[0] === "b" && path[1]) return {view:"bench", id:path[1], only:qs.get("s") || ""};
   if (path[0] === "s" && path[1]) return {view:"study", id:path[1], run:path.slice(2).join("/") || null};
   if (path[0] === "d" && path[1]) return {view:"dep", id:path[1]};
+  if (path[0] === "together") return {view:"together", ids:(qs.get("s") || "").split(",").filter(Boolean), bench:qs.get("b") || "", split:qs.get("split"), pts:qs.get("pts"), x:qs.get("x"), m:qs.get("m"), q:qs.get("q"), url:true};
   if (path[0] === "database") return list(["studies","models","benchmarks"].includes(path[1]) ? path[1] : null);
   if (["studies","models","benchmarks"].includes(path[0])) return list(path[0]);   /* older links */
   if (path[0] === "browse") return list(path[1] === "benchmarks" ? "benchmarks" : path[1] === "models" ? "models" : "studies");
@@ -1092,14 +1120,14 @@ function weightLink(w){
   return null;
 }
 const madeUp = x => x.made_up ? h("span",{class:"pill bad",title:"Every number in this study is made up, so the demo has more than one study",text:"made-up data"}) : null;
-const TITLES = {database:"Database", about:"About", deposit:"Deposit", compare:"Compare", notfound:"Not found"};
+const TITLES = {database:"Database", together:"Studies together", about:"About", deposit:"Deposit", compare:"Compare", notfound:"Not found"};
 async function route(){
   const r = parseHash(); ROUTE = r; window.scrollTo(0, 0); closeDialog(); if (FIELD_STOP){ FIELD_STOP(); FIELD_STOP = null; }
   document.title = TITLES[r.view] ? TITLES[r.view] + " · CAMEO" : "CAMEO";
-  document.body.classList.toggle("wide", ["study","bench","compare"].includes(r.view)); document.body.classList.toggle("at-home", r.view === "home"); document.body.classList.toggle("at-db", r.view === "database");   /* those two pages have their own search box, so the one in the header steps aside */
-  const here = {database:["database","bench","study","dep"], about:["about"], deposit:["deposit"]};
+  document.body.classList.toggle("wide", ["study","bench","compare","together"].includes(r.view)); document.body.classList.toggle("at-home", r.view === "home"); document.body.classList.toggle("at-db", r.view === "database");   /* those two pages have their own search box, so the one in the header steps aside */
+  const here = {database:["database","bench","study","dep","together"], about:["about"], deposit:["deposit"]};
   document.querySelectorAll("[data-nav]").forEach(a => { if ((here[a.dataset.nav] || []).includes(r.view)) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
-  renderTray();
+  renderTray(); renderStudyTray();
   if (r.view === "study"){
     if (ENTRY && ENTRY.id === r.id && ENTRY.status === "published" && document.getElementById("insp")){ if (r.run && byId[r.run] && r.run !== state.sel) select(r.run, true); return; }
     await openStudy(r.id);
@@ -1109,6 +1137,7 @@ async function route(){
   else if (r.view === "deposit") openDepositPage();
   else if (r.view === "compare") await openCompare(r);
   else if (r.view === "dep") openDepositor(r.id);
+  else if (r.view === "together") await openTogether(r);
   else if (r.view === "notfound"){ leave(); setCrumbs([]); put(document.getElementById("app"), pageHead(null, "This page does not exist", "The address may be mistyped, or the page may have moved."), h("p",{class:"empty"}, h("a",{href:"#/",text:"Go to the front page"}), " · ", h("a",{href:"#/database",text:"Open the database"}))); }
   else openHome();
 }
@@ -1275,26 +1304,135 @@ function drawDatabase(){
   if (DB.view === "models") drawModels(Mo); else if (DB.view === "benchmarks") drawBenchmarks(Bm); else drawStudies(St, hit);
 }
 function paintPicked(){
-  const box = document.getElementById("dlbox"); if (!box) return; const all = INDEX.studies.length, shown = DB.shown || [], n = DB.picked.size;
-  if (n) put(box, h("button",{class:"linkish",type:"button",id:"dlclear",text:"Clear selection",onclick:()=>{ DB.picked.clear(); drawDatabase(); }}),
-    h("button",{class:"btn pri",type:"button",id:"dlst",title:n > 1 ? "The selected studies, merged into one JSON file" : "The selected study, as its JSON file",text:`Download ${pl(n,"selected study","selected studies")}`,onclick:e=>downloadStudies([...DB.picked], e.currentTarget)}));
-  else if (!shown.length) put(box);
+  const box = document.getElementById("dlbox"); if (!box) return; const all = INDEX.studies.length, shown = DB.shown || [];
+  /* this button takes what is listed. What is ticked has its own bar at the foot of the screen, so ticking a box moves nothing on the page. */
+  if (!shown.length) put(box);
   else if (shown.length === all && !DB.q.trim() && !fltAny() && known(INDEX.site.bundle)) put(box, h("a",{class:"btn",id:"dlst",href:String(INDEX.site.bundle),download:"cameo-all.json",title:"Every study in one JSON file",text:`Download all ${all}`}));
   else put(box, h("button",{class:"btn",type:"button",id:"dlst",title:"The studies listed below, merged into one JSON file",text:shown.length === all ? `Download all ${all}` : shown.length === 1 ? "Download this study" : `Download these ${shown.length} studies`,onclick:e=>downloadStudies(shown.slice(), e.currentTarget)}));
+  renderStudyTray();
   paintAcross();
   const pa = document.getElementById("pickall"); if (pa){ const k = shown.filter(id => DB.picked.has(id)).length; pa.checked = k > 0 && k === shown.length; pa.indeterminate = k > 0 && k < shown.length; }
 }
 /* Studies that a search found, or that the visitor ticked, may share a benchmark. Then the next step is its leaderboard, where they can be compared. */
+const togHref = ids => "#/together?s=" + ids.map(encodeURIComponent).join(",");
+/* The studies that are ticked, and what can be done with them. It stays in view while the list scrolls. */
+function renderStudyTray(){
+  let t = document.getElementById("stray"); const ids = [...DB.picked].filter(id => INDEX.studies.some(x => x.id === id)), show = ROUTE.view === "database" && ids.length > 0;
+  document.body.classList.toggle("has-stray", show);
+  if (!show){ if (t) t.remove(); return; }
+  if (!t){ t = h("div",{class:"stray",id:"stray",role:"region","aria-label":"Selected studies"}); document.body.append(t); }
+  const St = ids.map(id => INDEX.studies.find(x => x.id === id)), n = St.length, runs = St.reduce((a, x) => a + (x.runs || 0), 0);
+  put(t, h("div",{class:"wrap"}, h("b",{id:"straycount",text:`${pl(n,"study","studies")} selected · ${pl(runs,"run","runs")}`}),
+    n === 1 ? h("span",{class:"hint",text:"Tick another study to explore their models on one plot"}) : null,
+    h("span",{class:"sp"}, h("button",{class:"linkish",type:"button",id:"strayclear",text:"Clear",onclick:()=>{ DB.picked.clear(); document.querySelectorAll(".spick input").forEach(c => { c.checked = false; }); paintPicked(); }}),
+      h("button",{class:"btn",type:"button",id:"straydl",title:n > 1 ? "The selected studies, merged into one JSON file" : "The selected study, as its JSON file",text:n > 1 ? "Download studies (JSON)" : "Download study (JSON)",onclick:e=>downloadStudies(ids.slice(), e.currentTarget)}),
+      n > 1 ? h("a",{class:"btn go",id:"straygo",href:togHref(ids),title:"Every model of the selected studies on one plot and in one list",text:"Explore models"}) : null)));
+  document.getElementById("live").textContent = `${pl(n,"study","studies")} selected`;
+}
+/* A search that finds several studies offers the same step without ticking them. */
 function paintAcross(){
-  const box = document.getElementById("xact"); if (!box) return;
-  const ids = DB.picked.size ? [...DB.picked] : (DB.q.trim() || fltAny()) ? (DB.shown || []) : [], St = ids.map(id => INDEX.studies.find(x => x.id === id)).filter(Boolean), out = [], on = x => x.benchmarks || (x.benchmark ? [x.benchmark] : []);
-  if (St.length > 1){
-    for (const b of INDEX.benchmarks){ const mine = St.filter(x => on(x).includes(b.id));
-      if (mine.length > 1) out.push(h("a",{href:"#/b/" + b.id + "?s=" + mine.map(x => encodeURIComponent(x.id)).join(",")}, "Plot results on " + b.title, h("span",{text:(mine.length === St.length ? (mine.length === 2 ? "Both studies" : `All ${mine.length} studies`) : `${mine.length} of these studies`) + " share this benchmark"}))); }
-    /* nothing shared: their scores cannot go on one chart, so say that and offer each benchmark's own */
-    if (!out.length && DB.picked.size){ const bs = INDEX.benchmarks.filter(b => St.some(x => on(x).includes(b.id)));
-      if (bs.length) out.push(h("span",{class:"msg",text:"These studies use different benchmarks, so their scores do not share a chart. Plot each benchmark, or download the studies."}), bs.map(b => h("a",{href:"#/b/" + b.id}, "Plot " + b.title, h("span",{text:St.filter(x => on(x).includes(b.id)).map(x => x.title).join(", ")})))); } }
-  put(box, out.length ? h("div",{class:"across",id:"across"}, h("span",{class:"fl",text:DB.picked.size ? pl(St.length, "study", "studies") + " selected" : "Across these studies"}), out) : null);
+  const box = document.getElementById("xact"); if (!box) return; const ids = !DB.picked.size && (DB.q.trim() || fltAny()) ? (DB.shown || []) : [];
+  put(box, ids.length > 1 ? h("div",{class:"across",id:"across"}, h("span",{class:"fl",text:"Across these studies"}), h("a",{href:togHref(ids)}, `Explore models across these ${ids.length} studies`, h("span",{text:"One plot and one list, with each model's details beside them"}))) : null);
+}
+/* ---------- several studies together: one plot, one list of models, and a model's details beside them ----------
+   Nothing here leaves the page. A click on a point or a name opens that model in the panel, whichever study it is from.
+   Scores are only comparable within one benchmark, so studies on different benchmarks get a chart each, one at a time. */
+const TOG = {key:null, bench:null, sel:null, pin:null, q:"", sort:null, all:false};
+async function openTogether(r){
+  leave(); const app = document.getElementById("app"), St = r.ids.map(id => INDEX.studies.find(x => x.id === id)).filter((x, i, a) => x && a.indexOf(x) === i), ids = St.map(x => x.id);
+  setCrumbs([["Database","#/database"],["Studies together",null]]);
+  if (!St.length){ put(app, pageHead(null, "Explore studies together", "Tick studies in the database, then choose Explore models."), h("p",{class:"empty"}, h("a",{href:"#/database",text:"Open the database"}))); return; }
+  const on = x => x.benchmarks || (x.benchmark ? [x.benchmark] : []), count = b => St.filter(x => on(x).includes(b.id)).length, benches = INDEX.benchmarks.filter(b => count(b)).sort((a, c) => count(c) - count(a));
+  const key = ids.slice().sort().join(","); if (TOG.key !== key){ Object.assign(TOG, {key, bench:null, sel:null, pin:null, q:"", sort:null, all:false}); }
+  if (r.bench && benches.some(b => b.id === r.bench)) TOG.bench = r.bench; if (!benches.some(b => b.id === TOG.bench)) TOG.bench = benches.length ? benches[0].id : null;
+  const col = {}; St.forEach((x, i) => { col[x.id] = `var(--s${(i % 4) + 1})`; });
+  const drop = id => goTo(ids.length > 1 ? togHref(ids.filter(x => x !== id)) : "#/database");
+  const head = [pageHead("Studies together", St.length > 1 ? `Models across ${St.length} studies` : "Models in one study", null),
+    h("div",{class:"tog-st",id:"togst"}, St.map(x => h("span",{class:"item"}, h("span",{class:"dot",style:"background:" + col[x.id]}), h("a",{href:"#/s/" + x.id,title:"Open this study on its own page",text:x.title || "Untitled study"}),
+        h("button",{class:"x",type:"button","aria-label":"Remove " + (x.title || "this study"),title:"Remove from this view",text:"×",onclick:()=>drop(x.id)}))),
+      h("a",{class:"btn sm",id:"togedit",href:"#/database",title:"Back to the database, with these studies still ticked",text:"Edit selection"}), h("button",{class:"btn sm",type:"button",id:"togdl",text:St.length > 1 ? "Download studies (JSON)" : "Download study (JSON)",onclick:e=>downloadStudies(ids.slice(), e.currentTarget)}))];
+  if (!TOG.bench){ put(app, head, h("p",{class:"empty",text:"None of these studies is on a benchmark yet, so there is no score to plot them by."})); return; }
+  put(app, head, h("div",{class:"loading",role:"status",text:"Loading the models…"}));
+  let B0; try{ B0 = await getJSON("boards/" + TOG.bench + ".json"); }catch(e){ put(app, head, h("div",{class:"err"}, h("b",{text:"The models did not load. "}), "Reload the page to try again. (" + e.message + ")")); return; }
+  if (ROUTE.view !== "together" || TOG.key !== key) return;
+  const b = B0.benchmark, mine = x => ids.includes(x.study), B = {benchmark:b, rows:B0.rows.filter(mine), runs:(B0.runs || []).filter(mine), studies:(B0.studies || []).filter(mine)}, K = u => u.study + "~" + u.run;
+  { const k = "together|" + key + "|" + b.id; if (BCH.for !== k){ BCH.for = k; BCH.mode = B.runs.length ? "run" : "model"; BCH.split = b.split === "test" ? "test" : "valid"; BCH.x = "params"; BCH.off = new Set(); } }
+  /* the address says what is on screen, so Back, Forward, a refresh and a shared link all open the same plot, list and model */
+  if (r.url){ if (r.split === "valid" || r.split === "test") BCH.split = r.split; if (r.pts === "run" || r.pts === "model") BCH.mode = B.runs.length ? r.pts : "model"; if (r.x === "params" || r.x === "minutes") BCH.x = r.x; if (r.pts || r.m) TOG.sel = r.m || null; if (r.pts || r.q) TOG.q = r.q || ""; }
+  DB.picked = new Set(ids);   /* Edit selection goes back to the database with these studies still ticked */
+  const words = () => TOG.q.trim().toLowerCase().split(/\s+/).filter(Boolean), title = {}; St.forEach(x => { title[x.id] = x.title || "Untitled study"; });
+  const match = u => { const w = words(); if (!w.length) return true; const t = [u.name, u.family, known(u.family) ? pretty(String(u.family)) : "", title[u.study], u.run, u.status].filter(Boolean).join(" ").toLowerCase(); return w.every(x => t.includes(x)); };
+  const cbox = h("div",{style:"padding:8px 12px"}), chead = h("h2",{id:"bchead",text:"Score vs. model size"}), tbox = h("div",{class:"scrollx",tabindex:"0",role:"region","aria-label":"Models"}), tcnt = h("span",{class:"q",style:"margin:0"}), insp = h("aside",{class:"card insp",id:"toginsp","aria-label":"Selected model"});
+  const fq = h("input",{class:"search sm",type:"search",id:"togq",value:TOG.q,placeholder:"Filter by model, family, study…","aria-label":"Filter the models"}); fq.addEventListener("input", () => { TOG.q = fq.value; TOG.all = false; cbox._redraw(); });
+  let LIST = [];   /* the models listed, in the order shown: what Previous and Next step through */
+  const pick = k => { TOG.sel = k; cbox._redraw(); }, low = b.direction === "minimize";
+  function after(P){
+    const sk = TOG.sort || {k:BCH.split, dir:low ? 1 : -1}, val = u => sk.k === "name" ? String(u.name || "") : sk.k === "family" ? String(u.family || "") : sk.k === "study" ? title[u.study] : sk.k === "params" ? u.params : sk.k === "minutes" ? u.minutes : u[sk.k];
+    LIST = P.all.filter(u => !BCH.off.has(u.study) && match(u)).sort((x, y) => { const p_ = val(x), q_ = val(y); if (p_ == null || q_ == null) return (p_ == null) - (q_ == null); return (typeof p_ === "number" ? p_ - q_ : String(p_).localeCompare(String(q_))) * sk.dir; });
+    if (TOG.sel && LIST.findIndex(u => K(u) === TOG.sel) >= 25) TOG.all = true;   /* a model picked on the plot is shown in the list too */
+    const shown = LIST.slice(0, TOG.all ? LIST.length : 25), th = (k, t, c, first) => { const onk = sk.k === k; return h("th",{class:c || "","aria-sort":onk ? (sk.dir > 0 ? "ascending" : "descending") : "none"}, h("button",{class:"thb",type:"button",title:"Sort by " + t.toLowerCase(),onclick:()=>{ TOG.sort = onk ? {k, dir:-sk.dir} : {k, dir:first || 1}; cbox._redraw(); }}, t, onk ? (sk.dir > 0 ? " ↑" : " ↓") : "")); };
+    tcnt.textContent = pl(LIST.length, P.unit[0], P.unit[1]);
+    put(tbox, LIST.length ? h("table",{class:"lb tog-t",id:"togtable"},
+        h("thead",null, h("tr",null, h("th",{class:"cmpc"}, h("span",{class:"vh",text:"Select"})), th("name","Model"), th("family","Family"), th("study","Study"), th("valid","Validation","num",low ? 1 : -1), th("test","Test","num",low ? 1 : -1), th("params","Parameters","num"), th("minutes","Training time","num"))),
+        h("tbody",null, shown.map(u => h("tr",{class:K(u) === TOG.sel ? "sel" : "","data-k":K(u),onclick:e=>{ if (!e.target.closest("input,label,a")) pick(K(u)); }},
+          h("td",{class:"cmpc"}, cmpBtn(u.study, u.run, u.name)),
+          h("td",{class:"nm"}, h("button",{class:"nmb",type:"button",title:u.name,text:u.name,onclick:e=>{ e.stopPropagation(); pick(K(u)); }}), u.status && u.status !== "done" ? h("span",{class:"pill bad",text:String(u.status).replace(/_/g, " ")}) : u.kind === "reported" ? h("span",{class:"pill plain",text:"reported"}) : null),
+          h("td",{class:"famc",text:known(u.family) ? pretty(String(u.family)) : "–"}), h("td",{class:"st",title:title[u.study]}, h("span",{class:"dot",style:"background:" + col[u.study]}), title[u.study]),
+          h("td",{class:"num",text:fmt(u.valid,4)}), h("td",{class:"num",text:fmt(u.test,4)}), h("td",{class:"num",text:fmtInt(u.params)}), h("td",{class:"num",text:dur(u.minutes)})))))
+      : h("p",{class:"q",style:"padding:14px 16px",text:"No model matches."}),
+      LIST.length > shown.length ? h("button",{class:"linkish",type:"button",style:"margin:10px 16px",text:`Show all ${fmtInt(LIST.length)} rows`,onclick:()=>{ TOG.all = true; cbox._redraw(); }}) : null);
+    { const a_ = ["s=" + ids.map(encodeURIComponent).join(","), "b=" + b.id, "split=" + BCH.split, "pts=" + BCH.mode, "x=" + BCH.x]; if (TOG.sel) a_.push("m=" + encodeURIComponent(TOG.sel)); if (TOG.q.trim()) a_.push("q=" + encodeURIComponent(TOG.q.trim()));
+      const to = "#/together?" + a_.join("&"); if (ROUTE.view === "together" && location.hash !== to) try{ history.replaceState(null, "", to); }catch(e){} }
+    tbox.style.maxHeight = TOG.all && LIST.length > 25 ? "620px" : ""; const cur = tbox.querySelector("tr.sel"); if (cur && TOG.all){ const top = cur.offsetTop - 40; if (top < tbox.scrollTop || top > tbox.scrollTop + tbox.clientHeight - 90) tbox.scrollTop = Math.max(0, top - 80); }
+    drawInsp(P);
+  }
+  /* the panel: one model, or two side by side when one is pinned. The plot and the list stay where they are. */
+  const DET = {};   /* what a study's own file adds about a run, once the file has loaded */
+  const detail = async u => { const k = K(u); if (DET[k]) return DET[k]; const S = await loadStudy(u.study), e = modelEntry(S, u.run), t = S.trials.find(x => x.id === u.run) || {}, m = S.models.find(x => x.id === t.model) || {};
+    return DET[k] = {settings:(e && e.training.settings) || {}, own:new Set((e && e.training.set_by_this_run) || []), recipe:e ? e.training.recipe : null, change:known(m.change_summary) ? String(m.change_summary) : null, hyp:known(t.hypothesis) ? String(t.hypothesis) : null,
+      parent:(pt => pt ? ((S.models.find(x => x.id === pt.model) || {}).name || pt.model) + " · " + pt.id : null)(known(t.parent_trial) ? S.trials.find(x => x.id === t.parent_trial) : null),
+      code:known(pathGet(m, SRCP)) ? String(pathGet(m, SRCP)).split("\n").length : 0, missing:e ? e.rebuild.missing : []}; };
+  function drawInsp(P){
+    const by = {}; for (const u of P.all) by[K(u)] = u; const u = by[TOG.sel], pin = TOG.pin && TOG.pin !== TOG.sel ? by[TOG.pin] : null;
+    if (!u){ TOG.sel = null; put(insp, h("div",{class:"tog-empty"}, h("b",{text:"Pick a model"}), "Click a point on the plot, or a name in the list. Its study, scores, architecture and training settings open here, and the plot stays as it is.")); return; }
+    const i = LIST.findIndex(x => K(x) === TOG.sel), step = d => { const n = LIST[i + d]; if (n){ TOG.focus = d < 0 ? "togprev" : "tognext"; pick(K(n)); } };
+    const src = x => h("span",null, h("span",{class:"dot",style:"background:" + col[x.study]}), title[x.study]);
+    const body = h("div",{class:"sec",id:"togdet"}, h("p",{class:"q",text:"Loading the training settings…"}));
+    put(insp, h("div",{class:"insp-h"},
+        h("div",{class:"tog-nav"}, i >= 0 ? `${fmtInt(i + 1)} of ${fmtInt(LIST.length)} listed` : "Not in the list as filtered",
+          h("span",{class:"sp"}, h("button",{class:"btn sm",type:"button",id:"togprev",disabled:i <= 0 || null,title:"The model above this one in the list",text:"← Previous",onclick:()=>step(-1)}), h("button",{class:"btn sm",type:"button",id:"tognext",disabled:i < 0 || i >= LIST.length - 1 || null,title:"The model below this one in the list",text:"Next →",onclick:()=>step(1)}),
+            h("button",{class:"x",type:"button",id:"togclose","aria-label":"Close the model's details",title:"Close",text:"×",onclick:()=>{ const k = TOG.sel; TOG.sel = null; cbox._redraw(); const row = tbox.querySelector(`tr[data-k="${CSS.escape(k)}"] .nmb`); if (row) row.focus(); }}))),
+        h("div",{class:"k"}, src(u)), h("h2",{id:"togname",text:u.name}),
+        h("div",{class:"pills"}, known(u.family) ? h("span",{class:"pill plain",text:pretty(String(u.family))}) : null, u.status && u.status !== "done" ? h("span",{class:"pill bad",text:String(u.status).replace(/_/g, " ")}) : null, u.kind === "reported" ? h("span",{class:"pill plain",text:"reported elsewhere"}) : null),
+        h("div",{class:"insp-a"}, h("button",{class:"btn sm",type:"button",id:"togpin","aria-pressed":String(TOG.pin === TOG.sel),title:"Keep this model in the panel, so the next one you pick is shown beside it",text:TOG.pin === TOG.sel ? "✓ Pinned to compare" : "Pin to compare",onclick:()=>{ TOG.pin = TOG.pin === TOG.sel ? null : TOG.sel; TOG.focus = "togpin"; cbox._redraw(); }}),
+          h("button",{class:"btn sm",type:"button",title:"The model, its training settings and recipe, its data and its results, as one JSON file",text:"Download run configuration (JSON)",onclick:e=>downloadModel(u.study, u.run, e.currentTarget)}),
+          h("a",{class:"btn sm",id:"togsrc",href:"#/s/" + u.study + "/" + encodeURIComponent(u.run),title:"Leaves this view: the run on its own study's page, with its layers, graph, code and lineage",text:"Open source study ↗"}))), body);
+    if (TOG.focus){ const e = document.getElementById(TOG.focus); TOG.focus = null; if (e && !e.disabled) e.focus(); }   /* stepping through the list keeps the keyboard on the button */
+    const want = TOG.sel + "|" + (pin ? TOG.pin : "");
+    Promise.all([detail(u), pin ? detail(pin) : null]).then(([d, dp]) => {
+      if (TOG.sel + "|" + (TOG.pin && TOG.pin !== TOG.sel && by[TOG.pin] ? TOG.pin : "") !== want || !body.isConnected) return;
+      const R = [], row = (label, f, g) => { const a = f(u, d), c = pin ? f(pin, dp) : null; if ((a == null || a === "") && (c == null || c === "")) return; R.push({label, a, c, own:g ? g(d) : false}); }, sec = t => R.push({sec:t});
+      sec("Results"); row("Run", x => x.run + (x.seed != null ? " · seed " + x.seed : "")); row("Validation", x => x.valid != null ? fmt(x.valid,4) : null); row("Test", x => x.test != null ? fmt(x.test,4) : null); row("Parameters", x => x.params != null ? fmtInt(x.params) : null); row("Training time", x => x.minutes != null ? dur(x.minutes) : null);
+      sec("Architecture"); row("Family", x => known(x.family) ? pretty(String(x.family)) : null); row("Parent", (x, e) => e.parent); row("Change it tested", (x, e) => e.change); row("Hypothesis", (x, e) => e.hyp); row("Model code", (x, e) => e.code ? `stored · ${fmtInt(e.code)} lines` : "not stored");
+      sec("Training settings"); row("Recipe", (x, e) => e.recipe);
+      for (const k of [...new Set(Object.keys(d.settings).concat(dp ? Object.keys(dp.settings) : []))].sort()) row(k.replace(/_/g, " "), (x, e) => e.settings[k] === undefined ? null : showV(e.settings[k]), e => e.own.has(k));
+      row("Still needed to retrain", (x, e) => e.missing.length ? pl(e.missing.length, "detail", "details") : "nothing listed");
+      const rows = R.filter((x, n) => !x.sec || (R[n + 1] && !R[n + 1].sec));
+      put(body, pin ? h("p",{class:"q",id:"togvs",style:"margin:0 0 8px"}, "Beside it, pinned: ", src(pin), " · ", h("span",{class:"mono",text:pin.name}), " ", h("button",{class:"linkish",type:"button",text:"Unpin",onclick:()=>{ TOG.pin = null; cbox._redraw(); }})) : null,
+        h("table",{class:"tog-cmp",id:"togcmp"}, pin ? h("thead",null, h("tr",null, h("th"), h("th",{scope:"col",text:"This model"}), h("th",{scope:"col",text:"Pinned"}))) : null,
+          h("tbody",null, rows.map(x => x.sec ? h("tr",null, h("th",{colspan:pin ? "3" : "2",scope:"colgroup",style:"padding-top:12px;text-transform:uppercase;letter-spacing:.07em;font-size:11.5px;font-weight:600",text:x.sec}))
+            : h("tr",{class:pin && x.a != null && x.c != null && String(x.a) !== String(x.c) ? "dif" : ""}, h("th",{scope:"row"}, x.label, x.own ? h("span",{class:"own",title:"Set by this run, not by the study's defaults",text:"set by this run"}) : null), h("td",{text:x.a == null || x.a === "" ? "–" : String(x.a)}), pin ? h("td",{text:x.c == null || x.c === "" ? "–" : String(x.c)}) : null)))),
+        pin ? h("p",{class:"fine",text:"Shaded rows differ between the two models."}) : null);
+    }).catch(e => { if (body.isConnected) put(body, h("p",{class:"q",text:"The training settings did not load. (" + e.message + ")"})); });
+  }
+  put(app, head,
+    benches.length > 1 ? [h("div",{class:"tog-b",role:"tablist","aria-label":"Benchmark",id:"togbench"}, benches.map(x => h("button",{class:"fchip",type:"button",role:"tab","aria-selected":String(x.id === b.id),"aria-pressed":String(x.id === b.id),onclick:()=>{ TOG.bench = x.id; TOG.sel = null; TOG.pin = null; TOG.sort = null; TOG.all = false; openTogether({ids, bench:x.id}); }}, x.title, h("span",{class:"n",text:pl(count(x),"study","studies")})))),
+      h("p",{class:"tog-note",text:"Scores are comparable only within one benchmark, so each benchmark has its own plot. Pick one above."})] : h("p",{class:"tog-note",text:`${b.title} · ${b.metric_label}. ` + (b.note || "")}),
+    h("div",{class:"work tog-work"}, h("div",null,
+        h("section",{class:"card"}, h("div",{class:"card-h"}, chead), cbox),
+        h("section",{class:"card"}, h("div",{class:"card-h"}, h("h2",{text:"Models"}), fq, tcnt,
+          h("span",{class:"sp"}, h("button",{class:"btn sm",type:"button",id:"togcsv",title:"The rows listed here, as filtered and sorted, with the score on both splits",text:"Download listed rows (CSV)",onclick:()=>saveText(runsCsv({benchmark:b, studies:B.studies, runs:LIST.map(u => Object.assign({}, u, {name:u.name}))}), "cameo-" + b.id + "-listed-rows.csv", "text/csv")}))), tbox)), insp));
+  chartBox(B, col, cbox, chead, {onPick:p => pick(K(p)), sel:() => TOG.sel, match, after});
 }
 function drawStudies(found, hit){
   const res = document.getElementById("results"), St = found.slice().sort(SORTS[STUD.sort][1]); DB.shown = St.map(x => x.id);
@@ -1722,7 +1860,7 @@ function downloadStudy(reason){   /* the staged entry as a file, for the pull re
 const BCH = {for:null, mode:"run", split:"valid", x:"params", off:new Set()};
 const SPLITN = {valid:"Validation", test:"Test"}, BX = {params:["model size","Parameters, log scale","no parameter count", v => fmtInt(v) + " parameters"], minutes:["training time","Training time in minutes, log scale","no training time", v => dur(v) + " of training"]};
 const metricBare = b => String(b.metric_short || b.metric_label || "score").replace(/^(validation|test)\s+/i, "");
-function boardView(B){
+function boardView(B, O){
   const b = B.benchmark, runs = B.runs || [], key = r => r.study + "~" + r.run, rowBy = {}, runBy = {}, title = {}; for (const r of B.rows){ rowBy[key(r)] = r; title[r.study] = r.study_title; } for (const u of runs) runBy[key(u)] = u;
   for (const x of B.studies || []) title[x.study] = x.study_title;
   const perModel = BCH.mode === "model" || !runs.length;
@@ -1732,8 +1870,8 @@ function boardView(B){
   for (const u of src){ const c = cover[u.study] || (cover[u.study] = {study:u.study, title:title[u.study] || "Untitled study", total:0, n:0, why:{}}); c.total++;
     const y = u[BCH.split], x = u[BCH.x], why = y == null ? (u.status && u.status !== "done" ? String(u.status).replace(/_/g, " ") : `with no ${SPLITN[BCH.split].toLowerCase()} score`) : !(x > 0) ? "with " + BX[BCH.x][2] : null;
     if (why){ c.why[why] = (c.why[why] || 0) + 1; continue; } c.n++;
-    if (!BCH.off.has(u.study)) pts.push({x, y, study:u.study, run:u.run, name:u.name, study_title:c.title, kind:u.kind, cite:u.cite}); }
-  return {pts, cover:Object.values(cover), unit:perModel ? ["model","models"] : ["run","runs"], ylabel:SPLITN[BCH.split] + " " + metricBare(b), xlabel:BX[BCH.x][1], xname:BX[BCH.x][0], xshow:BX[BCH.x][3], low:b.direction === "minimize"};
+    if (!BCH.off.has(u.study)) pts.push({x, y, study:u.study, run:u.run, name:u.name, study_title:c.title, kind:u.kind, cite:u.cite, dim:!!(O && O.match) && !O.match(u)}); }
+  return {all:src, onPick:O && O.onPick, sel:O && O.sel ? O.sel() : null, pts, cover:Object.values(cover), unit:perModel ? ["model","models"] : ["run","runs"], ylabel:SPLITN[BCH.split] + " " + metricBare(b), xlabel:BX[BCH.x][1], xname:BX[BCH.x][0], xshow:BX[BCH.x][3], low:b.direction === "minimize"};
 }
 function boardChart(P, col, W, H0, V){
   const pts = P.pts; if (!pts.length) return null;
@@ -1758,13 +1896,16 @@ function boardChart(P, col, W, H0, V){
     if (p.kind === "reported") nrep++;
     const c = p.kind === "reported" ? s("rect",{x:cx-4.5,y:cy-4.5,width:9,height:9,fill:"var(--surface)",stroke:col[p.study] || "var(--other)","stroke-width":2,style:"cursor:pointer"}, tt)
       : s("circle",{cx,cy,r:4.5,fill:under ? "none" : col[p.study],"fill-opacity":.8,stroke:under ? col[p.study] : "var(--surface)","stroke-width":under ? 1.5 : 1,style:"cursor:pointer"}, tt);
-    c.addEventListener("click", () => { if (!svg._moved) location.hash = "#/s/" + p.study + "/" + p.run; }); marks.append(c); }
+    if (p.dim) c.setAttribute("opacity", ".13");
+    c.addEventListener("click", () => { if (svg._moved) return; if (P.onPick) P.onPick(p); else location.hash = "#/s/" + p.study + "/" + p.run; }); marks.append(c);
+    if (P.sel && P.sel === p.study + "~" + p.run) svg._ring = s("circle",{cx,cy,r:9,fill:"none",stroke:"var(--ink)","stroke-width":2.2,"pointer-events":"none"}); }
+  if (svg._ring) marks.append(svg._ring);
   svg.dataset.low = low; svg.dataset.rep = nrep; svg._v = {x0, x1, y0, y1, pw:W - m.l - m.r, ph:H - m.t - m.b, ml:m.l, mt:m.t};
   { const pad = ((yhi - srt[0]) || 0.01) * 0.05; svg._full = {x0:xlo - xpad, x1:xhi + xpad, y0:srt[0] - pad, y1:yhi + pad}; }
   return svg;
 }
 /* the benchmark's chart with its controls: what to plot, move and zoom, and each study's share of the points */
-function chartBox(B, col, cbox, head){
+function chartBox(B, col, cbox, head, O){
   let V = null, raf = 0; const b = B.benchmark, runs = B.runs || [];
   if (!B.rows.length && !runs.length) return false;
   const bar = h("div",{class:"zbar"}), notes = h("div"), holder = h("div",{class:"zhold"}), cov = h("div",{id:"bcover"}), has = sp => runs.some(u => u[sp] != null) || b.split === sp;
@@ -1774,13 +1915,14 @@ function chartBox(B, col, cbox, head){
   const segSplit = runs.length ? segOf("Split", "split", [["valid","Validation", has("valid") ? null : "No study on this benchmark recorded a validation score"],["test","Test", has("test") ? null : "No study on this benchmark recorded a test score"]]) : null;
   const xsel = h("select",{id:"bch-x","aria-label":"Horizontal axis"}, [["params","Model size"],["minutes","Training time"]].map(([v, t]) => h("option",{value:v,text:t}))); xsel.addEventListener("change", () => { BCH.x = xsel.value; V = null; draw(); });
   const ctl = h("div",{class:"bctl",id:"bctl"}, segMode, segSplit, h("label",null, "Against", xsel));
-  const draw = () => { raf = 0; const P = boardView(B), chart = boardChart(P, col, Math.max(320, cbox.clientWidth - 24), null, V);
+  const draw = () => { raf = 0; const P = boardView(B, O), chart = boardChart(P, col, Math.max(320, cbox.clientWidth - 24), null, V);
     if (segMode) segMode._paint(); if (segSplit) segSplit._paint(); xsel.value = BCH.x; if (head) head.textContent = `${P.ylabel} vs. ${P.xname}`;
     const fid = cbox.contains(document.activeElement) ? document.activeElement.id : null; if (fid) requestAnimationFrame(() => { const e = document.getElementById(fid) || document.getElementById("bzin"); if (e) e.focus(); });
     put(cov, P.cover.map(c => { const off = BCH.off.has(c.study), miss = c.total - c.n, why = Object.entries(c.why).sort((a, d) => d[1] - a[1]).map(([k, n]) => `${fmtInt(n)} ${k}`).join(", ");
       return h("div",{class:"covrow"}, h("button",{class:"covt",type:"button",id:"cov-" + c.study,"aria-pressed":String(!off),title:off ? "Show this study on the chart" : "Hide this study on the chart",onclick:()=>{ if (off) BCH.off.delete(c.study); else BCH.off.add(c.study); V = null; draw(); }},
           h("span",{class:"dot",style:"background:" + (off ? "var(--other)" : col[c.study] || "var(--other)")}), c.title),
         h("span",{class:"covn"}, h("b",{text:`${fmtInt(c.n)} of ${fmtInt(c.total)}`}), ` ${P.unit[1]} plotted`), miss ? h("span",{class:"covw",text:`${fmtInt(miss)} not plotted: ${why}`}) : null, h("a",{href:"#/s/" + c.study,text:"Open the study"})); }));
+    if (O && O.after) O.after(P);
     if (!chart){ put(bar); put(holder, h("p",{class:"bempty",id:"bempty",text:P.cover.some(c => c.n) ? "Every study with points here is hidden. Click a study below to show it." : `No ${P.unit[0]} has both a ${SPLITN[BCH.split].toLowerCase()} score and a ${BCH.x === "params" ? "parameter count" : "training time"}.`})); put(notes); return true; }
     const g = chart._v, unit = e => { const r_ = chart.getBoundingClientRect(), k = (chart.viewBox.baseVal.width || 1) / r_.width; return [((e.clientX - r_.left) * k - g.ml) / g.pw, 1 - ((e.clientY - r_.top) * k - g.mt) / g.ph]; };
     const zoom = (f, ux, uy) => { const w = g.x1 - g.x0, hgt = g.y1 - g.y0, cx = g.x0 + ux * w, cy = g.y0 + uy * hgt; V = {x0:cx - ux * w * f, x1:cx + (1 - ux) * w * f, y0:cy - uy * hgt * f, y1:cy + (1 - uy) * hgt * f}; draw(); };
@@ -1799,7 +1941,7 @@ function chartBox(B, col, cbox, head){
     put(notes, +chart.dataset.rep ? h("p",{class:"fine",text:"Open squares are results reported elsewhere, not run by the depositor."}) : null,
       nl ? h("p",{class:"fine"}, `${nl} ${P.unit[nl === 1 ? 0 : 1]} scored below the axis and sit${nl === 1 ? "s" : ""} on the bottom edge as ${nl === 1 ? "an open circle" : "open circles"}. `, h("button",{class:"linkish",type:"button",id:"bzfull",text:"Show full range",onclick:()=>{ V = full; draw(); }})) : null);
     return true; };
-  put(cbox, ctl, h("div",{class:"zwrap"}, bar, holder), notes, cov); return draw();
+  put(cbox, ctl, h("div",{class:"zwrap"}, bar, holder), notes, cov); cbox._redraw = draw; return draw();
 }
 const BOARD = {mode:"study", key:"metric", dir:-1, q:"", all:false, rep:true};
 const dur = m => m == null ? "–" : m < 120 ? fmt(m, m < 10 ? 1 : 0) + " min" : m < 2880 ? fmt(m / 60, 1) + " h" : fmt(m / 1440, 1) + " d";
@@ -1823,8 +1965,8 @@ async function openBench(id, only){
   if (ROUTE.view !== "bench" || ROUTE.id !== id) return;
   const studies = INDEX.studies.filter(x => (x.benchmarks || [x.benchmark]).includes(id)), col = {}; studies.forEach((x, i) => { col[x.id] = `var(--s${(i % 3) + 1})`; });
   const better = b.direction === "minimize" ? 1 : -1, RANK = {gold:0, silver:1, bronze:2, none:3}, nRep = B.rows.filter(r => r.kind === "reported").length; BOARD.key = "metric"; BOARD.dir = better; BOARD.all = false; BOARD.rep = true;
-  if (BCH.for !== id || only){ const keep = String(only || "").split(",").filter(x => studies.some(q => q.id === x));   /* a link from a selection of studies shows those; the others stay one click away */
-    BCH.for = id; BCH.mode = (B.runs || []).length ? "run" : "model"; BCH.split = b.split === "test" ? "test" : "valid"; BCH.x = "params"; BCH.off = new Set(keep.length ? studies.map(q => q.id).filter(x => !keep.includes(x)) : []); }
+  if (BCH.for !== id + "|" + (only || "")){ const keep = String(only || "").split(",").filter(x => studies.some(q => q.id === x));   /* a link from a selection of studies shows those; the others stay one click away */
+    BCH.for = id + "|" + (only || ""); BCH.mode = (B.runs || []).length ? "run" : "model"; BCH.split = b.split === "test" ? "test" : "valid"; BCH.x = "params"; BCH.off = new Set(keep.length ? studies.map(q => q.id).filter(x => !keep.includes(x)) : []); }
   if (BOARD.for !== id){ BOARD.for = id; BOARD.mode = studies.length > 1 ? "study" : "model"; BOARD.q = ""; }
   const repChip = nRep ? h("button",{class:"fchip",type:"button",id:"repchip",title:"Show or hide results copied from papers",onclick:()=>{ BOARD.rep = !BOARD.rep; BOARD.all = false; draw(); }}, "Reported results", h("span",{class:"n",text:String(nRep)})) : null;
   const tbox = h("div",{class:"scrollx",tabindex:"0",role:"region","aria-label":"Leaderboard"}), seg = h("div",{class:"seg"}), cnt = h("span",{class:"q",style:"margin:0"});
@@ -1882,7 +2024,7 @@ async function openBench(id, only){
       h("div",{class:"stat"}, h("span",{class:"k",text:"Studies"}), h("b",{text:String(b.studies)}), h("span",{class:"s",text:studies.map(x => x.depositor).filter((v, i, a) => v && a.indexOf(v) === i).join(", ")})),
       h("div",{class:"stat"}, h("span",{class:"k",text:"Models"}), h("b",{text:fmtInt(b.models)}), h("span",{class:"s",text:"best run of each architecture" + (nRep ? ` · ${nRep} reported elsewhere` : "")}))),
     h("section",{class:"card"}, h("div",{class:"card-h"}, chead,
-        (B.runs || []).length ? h("span",{class:"sp"}, h("button",{class:"btn sm",id:"runcsv",title:"Every run of every study on this benchmark, one row each, with the score on both splits under one name",text:`Download all ${fmtInt(B.runs.length)} run rows (CSV)`,onclick:()=>saveText(runsCsv(B), id + "-runs.csv", "text/csv")})) : null), cbox),
+        (B.runs || []).length ? h("span",{class:"sp"}, h("a",{class:"btn sm",id:"benchtog",href:"#/together?s=" + studies.map(x => encodeURIComponent(x.id)).join(",") + "&b=" + id,title:"The same chart, with each model's details opening beside it",text:"Explore models"}), h("button",{class:"btn sm",id:"runcsv",title:"Every run of every study on this benchmark, one row each, with the score on both splits under one name",text:`Download all ${fmtInt(B.runs.length)} run rows (CSV)`,onclick:()=>saveText(runsCsv(B), id + "-runs.csv", "text/csv")})) : null), cbox),
     h("section",{class:"card"}, h("div",{class:"card-h"}, h("h2",{text:"Leaderboard"}), seg, repChip, fq, cnt,
         h("span",{class:"sp"}, h("button",{class:"btn sm",id:"csvbtn",title:"Every model on this benchmark, as a spreadsheet file",text:`Download all ${fmtInt(B.rows.length)} model rows (CSV)`,onclick:()=>saveText(csvOf(B), id + "-leaderboard.csv", "text/csv")}))), tbox,
       h("div",{class:"cardfoot"}, fold("Notes", h("p",{id:"lbnotes",text:"Each model is listed with the configuration its own study chose on validation. Repeated seeds show as a mean and spread. Speed and training time come from each study's own hardware: sort by them, but compare only within one device. Hover for the device." + (nRep ? " Rows marked Reported were copied from a paper and were not run by the depositor." : "") + " Tick rows to compare them side by side, or to download those models as one file."})))),
