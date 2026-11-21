@@ -973,6 +973,9 @@ body.has-stray{padding-bottom:72px} body.has-stray .cmptray{bottom:62px}
 .cmpx td.num{font-variant-numeric:tabular-nums}
 .bmnote{font-size:13px;color:var(--ink-2);margin:0 4px 8px;padding:7px 11px;background:var(--line-2);border-radius:8px;max-width:110ch}
 .bmnote.warn{background:var(--warn-fill);color:var(--warn)}
+.tog-rm{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--ink-2);margin-top:5px}
+.tog-rm select{font:inherit;font-size:13px;padding:3px 8px;border:1px solid var(--warn);border-radius:7px;background:var(--surface);color:var(--ink);max-width:260px}
+.btn.ovr[aria-pressed="true"]{background:var(--warn-fill);border-color:var(--warn);color:var(--warn)}
 </style>
 </head>
 <body>
@@ -1135,7 +1138,7 @@ function parseHash(){
   if (path[0] === "b" && path[1]) return {view:"bench", id:path[1], only:qs.get("s") || ""};
   if (path[0] === "s" && path[1]) return {view:"study", id:path[1], run:path.slice(2).join("/") || null};
   if (path[0] === "d" && path[1]) return {view:"dep", id:path[1]};
-  if (path[0] === "together") return {view:"together", ids:(qs.get("s") || "").split(",").filter(Boolean), bench:qs.get("b") || "", off:qs.get("off"), y:qs.get("y"), split:qs.get("split"), pts:qs.get("pts"), x:qs.get("x"), m:qs.get("m"), q:qs.get("q"), url:true};
+  if (path[0] === "together") return {view:"together", ids:(qs.get("s") || "").split(",").filter(Boolean), bench:qs.get("b") || "", off:qs.get("off"), y:qs.get("y"), per:qs.get("per"), split:qs.get("split"), pts:qs.get("pts"), x:qs.get("x"), m:qs.get("m"), q:qs.get("q"), url:true};
   if (path[0] === "database") return list(["studies","models","benchmarks"].includes(path[1]) ? path[1] : null);
   if (["studies","models","benchmarks"].includes(path[0])) return list(path[0]);   /* older links */
   if (path[0] === "browse") return list(path[1] === "benchmarks" ? "benchmarks" : path[1] === "models" ? "models" : "studies");
@@ -1383,8 +1386,9 @@ async function openTogether(r){
   setCrumbs([["Database","#/database"],["Merged studies",null]]);
   if (!St.length){ put(app, pageHead(null, "Explore merged studies", "Tick studies in the database, then choose Explore merged studies."), h("p",{class:"empty"}, h("a",{href:"#/database",text:"Open the database"}))); return; }
   const on = x => x.benchmarks || (x.benchmark ? [x.benchmark] : []), count = b => St.filter(x => on(x).includes(b.id)).length, benches = INDEX.benchmarks.filter(b => count(b)).sort((a, c) => count(c) - count(a));
+  const ALLB = "__all", OWNB = {};
   const key = ids.slice().sort().join(","); if (TOG.key !== key){ Object.assign(TOG, {key, bench:null, sel:null, pin:null, q:"", sort:null, all:false}); }
-  if (r.bench && benches.some(b => b.id === r.bench)) TOG.bench = r.bench; if (!benches.some(b => b.id === TOG.bench)) TOG.bench = benches.length ? benches[0].id : null;
+  if (r.bench && (benches.some(b => b.id === r.bench) || (r.bench === ALLB && benches.length > 1))) TOG.bench = r.bench; if (!benches.some(b => b.id === TOG.bench) && !(TOG.bench === ALLB && benches.length > 1)) TOG.bench = benches.length ? benches[0].id : null;
   const col = {}; St.forEach((x, i) => { col[x.id] = `var(--s${(i % 4) + 1})`; });
   const drop = id => goTo(ids.length > 1 ? togHref(ids.filter(x => x !== id)) : "#/database");
   const stbox = h("div",{id:"togst"}), dlb = h("button",{class:"btn sm",type:"button",id:"togdl",text:St.length > 1 ? "Download merged studies (JSON)" : "Download study (JSON)",onclick:e=>downloadStudies(ids.slice(), e.currentTarget)});
@@ -1392,23 +1396,36 @@ async function openTogether(r){
   const drawSt = P => put(stbox, St.map(x => { const c = P && P.cover.find(q => q.study === x.id), off = BCH.off.has(x.id), miss = c ? c.total - c.n : 0, why = c ? Object.entries(c.why).sort((a, d) => d[1] - a[1]).map(([k, n]) => `${fmtInt(n)} ${k}`).join(", ") : "";
     return h("div",{class:"tog-row" + (off ? " off" : "")}, h("span",{class:"mk",style:off ? "border-color:" + col[x.id] : "background:" + col[x.id]}),
       h("div",{class:"tog-rt"}, h("b",{title:x.title || "",text:x.title || "Untitled study"}),
-        !P ? h("span",{text:pl(x.runs,"run","runs")}) : !c ? h("span",{text:"On another benchmark, so it shares no metric with the one shown and is not on this plot. Choose its benchmark below."}) : h("span",null, h("i",{text:`${fmtInt(c.n)} of ${fmtInt(c.total)}`}), ` ${P.unit[1]} ${off ? "would be plotted" : "plotted"}`, miss ? ` · ${fmtInt(miss)} not plotted: ${why}` : "")),
+        !P ? h("span",{text:pl(x.runs,"run","runs")}) : !c ? h("span",{text:"On another benchmark, so it shares no metric with the one shown and is not on this plot. Choose its benchmark below."}) : h("span",null, h("i",{text:`${fmtInt(c.n)} of ${fmtInt(c.total)}`}), ` ${P.unit[1]} ${off ? "would be plotted" : "plotted"}`, miss ? ` · ${fmtInt(miss)} not plotted: ${why}` : ""),
+        P && c && BCH.per ? (() => { const ks = new Set(); for (const u of P.all) if (u.study === x.id) for (const k in ((u.m || {})[BCH.split] || {})) ks.add(k); const own = OWNB[x.id] || {}; ks.delete(own.metric);
+          const sel = h("select",{id:"tper-" + x.id,"aria-label":"Metric for " + (x.title || "this study")}, h("option",{value:"",text:ownLabel(x.id).replace(/^./, q => q.toUpperCase()) + " (its benchmark's metric)"}), [...ks].sort((a, d) => metricInfo0(a)[0].localeCompare(metricInfo0(d)[0])).map(k => h("option",{value:k,text:metricInfo0(k)[0]})));
+          sel.value = BCH.per[x.id] && ks.has(BCH.per[x.id]) ? BCH.per[x.id] : ""; sel.addEventListener("change", () => { BCH.per[x.id] = sel.value || null; TOG.focus = "tper-" + x.id; cbox_._redraw(); });
+          return h("label",{class:"tog-rm"}, "Plotted in", sel); })() : null),
       h("div",{class:"tog-ra"},
         P && c ? h("button",{class:"btn sm",type:"button",id:"tshow-" + x.id,"aria-pressed":String(!off),title:off ? "Put this study's points back on the plot and its models back in the list" : "Take this study's points off the plot and its models out of the list. It stays in the merge.",onclick:()=>{ if (off) BCH.off.delete(x.id); else BCH.off.add(x.id); TOG.focus = "tshow-" + x.id; cbox_._redraw(); }}, icon(off ? "eyeoff" : "eye"), off ? "Hidden · show" : "Shown · hide") : null,
         h("a",{class:"btn sm",href:"#/s/" + x.id,title:"Open this study on its own page. Back returns here.",}, icon("out"), "Open study"),
         h("button",{class:"btn sm rm",type:"button",id:"trm-" + x.id,title:"Remove this study from the merge",onclick:()=>drop(x.id)}, icon("x"), "Remove"))); }));
   let cbox_ = null;
+  /* the override: stop limiting the plot to what the studies share, and set each study's metric by hand */
+  const ovr = h("button",{class:"btn sm ovr",type:"button",id:"togovr",title:"By default the plot offers only the metrics these studies share. Turn this on to choose a metric for each study yourself, shared or not.",onclick:()=>{ if (TOG.bench === ALLB) return; BCH.per = BCH.per ? null : {}; TOG.focus = "togovr"; cbox_._redraw(); }});
+  const paintOvr = () => { const on = !!BCH.per; ovr.setAttribute("aria-pressed", String(on)); ovr.textContent = TOG.bench === ALLB ? "Override on: a metric per study" : on ? "✓ Override on: a metric per study" : "Override: choose a metric per study"; ovr.disabled = TOG.bench === ALLB; ovr.hidden = !cbox_; };
   const head = [pageHead("Merged studies", St.length > 1 ? `Models across ${St.length} studies` : "Models in one study", null),
-    h("section",{class:"card tog-card"}, h("div",{class:"card-h"}, h("h2",{text:pl(St.length,"study","studies") + " merged"}), h("span",{class:"sp"}, h("a",{class:"btn sm",id:"togedit",href:"#/database",title:"Back to the database, with these studies still ticked",text:"Edit selection"}), dlb)), stbox)];
+    h("section",{class:"card tog-card"}, h("div",{class:"card-h"}, h("h2",{text:pl(St.length,"study","studies") + " merged"}), h("span",{class:"sp"}, ovr, h("a",{class:"btn sm",id:"togedit",href:"#/database",title:"Back to the database, with these studies still ticked",text:"Edit selection"}), dlb)), stbox)];
   drawSt(null);
   if (!TOG.bench){ put(app, head, h("p",{class:"empty",text:"None of these studies is on a benchmark yet, so there is no score to plot them by."})); return; }
   put(app, head, h("div",{class:"loading",role:"status",text:"Loading the models…"}));
-  let B0; try{ B0 = await getJSON("boards/" + TOG.bench + ".json"); }catch(e){ put(app, head, h("div",{class:"err"}, h("b",{text:"The models did not load. "}), "Reload the page to try again. (" + e.message + ")")); return; }
+  /* All on one plot: the override for studies that share no benchmark. Each board gives its own studies' runs, scored in its own metric. */
+  let B0; try{ if (TOG.bench !== ALLB) B0 = await getJSON("boards/" + TOG.bench + ".json");
+    else { const Bs = await Promise.all(benches.map(x => getJSON("boards/" + x.id + ".json")));
+      B0 = {benchmark:{id:ALLB, title:"All studies on one plot", metric:"__own", metric_short:"score", metric_label:"each study in its own benchmark's metric", split:null, direction:"maximize"}, rows:Bs.flatMap(x => x.rows), runs:Bs.flatMap(x => x.runs || []), studies:Bs.flatMap(x => x.studies || [])};
+      for (const x of Bs) for (const q of x.studies || []) OWNB[q.study] = x.benchmark; } }catch(e){ put(app, head, h("div",{class:"err"}, h("b",{text:"The models did not load. "}), "Reload the page to try again. (" + e.message + ")")); return; }
   if (ROUTE.view !== "together" || TOG.key !== key) return;
   const b = B0.benchmark, mine = x => ids.includes(x.study), B = {benchmark:b, rows:B0.rows.filter(mine), runs:(B0.runs || []).filter(mine), studies:(B0.studies || []).filter(mine)}, K = u => u.study + "~" + u.run;
-  { const k = "together|" + key + "|" + b.id; if (BCH.for !== k){ BCH.for = k; BCH.mode = B.runs.length ? "run" : "model"; BCH.split = b.split === "test" ? "test" : "valid"; BCH.x = "params"; BCH.metric = null; BCH.off = new Set(); } }
+  { const k = "together|" + key + "|" + b.id; if (BCH.for !== k){ BCH.for = k; BCH.mode = B.runs.length ? "run" : "model"; BCH.split = b.split === "test" ? "test" : "valid"; BCH.x = "params"; BCH.metric = null; BCH.per = b.id === ALLB ? {} : null; BCH.off = new Set(); } }
+  for (const x of B.studies) if (!OWNB[x.study]) OWNB[x.study] = b;
+  const ownLabel = id => OWNB[id] && OWNB[id].id !== ALLB ? metricBare(OWNB[id]) : "its benchmark's metric";
   /* the address says what is on screen, so Back, Forward, a refresh and a shared link all open the same plot, list and model */
-  if (r.url){ if (r.split === "valid" || r.split === "test") BCH.split = r.split; if (r.pts === "run" || r.pts === "model") BCH.mode = B.runs.length ? r.pts : "model"; if (r.x === "params" || r.x === "minutes") BCH.x = r.x; if (r.pts) BCH.metric = r.y || null; if (r.pts || r.m) TOG.sel = r.m || null; if (r.pts || r.q) TOG.q = r.q || ""; if (r.pts) BCH.off = new Set(String(r.off || "").split(",").filter(x => ids.includes(x))); }
+  if (r.url){ if (r.split === "valid" || r.split === "test") BCH.split = r.split; if (r.pts === "run" || r.pts === "model") BCH.mode = B.runs.length ? r.pts : "model"; if (r.x === "params" || r.x === "minutes") BCH.x = r.x; if (r.pts) BCH.metric = r.y || null; if (r.pts && (r.per != null || b.id === ALLB)){ BCH.per = {}; for (const part of String(r.per || "").split(";")){ const i_ = part.indexOf(":"); if (i_ > 0 && ids.includes(part.slice(0, i_))) BCH.per[part.slice(0, i_)] = part.slice(i_ + 1) || null; } } else if (r.pts) BCH.per = null; if (r.pts || r.m) TOG.sel = r.m || null; if (r.pts || r.q) TOG.q = r.q || ""; if (r.pts) BCH.off = new Set(String(r.off || "").split(",").filter(x => ids.includes(x))); }
   DB.picked = new Set(ids);   /* Edit selection goes back to the database with these studies still ticked */
   const words = () => TOG.q.trim().toLowerCase().split(/\s+/).filter(Boolean), title = {}; St.forEach(x => { title[x.id] = x.title || "Untitled study"; });
   const match = u => { const w = words(); if (!w.length) return true; const t = [u.name, u.family, known(u.family) ? pretty(String(u.family)) : "", title[u.study], u.run, u.status].filter(Boolean).join(" ").toLowerCase(); return w.every(x => t.includes(x)); };
@@ -1421,7 +1438,7 @@ async function openTogether(r){
     LIST = P.all.filter(u => !BCH.off.has(u.study) && match(u)).sort((x, y) => { const p_ = val(x), q_ = val(y); if (p_ == null || q_ == null) return (p_ == null) - (q_ == null); return (typeof p_ === "number" ? p_ - q_ : String(p_).localeCompare(String(q_))) * sk.dir; });
     if (TOG.sel && LIST.findIndex(u => K(u) === TOG.sel) >= 25) TOG.all = true;   /* a model picked on the plot is shown in the list too */
     const shown = LIST.slice(0, TOG.all ? LIST.length : 25), th = (k, t, c, first) => { const onk = sk.k === k; return h("th",{class:c || "","aria-sort":onk ? (sk.dir > 0 ? "ascending" : "descending") : "none"}, h("button",{class:"thb",type:"button",title:"Sort by " + t.toLowerCase(),onclick:()=>{ TOG.sort = onk ? {k, dir:-sk.dir} : {k, dir:first || 1}; cbox._redraw(); }}, t, onk ? (sk.dir > 0 ? " ↑" : " ↓") : "")); };
-    tcnt.textContent = pl(LIST.length, P.unit[0], P.unit[1]) + " · scores are " + bmLabel(b, BCH.metric);
+    tcnt.textContent = pl(LIST.length, P.unit[0], P.unit[1]) + " · scores are " + (BCH.per ? "each study's own metric" : bmLabel(b, BCH.metric));
     put(tbox, LIST.length ? h("table",{class:"lb tog-t",id:"togtable"},
         h("thead",null, h("tr",null, h("th",{class:"cmpc"}, h("span",{class:"vh",text:"Select"})), th("name","Model"), th("family","Family"), th("study","Study"), th("valid","Validation","num",low ? 1 : -1), th("test","Test","num",low ? 1 : -1), th("params","Parameters","num"), th("minutes","Training time","num"))),
         h("tbody",null, shown.map(u => h("tr",{class:K(u) === TOG.sel ? "sel" : "","data-k":K(u),onclick:e=>{ if (!e.target.closest("input,label,a")) pick(K(u)); }},
@@ -1431,10 +1448,10 @@ async function openTogether(r){
           h("td",{class:"num",text:fmt(bval(u, "valid", b),4)}), h("td",{class:"num",text:fmt(bval(u, "test", b),4)}), h("td",{class:"num",text:fmtInt(u.params)}), h("td",{class:"num",text:dur(u.minutes)})))))
       : h("p",{class:"q",style:"padding:14px 16px",text:"No model matches."}),
       LIST.length > shown.length ? h("button",{class:"linkish",type:"button",style:"margin:10px 16px",text:`Show all ${fmtInt(LIST.length)} rows`,onclick:()=>{ TOG.all = true; cbox._redraw(); }}) : null);
-    { const a_ = ["s=" + ids.map(encodeURIComponent).join(","), "b=" + b.id, "split=" + BCH.split, "pts=" + BCH.mode, "x=" + BCH.x]; if (BCH.metric) a_.push("y=" + encodeURIComponent(BCH.metric)); if (BCH.off.size) a_.push("off=" + [...BCH.off].map(encodeURIComponent).join(",")); if (TOG.sel) a_.push("m=" + encodeURIComponent(TOG.sel)); if (TOG.q.trim()) a_.push("q=" + encodeURIComponent(TOG.q.trim()));
+    { const a_ = ["s=" + ids.map(encodeURIComponent).join(","), "b=" + b.id, "split=" + BCH.split, "pts=" + BCH.mode, "x=" + BCH.x]; if (BCH.metric) a_.push("y=" + encodeURIComponent(BCH.metric)); if (BCH.per) a_.push("per=" + encodeURIComponent(Object.entries(BCH.per).filter(x => x[1]).map(x => x[0] + ":" + x[1]).join(";"))); if (BCH.off.size) a_.push("off=" + [...BCH.off].map(encodeURIComponent).join(",")); if (TOG.sel) a_.push("m=" + encodeURIComponent(TOG.sel)); if (TOG.q.trim()) a_.push("q=" + encodeURIComponent(TOG.q.trim()));
       const to = "#/together?" + a_.join("&"); if (ROUTE.view === "together" && location.hash !== to) try{ history.replaceState(null, "", to); }catch(e){} }
     tbox.style.maxHeight = TOG.all && LIST.length > 25 ? "620px" : ""; const cur = tbox.querySelector("tr.sel"); if (cur && TOG.all){ const top = cur.offsetTop - 40; if (top < tbox.scrollTop || top > tbox.scrollTop + tbox.clientHeight - 90) tbox.scrollTop = Math.max(0, top - 80); }
-    LASTP = P; drawSt(P); drawInsp(P);
+    LASTP = P; paintOvr(); drawSt(P); drawInsp(P);
     if (TOG.focus){ const e = document.getElementById(TOG.focus); TOG.focus = null; if (e && !e.disabled) e.focus(); }   /* a button that redraws the page keeps the keyboard */
   }
   /* the panel: one model, or two side by side when one is pinned. The plot and the list stay where they are. */
@@ -1506,13 +1523,14 @@ async function openTogether(r){
     }).catch(e => { if (body.isConnected) put(body, h("p",{class:"q",text:"The training settings did not load. (" + e.message + ")"})); });
   }
   put(app, head,
-    benches.length > 1 ? [h("div",{class:"tog-b",role:"tablist","aria-label":"Benchmark",id:"togbench"}, benches.map(x => h("button",{class:"fchip",type:"button",role:"tab","aria-selected":String(x.id === b.id),"aria-pressed":String(x.id === b.id),onclick:()=>{ TOG.bench = x.id; TOG.sel = null; TOG.pin = null; TOG.sort = null; TOG.all = false; openTogether({ids, bench:x.id}); }}, x.title, h("span",{class:"n",text:pl(count(x),"study","studies")})))),
-      h("p",{class:"tog-note",text:"These studies are on different benchmarks. Studies on different benchmarks share no metric, so each benchmark has its own plot. Pick one above."})] : h("p",{class:"tog-note",text:`${b.title} · ${b.metric_label}. ` + (b.note || "")}),
+    benches.length > 1 ? [h("div",{class:"tog-b",role:"tablist","aria-label":"Benchmark",id:"togbench"}, benches.map(x => h("button",{class:"fchip",type:"button",role:"tab","aria-selected":String(x.id === b.id),"aria-pressed":String(x.id === b.id),onclick:()=>{ TOG.bench = x.id; TOG.sel = null; TOG.pin = null; TOG.sort = null; TOG.all = false; openTogether({ids, bench:x.id}); }}, x.title, h("span",{class:"n",text:pl(count(x),"study","studies")}))),
+        h("button",{class:"fchip",type:"button",role:"tab",id:"togall","aria-selected":String(b.id === ALLB),"aria-pressed":String(b.id === ALLB),title:"Override: put every study on one plot, each in its own metric",onclick:()=>{ TOG.bench = ALLB; TOG.sel = null; TOG.pin = null; TOG.sort = null; TOG.all = false; openTogether({ids, bench:ALLB}); }}, "All on one plot", h("span",{class:"n",text:"override"}))),
+      h("p",{class:"tog-note",text:b.id === ALLB ? "Override: these studies are on different benchmarks and share no metric, but all of them are on one plot because you asked. Each is in its own benchmark's metric unless you set another in the list of studies." : "These studies are on different benchmarks, which share no metric, so each benchmark has its own plot. Pick one above, or choose All on one plot to merge them anyway."})] : h("p",{class:"tog-note",text:`${b.title} · ${b.metric_label}. ` + (b.note || "")}),
     h("div",{class:"work tog-work"}, h("div",null,
         h("section",{class:"card"}, h("div",{class:"card-h"}, chead), cbox),
         h("section",{class:"card"}, h("div",{class:"card-h"}, h("h2",{text:"Models"}), fq, tcnt,
           h("span",{class:"sp"}, h("button",{class:"btn sm",type:"button",id:"togcsv",title:"The rows listed here, as filtered and sorted, with the score on both splits",text:"Download listed rows (CSV)",onclick:()=>saveText(runsCsv({benchmark:b, studies:B.studies, runs:LIST.map(u => Object.assign({}, u, {name:u.name}))}), "cameo-" + b.id + "-listed-rows.csv", "text/csv")}))), tbox)), insp));
-  chartBox(B, col, cbox, chead, {onPick:p => pick(K(p)), sel:() => TOG.sel, marked:() => new Set(CMP.sel.map(K)), match, after, noCover:true});
+  chartBox(B, col, cbox, chead, {onPick:p => pick(K(p)), sel:() => TOG.sel, marked:() => new Set(CMP.sel.map(K)), match, after, noCover:true, ownLabel});
 }
 function drawStudies(found, hit){
   const res = document.getElementById("results"), St = found.slice().sort(SORTS[STUD.sort][1]); DB.shown = St.map(x => x.id);
@@ -1939,9 +1957,10 @@ function downloadStudy(reason){   /* the staged entry as a file, for the pull re
 /* the leaderboard chart: result against size. It can be moved and zoomed, so one outlier does not set the scale. */
 /* What the benchmark's chart plots: every run of every study, or the one run that stands for each model on the leaderboard;
    on the validation or the test split; against size or training time. A run needs both values to be a point. The rest are counted, by study and by reason. */
-const BCH = {for:null, mode:"run", split:"valid", x:"params", metric:null, off:new Set()};
+const BCH = {for:null, mode:"run", split:"valid", x:"params", metric:null, per:null, off:new Set()};
 /* A run's value on the chosen split: the benchmark's own metric unless another one, shared by the studies, has been chosen. */
-const bval = (u, sp, b) => !BCH.metric || BCH.metric === b.metric ? u[sp] : ((u.m || {})[sp] || {})[BCH.metric];
+/* With the override on (BCH.per), each study is plotted in the metric chosen for it, shared or not: its benchmark's metric unless another is set. */
+const bval = (u, sp, b) => BCH.per ? (BCH.per[u.study] ? ((u.m || {})[sp] || {})[BCH.per[u.study]] : u[sp]) : !BCH.metric || BCH.metric === b.metric ? u[sp] : ((u.m || {})[sp] || {})[BCH.metric];
 const bmLabel = (b, k) => !k || k === b.metric ? metricBare(b) : metricInfo0(k)[0];
 /* The metrics that can go on the vertical axis: those every study with results on this split recorded, matched by name. Studies with nothing on the split are named, not hidden. */
 function sharedMetrics(B, sp){
@@ -1962,10 +1981,10 @@ function boardView(B, O){
     : runs.map(u => Object.assign({cite:((rowBy[key(u)] || {}).reported || {}).citation}, u));
   const cover = {}, pts = [];
   for (const u of src){ const c = cover[u.study] || (cover[u.study] = {study:u.study, title:title[u.study] || "Untitled study", total:0, n:0, why:{}}); c.total++;
-    const y = bval(u, BCH.split, b), x = u[BCH.x], why = y == null ? (u.status && u.status !== "done" ? String(u.status).replace(/_/g, " ") : (BCH.metric && BCH.metric !== b.metric && u[BCH.split] != null ? "without this metric" : `with no ${SPLITN[BCH.split].toLowerCase()} score`)) : !(x > 0) ? "with " + BX[BCH.x][2] : null;
+    const y = bval(u, BCH.split, b), x = u[BCH.x], why = y == null ? (u.status && u.status !== "done" ? String(u.status).replace(/_/g, " ") : (((BCH.per && BCH.per[u.study]) || (!BCH.per && BCH.metric && BCH.metric !== b.metric)) && u[BCH.split] != null ? "without this metric" : `with no ${SPLITN[BCH.split].toLowerCase()} score`)) : !(x > 0) ? "with " + BX[BCH.x][2] : null;
     if (why){ c.why[why] = (c.why[why] || 0) + 1; continue; } c.n++;
     if (!BCH.off.has(u.study)) pts.push({x, y, study:u.study, run:u.run, name:u.name, study_title:c.title, kind:u.kind, cite:u.cite, dim:!!(O && O.match) && !O.match(u)}); }
-  return {all:src, onPick:O && O.onPick, sel:O && O.sel ? O.sel() : null, marked:O && O.marked ? O.marked() : null, pts, cover:Object.values(cover), unit:perModel ? ["model","models"] : ["run","runs"], ylabel:SPLITN[BCH.split] + " " + bmLabel(b, BCH.metric), xlabel:BX[BCH.x][1], xname:BX[BCH.x][0], xshow:BX[BCH.x][3], low:!BCH.metric || BCH.metric === b.metric ? b.direction === "minimize" : metricInfo0(BCH.metric)[2] === "low"};
+  return {all:src, onPick:O && O.onPick, sel:O && O.sel ? O.sel() : null, marked:O && O.marked ? O.marked() : null, pts, cover:Object.values(cover), unit:perModel ? ["model","models"] : ["run","runs"], ylabel:BCH.per ? SPLITN[BCH.split] + " score, each study in its own metric" : SPLITN[BCH.split] + " " + bmLabel(b, BCH.metric), noDir:!!BCH.per, xlabel:BX[BCH.x][1], xname:BX[BCH.x][0], xshow:BX[BCH.x][3], low:BCH.per ? false : !BCH.metric || BCH.metric === b.metric ? b.direction === "minimize" : metricInfo0(BCH.metric)[2] === "low"};
 }
 function boardChart(P, col, W, H0, V){
   const pts = P.pts; if (!pts.length) return null;
@@ -1984,7 +2003,7 @@ function boardChart(P, col, W, H0, V){
   for (let v = Math.ceil(y0 / step - 1e-9) * step; v <= y1 + 1e-9; v += step){ const y = Y(v); svg.append(s("line",{x1:m.l,x2:W-m.r,y1:y,y2:y,stroke:"var(--line-2)"}), s("text",{x:m.l-8,y:y+4,"text-anchor":"end","font-size":11,fill:"var(--muted)"}, v.toFixed(dp))); }
   let low = 0, nrep = 0; const marks = s("g",{"clip-path":"url(#bclip)"});
   svg.append(s("text",{x:(m.l+W-m.r)/2,y:H-6,"text-anchor":"middle","font-size":12,fill:"var(--ink-2)"}, P.xlabel),
-    s("text",{x:14,y:(m.t+H-m.b)/2,"text-anchor":"middle","font-size":12,fill:"var(--ink-2)",transform:`rotate(-90 14 ${(m.t+H-m.b)/2})`}, P.ylabel + (P.low ? " ↓ better" : " ↑ better")), marks);
+    s("text",{x:14,y:(m.t+H-m.b)/2,"text-anchor":"middle","font-size":12,fill:"var(--ink-2)",transform:`rotate(-90 14 ${(m.t+H-m.b)/2})`}, P.ylabel + (P.noDir ? "" : P.low ? " ↓ better" : " ↑ better")), marks);
   for (const p of pts){ const under = !V && p.y < y0; if (under) low++;
     const tt = s("title",null, `${p.name} · ${p.study_title} · ${fmt(p.y,3)} · ${P.xshow(p.x)}` + (p.kind === "reported" ? " · reported in " + (p.cite || "its source") : "")), cx = X(p.x), cy = Y(under ? y0 : p.y);
     if (p.kind === "reported") nrep++;
@@ -2013,6 +2032,9 @@ function chartBox(B, col, cbox, head, O){
   const mnote = h("p",{class:"bmnote",id:"bmnote"}), tname = id => ((B.studies || []).find(x => x.study === id) || {}).study_title || id;
   /* what the studies share on this split, said in words: the choice of metric is only as wide as that */
   const metrics = () => { const S = sharedMetrics(B, BCH.split), sp = SPLITN[BCH.split].toLowerCase(), many = S.all.length > 1;
+    if (BCH.per){   /* the override: the visitor has taken the choice of metric study by study */
+      put(msel, h("option",{value:"",text:"Set for each study"})); msel.disabled = true; mnote.className = "bmnote warn"; mnote.hidden = false;
+      mnote.textContent = "Override on. Each study is plotted in the metric set for it in the list of studies: " + S.all.map(id => `${tname(id)} in ${BCH.per[id] ? metricInfo0(BCH.per[id])[0] : (O && O.ownLabel ? O.ownLabel(id) : "its benchmark's metric")}`).join("; ") + ". Different metrics share this axis only because you chose to put them there, so heights are not comparable between them."; return; }
     if (BCH.metric && !S.list.includes(BCH.metric)) BCH.metric = null;
     put(msel, (S.list.length ? S.list : [b.metric]).map(k => h("option",{value:k,text:bmLabel(b, k).replace(/^./, c => c.toUpperCase()) + (k === b.metric ? " (the benchmark's metric)" : "")}))); msel.value = BCH.metric || b.metric; msel.disabled = S.list.length < 2;
     const t = [], warn = !S.list.length || (many && S.none.length > 0);
@@ -2070,7 +2092,7 @@ async function openBench(id, only){
   const studies = INDEX.studies.filter(x => (x.benchmarks || [x.benchmark]).includes(id)), col = {}; studies.forEach((x, i) => { col[x.id] = `var(--s${(i % 3) + 1})`; });
   const better = b.direction === "minimize" ? 1 : -1, RANK = {gold:0, silver:1, bronze:2, none:3}, nRep = B.rows.filter(r => r.kind === "reported").length; BOARD.key = "metric"; BOARD.dir = better; BOARD.all = false; BOARD.rep = true;
   if (BCH.for !== id + "|" + (only || "")){ const keep = String(only || "").split(",").filter(x => studies.some(q => q.id === x));   /* a link from a selection of studies shows those; the others stay one click away */
-    BCH.for = id + "|" + (only || ""); BCH.mode = (B.runs || []).length ? "run" : "model"; BCH.split = b.split === "test" ? "test" : "valid"; BCH.x = "params"; BCH.metric = null; BCH.off = new Set(keep.length ? studies.map(q => q.id).filter(x => !keep.includes(x)) : []); }
+    BCH.for = id + "|" + (only || ""); BCH.mode = (B.runs || []).length ? "run" : "model"; BCH.split = b.split === "test" ? "test" : "valid"; BCH.x = "params"; BCH.metric = null; BCH.per = null; BCH.off = new Set(keep.length ? studies.map(q => q.id).filter(x => !keep.includes(x)) : []); }
   if (BOARD.for !== id){ BOARD.for = id; BOARD.mode = studies.length > 1 ? "study" : "model"; BOARD.q = ""; }
   const repChip = nRep ? h("button",{class:"fchip",type:"button",id:"repchip",title:"Show or hide results copied from papers",onclick:()=>{ BOARD.rep = !BOARD.rep; BOARD.all = false; draw(); }}, "Reported results", h("span",{class:"n",text:String(nRep)})) : null;
   const tbox = h("div",{class:"scrollx",tabindex:"0",role:"region","aria-label":"Leaderboard"}), seg = h("div",{class:"seg"}), cnt = h("span",{class:"q",style:"margin:0"});
