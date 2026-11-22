@@ -1074,6 +1074,9 @@ h1{font-weight:600} .page-h h1{font-size:40px;font-weight:600} .hero2 h1{font-si
 @media (max-width:700px){ .lb-about .about-grid{grid-template-columns:minmax(0,1fr);gap:2px 0} .lb-about .about-grid dd{margin-bottom:8px} }
 .savemenu .pop{left:auto;right:0;min-width:250px;text-transform:none;letter-spacing:0} .savemenu .pop .linkish{font-size:13.5px;text-align:left;padding:3px 0;font-weight:500}
 .sec h3 .sp{align-items:center}
+/* one page width everywhere, so the header and the page's left edge do not move from tab to tab */
+.wrap,body.wide .wrap{max-width:1480px}
+html{scrollbar-gutter:stable}   /* a short page keeps the room a scrollbar takes, so nothing shifts sideways between short and long pages */
 </style>
 </head>
 <body>
