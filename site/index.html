@@ -1036,6 +1036,8 @@ h1{font-weight:600} .page-h h1{font-size:40px;font-weight:600} .hero2 h1{font-si
 .band{margin:34px 0 0;padding:34px 40px} .band h2{margin:0 0 8px} .band .soon{margin-top:10px}
 .at-home + * , .at-home .foot-site{margin-top:44px}
 @media (max-width:980px){ .land{padding:36px 0 34px} .hl{padding:26px 22px} .band{padding:26px 22px} }
+.about-s h3{font-family:var(--font-display);font-weight:600;font-size:17.5px;letter-spacing:-.015em;margin:32px 0 6px;padding-top:22px;border-top:1px solid var(--line-2);scroll-margin-top:96px}
+.about-s h2 + h3{margin-top:4px;padding-top:0;border-top:0}
 </style>
 </head>
 <body>
@@ -1304,13 +1306,12 @@ function openHome(){
         h("p",{class:"fine",text:"A study is one experimental campaign. An architecture can have several training runs."})), art),
     h("section",{class:"hl",id:"learn","aria-label":"Learn across studies"},
       h("div",null, h("div",{class:"eyebrow",text:"Why keep every model"}), h("h2",{text:"Learn across studies"}),
-        h("p",{text:"A leaderboard says which model did best on one task. Someone planning an experiment wants to know something else: which design choices have helped before, under what conditions, and what is worth trying next."}),
-        h("p",{text:"The baselines, ablations, near ties and failed changes of a search often say more about a design decision than its winning model does. CAMEO keeps all of them, in one format, so they can be read within a study and across studies."}),
+        h("p",{text:"A leaderboard shows which model did best on one task. The runs behind it, including the baselines and the changes that failed, show why. CAMEO keeps them all in one format, so a search can be read as a whole, within a study or across several."}),
         h("div",{class:"hl-a"}, h("a",{class:"btn pri big",href:"#/database",text:"Explore the studies"}), h("a",{class:"hl-more",href:"#/about/why",text:"Why CAMEO"}))),
       h("ol",{"aria-label":"Questions a record of whole searches can answer"},
         h("li",null, h("span",{text:"What helped"}), "Which design choices improved a model, and which made no difference?"),
-        h("li",null, h("span",{text:"Where"}), "On which tasks, architectures and budgets did they hold?"),
-        h("li",null, h("span",{text:"What next"}), "What has already been tried, and what is worth trying here?"))),
+        h("li",null, h("span",{text:"Where"}), "Did they hold on other tasks and architectures?"),
+        h("li",null, h("span",{text:"What next"}), "What has already been tried?"))),
     h("section",{class:"uses","aria-label":"What else the record is for"}, uses.map(([t, d, href, cta]) => h("div",{class:"use"}, h("h2",{text:t}), h("p",{text:d}), h("a",{href,text:cta})))),
     h("section",{class:"band"}, h("div",null, h("h2",{text:"Deposit your models"}),
         h("p",{text:"CAMEO provides a spec that tells an agent, or a training loop, what to record and how to write it as JSON. Baselines belong in the entry too."}),
@@ -1454,7 +1455,7 @@ async function openTogether(r){
   const drawSt = P => put(stbox, St.map(x => { const c = P && P.cover.find(q => q.study === x.id), off = BCH.off.has(x.id), miss = c ? c.total - c.n : 0, why = c ? Object.entries(c.why).sort((a, d) => d[1] - a[1]).map(([k, n]) => `${fmtInt(n)} ${k}`).join(", ") : "";
     return h("div",{class:"tog-row" + (off ? " off" : "")}, h("span",{class:"mk",style:off ? "border-color:" + col[x.id] : "background:" + col[x.id]}),
       h("div",{class:"tog-rt"}, h("b",{title:x.title || "",text:x.title || "Untitled study"}),
-        !P ? h("span",{text:pl(x.runs,"run","runs")}) : !c ? h("span",{text:"On another benchmark, so it shares no metric with the one shown and is not on this plot. Choose its benchmark below."}) : h("span",null, h("i",{text:`${fmtInt(c.n)} of ${fmtInt(c.total)}`}), ` ${P.unit[1]} ${off ? "would be plotted" : "plotted"}`, miss ? ` · ${fmtInt(miss)} not plotted: ${why}` : ""),
+        !P ? h("span",{text:pl(x.runs,"run","runs")}) : !c ? h("span",{text:"On another benchmark, so not on this plot. Choose its benchmark below."}) : h("span",null, h("i",{text:`${fmtInt(c.n)} of ${fmtInt(c.total)}`}), ` ${P.unit[1]} ${off ? "would be plotted" : "plotted"}`, miss ? ` · ${fmtInt(miss)} not plotted: ${why}` : ""),
         P && c && BCH.per ? (() => { const ks = new Set(); for (const u of P.all) if (u.study === x.id) for (const k in ((u.m || {})[BCH.split] || {})) ks.add(k); const own = OWNB[x.id] || {}; ks.delete(own.metric);
           const sel = h("select",{id:"tper-" + x.id,"aria-label":"Metric for " + (x.title || "this study")}, h("option",{value:"",text:ownLabel(x.id).replace(/^./, q => q.toUpperCase()) + " (its benchmark's metric)"}), [...ks].sort((a, d) => metricInfo0(a)[0].localeCompare(metricInfo0(d)[0])).map(k => h("option",{value:k,text:metricInfo0(k)[0]})));
           sel.value = BCH.per[x.id] && ks.has(BCH.per[x.id]) ? BCH.per[x.id] : ""; sel.addEventListener("change", () => { BCH.per[x.id] = sel.value || null; TOG.focus = "tper-" + x.id; cbox_._redraw(); });
@@ -1556,7 +1557,7 @@ async function openTogether(r){
   TOG.redraw = () => { const id = document.activeElement && document.activeElement.id; if (cbox._redraw) cbox._redraw(); if (id){ const e = document.getElementById(id); if (e) e.focus(); } };
   function drawInsp(P){
     const by = {}; for (const u of P.all) by[K(u)] = u; const u = by[TOG.sel], pin = TOG.pin && TOG.pin !== TOG.sel ? by[TOG.pin] : null;
-    if (!u){ TOG.sel = null; put(insp, h("div",{class:"tog-empty"}, h("b",{text:"Pick a model"}), "Click a point on the plot, or a name in the list. Its study, scores, architecture and training settings open here, and the plot stays as it is. Use Select on each model you want to keep: the bar at the foot of the screen then compares them in a large table or downloads them as JSON.")); return; }
+    if (!u){ TOG.sel = null; put(insp, h("div",{class:"tog-empty"}, h("b",{text:"Pick a model"}), "Click a point or a name to see that model here. Use Select to collect models, then compare or download them from the bar below.")); return; }
     const i = LIST.findIndex(x => K(x) === TOG.sel), step = d => { const n = LIST[i + d]; if (n){ TOG.focus = d < 0 ? "togprev" : "tognext"; pick(K(n)); } };
     const src = x => h("span",null, h("span",{class:"dot",style:"background:" + col[x.study]}), title[x.study]);
     const body = h("div",{class:"sec",id:"togdet"}, h("p",{class:"q",text:"Loading the training settings…"}));
@@ -1583,7 +1584,7 @@ async function openTogether(r){
   put(app, head,
     benches.length > 1 ? [h("div",{class:"tog-b",role:"tablist","aria-label":"Benchmark",id:"togbench"}, benches.map(x => h("button",{class:"fchip",type:"button",role:"tab","aria-selected":String(x.id === b.id),"aria-pressed":String(x.id === b.id),onclick:()=>{ TOG.bench = x.id; TOG.sel = null; TOG.pin = null; TOG.sort = null; TOG.all = false; openTogether({ids, bench:x.id}); }}, x.title, h("span",{class:"n",text:pl(count(x),"study","studies")}))),
         h("button",{class:"fchip",type:"button",role:"tab",id:"togall","aria-selected":String(b.id === ALLB),"aria-pressed":String(b.id === ALLB),title:"Override: put every study on one plot, each in its own metric",onclick:()=>{ TOG.bench = ALLB; TOG.sel = null; TOG.pin = null; TOG.sort = null; TOG.all = false; openTogether({ids, bench:ALLB}); }}, "All on one plot", h("span",{class:"n",text:"override"}))),
-      h("p",{class:"tog-note",text:b.id === ALLB ? "Override: these studies are on different benchmarks and share no metric, but all of them are on one plot because you asked. Each is in its own benchmark's metric unless you set another in the list of studies." : "These studies are on different benchmarks, which share no metric, so each benchmark has its own plot. Pick one above, or choose All on one plot to merge them anyway."})] : h("p",{class:"tog-note",text:`${b.title} · ${b.metric_label}. ` + (b.note || "")}),
+      h("p",{class:"tog-note",text:b.id === ALLB ? "Override: these studies share no metric. Each is plotted in its own benchmark's metric unless you set another in the list above." : "These studies are on different benchmarks, which share no metric. Pick a benchmark above, or choose All on one plot to merge them anyway."})] : h("p",{class:"tog-note",text:`${b.title} · ${b.metric_label}. ` + (b.note || "")}),
     h("div",{class:"work tog-work"}, h("div",null,
         h("section",{class:"card"}, h("div",{class:"card-h"}, chead), cbox),
         h("section",{class:"card"}, h("div",{class:"card-h"}, h("h2",{text:"Models"}), fq, tcnt,
@@ -1713,62 +1714,67 @@ function openAbout(sub){
   leave(); setCrumbs([]); const repo = "https://github.com/" + INDEX.site.repo, cs = citeSite(), base = siteBase(), mt = isObj(INDEX.site.maintainer) ? INDEX.site.maintainer : null; if (sub === "where") sub = "contact";
   /* one topic is shown at a time; the list on the left says which, and each has its own address */
   const T = {}, sec = (id, t, ...kids_) => { T[id] = kids_; }, p = (...k) => h("p",null, k), a = (href, text) => h("a",{href,target:"_blank",rel:"noopener",text}), inl = (href, text) => h("a",{href,text}), mono = t => h("span",{class:"mono",text:t});
-  const fb = INDEX.benchmarks[0], fs_ = INDEX.studies[0], files = [["index.json","index.json","Every study, benchmark and depositor, with counts and stars. Start here."],
+  const fb = INDEX.benchmarks[0], fs_ = INDEX.studies[0], files = [["index.json","index.json","Every study, benchmark and depositor, with counts and stars."],
     ["cameo-all.json","cameo-all.json","Every study in one file: a list of whole entries."],
     ["studies/<study id>.json", fs_ ? "studies/" + fs_.id + ".json" : null, "One study: its models, training recipes and runs."],
     ["models.json","models.json","One row for each model on each leaderboard: result, parameters, speed, training time and study."],
-    ["boards/<benchmark id>.json", fb ? "boards/" + fb.id + ".json" : null, "One leaderboard, and how each study on it prepared the data."],
+    ["boards/<benchmark id>.json", fb ? "boards/" + fb.id + ".json" : null, "One leaderboard, how each study on it prepared the data, and one row per run with every metric it recorded."],
     ["kit/rules.json","kit/rules.json","The checks, the open licenses, and what each star means."],
     ["llms.txt","llms.txt","This list as plain text, for agents."]];
-  sec("why", "", p("A study that searches for a model trains many of them, often hundreds, and its paper reports one. Every other model makes a cameo: it is trained, scored, compared, and then left out."),
-    p("CAMEO keeps the record of all of them. A study is deposited as one JSON file that says, for every model, what it was, how it was trained and how it performed. That record is useful in several ways."),
+  const h3 = (id, t) => h("h3",{id:"about-" + id,text:t});
+  sec("why", "", p("A study that searches for a model trains many of them, often hundreds, and its paper reports one. Every other model makes a cameo: it is trained, scored, and left out."),
+    p("CAMEO keeps the record of all of them. A study is deposited as one JSON file describing each model, its training and its results."),
     h("ul",null,
-      h("li",null, h("b",{text:"Design choices can be learned across studies. "}), "A leaderboard says which model did best on one task. The baselines, ablations, near ties and failed changes behind it say which choices helped, under what conditions, and what is worth trying next. With every run on record in one format, a search can be read as a whole, within one study or across studies."),
+      h("li",null, h("b",{text:"Design choices can be learned across studies. "}), "A leaderboard shows which model did best on one task. The runs behind it show which changes helped and which did not. With every run recorded in one format, a search can be read as a whole, within a study or across several."),
       h("li",null, h("b",{text:"Failed experiments are kept. "}), "What did not work is stored beside what did, so nobody has to find it out again."),
-      h("li",null, h("b",{text:"New searches can start warm. "}), "Entries can be downloaded and merged, so an agentic loop begins from what has already been tried."),
-      h("li",null, h("b",{text:"Models and analyses can be reproduced without the code base. "}), "An entry is a specification, not a repository. It holds enough for a person or an agent to rebuild a model and train it. Code and datasets can also be linked by DOI, which makes a reproduction more exact, but the JSON is meant to be enough for most purposes.")),
-    p("Agentic search makes this more pressing. One search can produce hundreds of models that perform about equally well and share little architecture. The full set is then more informative than the single best model."));
-  [
-      sec("entry", "", p("An entry is one JSON file for one study. It has four parts."), h("ul",null,
-        h("li",null, h("b",{text:"Experiment. "}), "What was studied, by whom, on what data, and in what software and hardware environment."),
-        h("li",null, h("b",{text:"Models. "}), "Each architecture."),
-        h("li",null, h("b",{text:"Training. "}), "Each training recipe: settings, loss, schedule and stopping rule."),
-        h("li",null, h("b",{text:"Runs. "}), "Each run: which model, which recipe, which seed, what it was derived from, and how it performed.")),
-        p("An entry is a specification, not a code repository. It should hold enough for a person or an agent to reconstruct a model and train it. How far that is possible depends on what the depositor recorded, and the star shows it. An entry can also link its code, its datasets and its trained weights by DOI."),
-        p("CAMEO reports what depositors recorded. It does not re-run or re-score models.")),
-      sec("stars", "Stars", p("Partial entries are accepted. Each entry gets a star that is computed from the file, so it cannot be claimed."),
-        h("ul",{class:"starlist"}, Object.keys(RULES.stars).map(k => h("li",null, starPill(k), h("span",{text:RULES.stars[k].means}))))),
-      sec("compare", "Benchmarks and comparison", p("A benchmark is a dataset, a split to score on and a metric. Most are scored on test data. Where the studies recorded only validation results, the benchmark says so. Studies on the same benchmark share one leaderboard. Each model is listed with the configuration its own study selected on validation data. Repeated seeds are shown as a mean and a spread."),
-        p("Studies often split and process the same dataset differently. Each benchmark page lists how every study prepared the data, and Compare places any runs side by side. Speed and training time are shown with their hardware and are not ranked across studies."),
-        p("An entry can include baselines: the model the study started from, and results reported in papers. Reported results are marked, link to their source and carry no star, because the depositor did not run them.")),
-      sec("data", "Download", p("Everything in CAMEO can be downloaded as JSON. There is no sign-in."),
-        h("ul",null,
-          h("li",null, h("b",{text:"One study. "}), "Use Download study (JSON) on the study's page. The file is indented so that it can be read. The same entry, on one line, is at ", mono("studies/<study id>.json"), "."),
-          h("li",null, h("b",{text:"Several studies, merged. "}), "In the ", inl("#/database", "database"), ", tick the studies you want and choose Download. With nothing ticked, the same button takes every study listed, so a search or a filter also picks a subset. The result is one file. Its ", mono("studies"), " list holds the whole entries, unchanged. Its ", mono("rows"), " list has one line per run with the benchmark's metric on the validation and test splits under one name, the parameter count and the status, ready to plot. Run ids repeat between studies, so key a run by study and run together. Its ", mono("contents"), " list says where each study's entry stores the metric."),
-          h("li",null, h("b",{text:"Everything. "}), "With no filter and nothing ticked the button reads Download all. The same file is at ", mono("cameo-all.json"), "."),
-          h("li",null, h("b",{text:"One model, or several. "}), "Tick models on a leaderboard, in the Models list or in a study's table. A bar appears at the foot of the page that downloads them as one file, or compares two to four of them side by side. A run's panel also has Download run configuration (JSON). Each model comes with its code, the settings and recipe it was trained with, the data it was trained on and its results.")),
-        p("A merged file is a starting point for a new search. An agentic loop can read the models and runs of earlier studies, with their scores, and begin from them rather than from nothing. A single model file includes the recorded model code, settings and results, and lists what is still needed to reproduce training."),
-        h("div",{class:"card scrollx",tabindex:"0",role:"region","aria-label":"Data files"}, h("table",{class:"lb",id:"filetable"}, h("thead",null, h("tr",null, h("th",{text:"File"}), h("th",{text:"What it holds"}), h("th",null, h("span",{class:"vh",text:"Open"})))),
-          h("tbody",null, files.map(([name, href, what]) => h("tr",null, h("td",null, mono(name)), h("td",{text:what}), h("td",null, href ? h("a",{class:"plainlink",href,target:"_blank",rel:"noopener",text:name.includes("<") ? "Open an example" : "Open"}) : "")))))),
-        p("The files are at ", mono(base), " and are rebuilt whenever a study is added.")),
-      sec("deposit", "Deposit", p("CAMEO provides a ", a(KITF, "spec"), " that tells an agent or a training loop what to record and how to write it as JSON. The ", inl("#/deposit", "Deposit"), " page has the spec, the checker and a preview. Entries are added by pull request."),
-        p("Code for running your own agentic search is coming soon.")),
-      sec("credit", "Credit and licenses", p("The depositor's name stays on the study, on every leaderboard row and on every run. Each entry carries an open license: MIT unless the depositor chooses another from the list.")),
-      sec("cite", "How to cite", p("To credit a study, use Cite on its page. That citation names the depositor. To cite the database:"), citeBlock("Citation", cs.text), citeBlock("BibTeX", cs.bib),
-        cs.doi ? h("p",null, "DOI: ", a("https://doi.org/" + cs.doi, cs.doi), ".") : p("The database has no DOI yet. Until it does, cite its address and the date you used it.")),
-      sec("contact", "Who runs it", mt && known(mt.name) ? p("CAMEO is maintained by ", String(mt.name), known(mt.affiliation) ? " at " + mt.affiliation : "", ".") : null,
-        p("The database is a public repository, ", a(repo, INDEX.site.repo), ". The study files in it are the database."),
-        p("To report a problem with the site or with an entry, ", a(repo + "/issues", "open an issue on GitHub"), ...(mt && known(mt.email) ? [" or write to ", h("a",{href:"mailto:" + mt.email,text:String(mt.email)})] : []), "."))];
+      h("li",null, h("b",{text:"New searches can start warm. "}), "Entries can be downloaded and merged, so a new search begins from what has already been tried."),
+      h("li",null, h("b",{text:"Models can be rebuilt from the entry. "}), "An entry records each model's code and training settings, and lists what is still missing to retrain it. Code, datasets and weights can also be linked by DOI.")),
+    p("Agentic search makes this more pressing. One search can produce hundreds of models that perform about equally well and share little architecture, and the full set is more informative than the single best model."));
+  sec("entry", "", p("An entry is one JSON file for one study. It has four parts."), h("ul",null,
+      h("li",null, h("b",{text:"Experiment. "}), "What was studied, by whom, on what data, and in what software and hardware environment."),
+      h("li",null, h("b",{text:"Models. "}), "Each architecture."),
+      h("li",null, h("b",{text:"Training. "}), "Each training recipe: settings, loss, schedule and stopping rule."),
+      h("li",null, h("b",{text:"Runs. "}), "Each run: which model, which recipe, which seed, what it was derived from, and how it performed.")),
+    p("An entry is a specification, not a code repository. How much of a model and its training can be rebuilt from it depends on what the depositor recorded. An entry can also link its code, datasets and trained weights by DOI."),
+    p("CAMEO reports what depositors recorded. It does not re-run or re-score models."),
+    h3("stars", "Stars"), p("Partial entries are accepted. Each entry gets a star computed from its file, so a star cannot be claimed."),
+    h("ul",{class:"starlist"}, Object.keys(RULES.stars).map(k => h("li",null, starPill(k), h("span",{text:RULES.stars[k].means})))));
+  sec("data", "", h3("compare", "Benchmarks"),
+    p("A benchmark is a dataset, a split to score on and a metric. Studies on the same benchmark share one leaderboard. Most benchmarks are scored on test data; where the studies recorded only validation results, the benchmark says so. Each model is listed with the configuration its own study selected on validation data, and repeated seeds are shown as a mean and a spread."),
+    p("Studies often split and process the same dataset differently, so each benchmark page lists how every study prepared the data. Speed and training time are shown with their hardware and are not ranked across studies. Results copied from papers are marked, link to their source and carry no star."),
+    h3("merged", "Several studies at once"),
+    p("In the ", inl("#/database", "database"), ", tick two or more studies and choose Explore merged studies. Their models share one plot and one list, and a model's details open beside them. The plot offers the metrics the studies share. An override lets you set a metric for each study, or put studies from different benchmarks on one plot."),
+    h3("download", "Download"), p("Everything can be downloaded as JSON, without signing in."),
+    h("ul",null,
+      h("li",null, h("b",{text:"One study. "}), "Use Download study (JSON) on the study's page. The file is indented for reading. The same entry on one line is at ", mono("studies/<study id>.json"), "."),
+      h("li",null, h("b",{text:"Several studies. "}), "Tick studies in the database and choose Download merged studies (JSON). The file has three lists. ", mono("studies"), " holds the whole entries, unchanged. ", mono("rows"), " has one line per run with the benchmark's metric on both splits, ready to plot. ", mono("contents"), " says where each study stores that metric. Run ids repeat between studies, so key a run by study and run together."),
+      h("li",null, h("b",{text:"Everything. "}), mono("cameo-all.json"), " holds every study."),
+      h("li",null, h("b",{text:"Models. "}), "Select models on a leaderboard, in the Models list, in a study's table or in the merged view. The bar at the foot of the page downloads them as one file or compares them side by side. Each model comes with its code, training settings and results, and a list of what is still needed to retrain it.")),
+    h("div",{class:"card scrollx",tabindex:"0",role:"region","aria-label":"Data files"}, h("table",{class:"lb",id:"filetable"}, h("thead",null, h("tr",null, h("th",{text:"File"}), h("th",{text:"What it holds"}), h("th",null, h("span",{class:"vh",text:"Open"})))),
+      h("tbody",null, files.map(([name, href, what]) => h("tr",null, h("td",null, mono(name)), h("td",{text:what}), h("td",null, href ? h("a",{class:"plainlink",href,target:"_blank",rel:"noopener",text:name.includes("<") ? "Open an example" : "Open"}) : "")))))),
+    p("The files are at ", mono(base), " and are rebuilt whenever a study is added."));
+  sec("credit", "", h3("deposit", "Deposit"),
+    p("A deposit is one JSON file, added by pull request. The ", inl("#/deposit", "Deposit"), " page has the ", a(KITF, "spec"), " that tells an agent or a training loop what to record, the checker, and a preview."),
+    p("Code for running your own agentic search is coming soon."),
+    h3("licenses", "Credit and licenses"), p("The depositor's name stays on the study, on every leaderboard row and on every run. Each entry carries an open license: MIT unless the depositor chooses another from the list."),
+    h3("cite", "How to cite"), p("To credit a study, use Cite on its page. That citation names the depositor. To cite the database:"), citeBlock("Citation", cs.text), citeBlock("BibTeX", cs.bib),
+    cs.doi ? h("p",null, "DOI: ", a("https://doi.org/" + cs.doi, cs.doi), ".") : p("The database has no DOI yet. Until it does, cite its address and the date you used it."),
+    h3("contact", "Contact"), mt && known(mt.name) ? p("CAMEO is maintained by ", String(mt.name), known(mt.affiliation) ? " at " + mt.affiliation : "", ".") : null,
+    p("The database is a public repository, ", a(repo, INDEX.site.repo), ". The study files in it are the database."),
+    p("To report a problem with the site or with an entry, ", a(repo + "/issues", "open an issue on GitHub"), ...(mt && known(mt.email) ? [" or write to ", h("a",{href:"mailto:" + mt.email,text:String(mt.email)})] : []), "."));
+  /* older addresses of topics that are now parts of a longer one: open that topic and move to the part */
+  const part = {stars:"entry", compare:"data", download:"data", merged:"data", deposit:"credit", licenses:"credit", cite:"credit", contact:"credit"}[sub]; const want = part ? sub : null; if (part) sub = part;
   const k = Math.max(0, ABOUT.findIndex(x => x[0] === sub)), [id, title] = ABOUT[k], keep = ABOUT_KEEP; ABOUT_KEEP = false;
-  put(document.getElementById("app"), pageHead(null, "About CAMEO", "What it is for, what it stores, and how to use it."),
+  put(document.getElementById("app"), pageHead(null, "About CAMEO", "What it is for and how to use it."),
     h("div",{class:"about-l"},
       h("nav",{class:"about-n","aria-label":"About CAMEO"}, ABOUT.map(([t, label]) => h("a",{href:"#/about/" + t,"aria-current":t === id ? "page" : null,text:label,onclick:()=>{ ABOUT_KEEP = true; }}))),
       h("article",{class:"about-w about-s",id}, h("h2",{text:title}), T[id],
         h("div",{class:"about-pn"}, k > 0 ? h("a",{href:"#/about/" + ABOUT[k - 1][0],text:"← " + ABOUT[k - 1][1],onclick:()=>{ ABOUT_KEEP = true; }}) : h("span"),
           k < ABOUT.length - 1 ? h("a",{href:"#/about/" + ABOUT[k + 1][0],text:ABOUT[k + 1][1] + " →",onclick:()=>{ ABOUT_KEEP = true; }}) : null))));
   if (keep){ const e = document.querySelector('.about-n a[aria-current="page"]'); if (e) e.focus(); }   /* moving between topics keeps the keyboard in the list */
+  if (want){ const e = document.getElementById("about-" + want); if (e) e.scrollIntoView({block:"start"}); }
 }
-const ABOUT = [["why","Why CAMEO"],["entry","What an entry holds"],["stars","Stars"],["compare","Benchmarks and comparison"],["data","Download"],["deposit","Deposit"],["credit","Credit and licenses"],["cite","How to cite"],["contact","Contact"]];
+const ABOUT = [["why","Why CAMEO"],["entry","What an entry holds"],["data","Using the data"],["credit","Contributing and credit"]];
 let ABOUT_KEEP = false;
 /* ================= compare: runs from any studies, side by side =================
    The selection lives in the address (#/compare?r=study~run&r=...), so a comparison can be shared. */
@@ -2092,13 +2098,13 @@ function chartBox(B, col, cbox, head, O){
   const metrics = () => { const S = sharedMetrics(B, BCH.split), sp = SPLITN[BCH.split].toLowerCase(), many = S.all.length > 1;
     if (BCH.per){   /* the override: the visitor has taken the choice of metric study by study */
       put(msel, h("option",{value:"",text:"Set for each study"})); msel.disabled = true; mnote.className = "bmnote warn"; mnote.hidden = false;
-      mnote.textContent = "Override on. Each study is plotted in the metric set for it in the list of studies: " + S.all.map(id => `${tname(id)} in ${BCH.per[id] ? metricInfo0(BCH.per[id])[0] : (O && O.ownLabel ? O.ownLabel(id) : "its benchmark's metric")}`).join("; ") + ". Different metrics share this axis only because you chose to put them there, so heights are not comparable between them."; return; }
+      mnote.textContent = "Override on. Each study is plotted in its own metric: " + S.all.map(id => `${tname(id)} in ${BCH.per[id] ? metricInfo0(BCH.per[id])[0] : (O && O.ownLabel ? O.ownLabel(id) : "its benchmark's metric")}`).join("; ") + ". Heights are not comparable between different metrics."; return; }
     if (BCH.metric && !S.list.includes(BCH.metric)) BCH.metric = null;
     put(msel, (S.list.length ? S.list : [b.metric]).map(k => h("option",{value:k,text:bmLabel(b, k).replace(/^./, c => c.toUpperCase()) + (k === b.metric ? " (the benchmark's metric)" : "")}))); msel.value = BCH.metric || b.metric; msel.disabled = S.list.length < 2;
     const t = [], warn = !S.list.length || (many && S.none.length > 0);
     if (!S.have.length) t.push(`No study here recorded a ${sp} score, so there is nothing to plot on this split.`);
-    else { if (many && S.none.length) t.push(`${S.none.map(tname).join(" and ")} recorded no ${sp} scores, so ${S.none.length === 1 ? "it shares" : "they share"} no metric with the ${S.have.length === 1 ? "other study" : "others"} on this split. The plot shows only ${S.have.map(tname).join(" and ")}.`);
-      if (S.have.length > 1) t.push(!S.list.length ? `These studies share no metric on the ${sp} split: none was recorded under the same name by all of them. Their scores cannot share an axis.` : S.list.length === 1 ? `The benchmark's metric is the only one these studies share on the ${sp} split.` : `${S.list.length} metrics are shared by these studies on the ${sp} split. They are matched by the name each study recorded.`);
+    else { if (many && S.none.length) t.push(`${S.none.map(tname).join(" and ")} recorded no ${sp} scores, so the plot shows only ${S.have.map(tname).join(" and ")}.`);
+      if (S.have.length > 1) t.push(!S.list.length ? `These studies share no metric on the ${sp} split, so their scores cannot share an axis.` : S.list.length === 1 ? `The benchmark's metric is the only one these studies share on the ${sp} split.` : `These studies share ${S.list.length} metrics on the ${sp} split, matched by name.`);
       else if (!many) t.push(S.list.length > 1 ? `This study recorded ${S.list.length} metrics on the ${sp} split.` : ""); }
     mnote.className = "bmnote" + (warn ? " warn" : ""); mnote.textContent = t.filter(Boolean).join(" "); mnote.hidden = !mnote.textContent; };
   const ctl = h("div",{class:"bctl",id:"bctl"}, segMode, segSplit, runs.length ? h("label",null, "Metric", msel) : null, h("label",null, "Against", xsel), bar);
@@ -2846,7 +2852,7 @@ function renderTable(){
   const t = document.getElementById("tbl"), all = tableRows(), ti = tieInfo(), LIMIT = 10;
   const rows = state.rowsAll ? all : all.slice(0, LIMIT);
   document.getElementById("tnote").replaceChildren(...(state.noScore && state.mode === "all" ? [h("b",{text:all.length === 1 ? "1 run did not finish with a score" : `${fmtInt(all.length)} runs did not finish with a score`}), h("span",{class:"m",text:" · the first column says how each one ended · "}), h("button",{class:"linkish",type:"button",id:"noscoreoff",text:"Show every run",onclick:()=>{ state.noScore = false; renderTable(); }})]
-    : ti.total ? [h("b",{text:!ti.nf ? pl(ti.total,"scored run","scored runs") : ti.n < 2 ? `No other scored run is within the study's ${fmtSmall(ti.nf)} margin of the best` : `${ti.n} of ${ti.total} scored runs are within the study's ${fmtSmall(ti.nf)} margin of the best`}), h("span",{class:"m",text:ti.nf ? ` · one seed per run, so this is not a statistical tie` : ` · the file gives no margin to judge ties by`})]
+    : ti.total ? [h("b",{text:!ti.nf ? pl(ti.total,"scored run","scored runs") : ti.n < 2 ? `No other scored run is within the study's ${fmtSmall(ti.nf)} margin of the best` : `${ti.n} of ${ti.total} scored runs are within the study's ${fmtSmall(ti.nf)} margin of the best`}), h("span",{class:"m",text:ti.nf ? ` · one seed per run` : ` · the file gives no margin to judge ties by`})]
     : [h("span",{class:"m",text:RUNS.some(r => r.kind === "reported") ? "These results were reported elsewhere. Nothing was run in this study." : "No run has a score yet."})]));
   const pickable = ENTRY.status === "published" && !!ENTRY.id;
   const wst = k => state.colW[k] ? `width:${state.colW[k]}px;min-width:${state.colW[k]}px;max-width:${state.colW[k]}px` : null;
