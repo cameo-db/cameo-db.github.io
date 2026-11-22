@@ -1072,6 +1072,8 @@ h1{font-weight:600} .page-h h1{font-size:40px;font-weight:600} .hero2 h1{font-si
 .lb-about .about-grid{max-width:none;margin-top:12px;font-size:14px;grid-template-columns:150px minmax(0,1fr)} .lb-about .about-grid a{color:var(--accent)}
 .lb-prep{margin:0;padding-left:18px} .lb-prep li + li{margin-top:6px} .lb-dl{display:flex;gap:8px;flex-wrap:wrap}
 @media (max-width:700px){ .lb-about .about-grid{grid-template-columns:minmax(0,1fr);gap:2px 0} .lb-about .about-grid dd{margin-bottom:8px} }
+.savemenu .pop{left:auto;right:0;min-width:250px;text-transform:none;letter-spacing:0} .savemenu .pop .linkish{font-size:13.5px;text-align:left;padding:3px 0;font-weight:500}
+.sec h3 .sp{align-items:center}
 </style>
 </head>
 <body>
@@ -3355,6 +3357,69 @@ const ioFull = o => known(ioFirst(o).kind) ? String(ioFirst(o).kind) : "";
 const ioName = o => { const k = ioFull(o); return k ? ": " + (k.length > 40 ? k.slice(0, 38) + "…" : k) : ""; };
 const ioShape = o => { const sh = ioFirst(o).shape; if (Array.isArray(sh)) return sh.join(" × ");
   return known(sh) ? String(sh).replace(/[()\[\]]/g, "").split(",").map(x => x.trim()).filter(x => x && !/^(N|B|batch)$/i.test(x)).join(" × ") : ""; };
+/* ---------- saving a model's picture: the layers, the graph, or the code, whichever is on screen ----------
+   Saved pictures are always drawn light, on white, whatever the page's theme, so they can go straight into a slide or a paper. */
+const xmlEsc = t => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const fileSlug = t => String(t || "model").replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80) || "model";
+function saveBlob(blob, name){ const a = h("a",{href:URL.createObjectURL(blob),download:name}); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+function svgToPng(svgText, w, ht){
+  return new Promise((res, rej) => { const img = new Image(), k = Math.max(0.5, Math.min(2, 16000 / ht, 16000 / w));
+    img.onload = () => { const c = document.createElement("canvas"); c.width = Math.round(w * k); c.height = Math.round(ht * k); const g = c.getContext("2d"); g.fillStyle = "#FFFFFF"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(b => b ? res(b) : rej(new Error("the image could not be made")), "image/png"); };
+    img.onerror = () => rej(new Error("the image could not be drawn")); img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgText); });
+}
+/* the layer list, written out in full as a drawing: every group open, one row per layer, with its output shape and parameters */
+function layersSVG(mdl){
+  const t = mdl.tree, W = 860, RH = 26, PAD = 18, IND = 18, rows = [], F = "Helvetica, Arial, sans-serif", M = "Menlo, Consolas, monospace";
+  const C = {grp:["#0A1433","#F5F7FC"], weights:["#2F8672","#E4F2EE"], norm:["#6E60C0","#ECE9F8"], custom:["#C27A2C","#FBEFE3"], shape:["#39446A","#FFFFFF"], light:["#D8DEEF","#FFFFFF"], io:["#3F57D9","#E7ECFF"]};
+  const walk = (n, d, count) => { const grp = !!n.children, numeric = /^\d+$/.test(n.name || ""), name = grp ? (numeric ? n.cls : (n.name || n.cls)) : n.cls;
+    const sub = [grp ? (numeric ? "" : n.cls) : [n.label, n.detail].filter(Boolean).join("  "), count > 1 ? "× " + count : "", n.calls > 1 ? `used ${n.calls}×` + (n.params ? ", same weights" : "") : "", n.used === false ? "defined but not used in the forward pass" : ""].filter(Boolean).join("   ");
+    rows.push({d, name, sub, shape:shp(n.out), par:weight(n) ? fmtInt(weight(n)) : "", k:grp ? "grp" : (C[n.kind] ? n.kind : "light"), dash:n.used === false});
+    if (grp){ for (const c of n.children) walk(c, d + 1, c.count || 1); if (n.own) rows.push({d:d + 1, name:"Own weights", sub:"defined directly on " + n.cls, shape:"", par:fmtInt(n.own), k:"custom"}); } };
+  rows.push({d:0, name:"Input", sub:ioFull(mdl.io && mdl.io.inputs), shape:ioShape(mdl.io && mdl.io.inputs), par:"", k:"io"});
+  for (const c of t.children || []) walk(c, 0, c.count || 1);
+  if (t.own) rows.push({d:0, name:"Own weights", sub:"defined directly on " + t.cls, shape:"", par:fmtInt(t.own), k:"custom"});
+  rows.push({d:0, name:"Output", sub:ioFull(mdl.io && mdl.io.outputs), shape:shp(t.out), par:"", k:"io"});
+  const top = 62, H = top + rows.length * RH + 46, out = [`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`, `<rect width="${W}" height="${H}" fill="#FFFFFF"/>`,
+    `<text x="${PAD}" y="28" font-family="${F}" font-size="16" font-weight="700" fill="#0A1433">${xmlEsc(mdl.name || t.cls)}</text>`,
+    `<text x="${PAD}" y="47" font-family="${F}" font-size="12" fill="#5C6790">${xmlEsc(t.cls + " · " + fmtInt(mdl.traced_params) + " parameters")}</text>`,
+    `<text x="${W - PAD - 96}" y="47" text-anchor="end" font-family="${F}" font-size="10.5" fill="#5C6790">OUTPUT SHAPE</text>`, `<text x="${W - PAD - 8}" y="47" text-anchor="end" font-family="${F}" font-size="10.5" fill="#5C6790">PARAMETERS</text>`];
+  rows.forEach((r, i) => { const x = PAD + r.d * IND, y = top + i * RH, w = W - PAD - x, [bar, fill] = C[r.k], room = Math.max(8, Math.floor((w - 230) / 6.4)), nm = r.name.length > room ? r.name.slice(0, room - 1) + "…" : r.name, left = room - nm.length - 2, sb = left > 4 ? (r.sub.length > left ? r.sub.slice(0, left - 1) + "…" : r.sub) : "";
+    out.push(`<rect x="${x}" y="${y}" width="${w}" height="${RH - 4}" rx="4" fill="${fill}" stroke="#D8DEEF"${r.dash ? ' stroke-dasharray="3 3" opacity=".6"' : ""}/>`, `<rect x="${x}" y="${y}" width="3" height="${RH - 4}" fill="${bar}"/>`,
+      `<text x="${x + 11}" y="${y + 15}" font-family="${F}" font-size="12" fill="#0A1433"><tspan font-weight="700">${xmlEsc(nm)}</tspan>${sb ? `<tspan fill="#5C6790" dx="8">${xmlEsc(sb)}</tspan>` : ""}</text>`,
+      r.shape ? `<text x="${W - PAD - 96}" y="${y + 15}" text-anchor="end" font-family="${M}" font-size="11" fill="#39446A">${xmlEsc(r.shape)}</text>` : "", r.par ? `<text x="${W - PAD - 8}" y="${y + 15}" text-anchor="end" font-family="${F}" font-size="11" fill="#5C6790">${xmlEsc(r.par)}</text>` : ""); });
+  { const y = top + rows.length * RH + 22, key = [["weights","weights"],["norm","normalization"],["custom","custom block"],["grp","group of layers"]]; let x = PAD;
+    for (const [k, lab] of key){ out.push(`<rect x="${x}" y="${y - 10}" width="12" height="12" rx="2" fill="${C[k][1]}" stroke="${C[k][0]}"/>`, `<text x="${x + 18}" y="${y}" font-family="${F}" font-size="11" fill="#5C6790">${lab}</text>`); x += 34 + lab.length * 6.2; } }
+  out.push("</svg>"); return {text:out.join("\n"), w:W, h:H};
+}
+/* the graph at its largest size, with every style written into the drawing so that it stands alone as a file */
+const SVGPROPS = ["fill","stroke","stroke-width","stroke-dasharray","stroke-linecap","stroke-linejoin","opacity","fill-opacity","stroke-opacity","font-family","font-size","font-weight","font-style","text-anchor","dominant-baseline","letter-spacing","visibility","display"];
+function graphSVG(mdl){
+  const root = document.documentElement, was = root.getAttribute("data-theme"); root.setAttribute("data-theme", "light");
+  const box = h("div",{style:"position:absolute;left:-99999px;top:0;width:4000px"}), el = flowView(mdl, {size:"big"}); box.append(el); document.body.append(box);
+  try{ const svg = el.tagName.toLowerCase() === "svg" ? el : el.querySelector("svg"); if (!svg) throw new Error("there is no graph to save");
+    const vb = svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width ? svg.viewBox.baseVal : null, r = svg.getBoundingClientRect(), w = Math.ceil(vb ? vb.width : r.width), ht = Math.ceil(vb ? vb.height : r.height), cl = svg.cloneNode(true), A = svg.querySelectorAll("*"), Bq = cl.querySelectorAll("*");
+    A.forEach((e, i) => { const cs = getComputedStyle(e); let st = ""; for (const p_ of SVGPROPS){ const v = cs.getPropertyValue(p_); if (v) st += p_ + ":" + v + ";"; } Bq[i].setAttribute("style", st); Bq[i].removeAttribute("class"); });
+    cl.setAttribute("xmlns", NS); cl.setAttribute("width", w); cl.setAttribute("height", ht); if (!vb) cl.setAttribute("viewBox", `0 0 ${w} ${ht}`); cl.removeAttribute("class"); cl.removeAttribute("style");
+    cl.insertBefore(s("rect",{x:vb ? vb.x : 0, y:vb ? vb.y : 0, width:w, height:ht, fill:"#FFFFFF"}), cl.firstChild);
+    return {text:new XMLSerializer().serializeToString(cl), w, h:ht}; }
+  finally{ box.remove(); if (was == null) root.removeAttribute("data-theme"); else root.setAttribute("data-theme", was); }
+}
+/* the Save menu beside Layers, Graph and Code: what it offers follows the view that is open */
+function modelSaveMenu(mdl, mtab){
+  const what = mtab === "source" ? (mdl.src ? "code" : null) : mtab === "flow" ? (mdl.flow && (mdl.flow.nodes || []).length ? "graph" : null) : (mdl.tree ? "layers" : null); if (!what) return null;
+  const base = fileSlug(mdl.name) + "-" + what, det = h("details",{class:"colmenu savemenu"}), busy = (btn, f) => async () => { const old = btn.textContent; btn.disabled = true; btn.textContent = "Saving…";
+    try{ await f(); btn.textContent = old; det.open = false; }catch(e){ btn.textContent = "Could not save: " + e.message; } btn.disabled = false; };
+  const item = (id, label, f) => { const b_ = h("button",{class:"linkish",type:"button",id,text:label}); b_.addEventListener("click", busy(b_, f)); return b_; };
+  const draw = () => what === "graph" ? graphSVG(mdl) : layersSVG(mdl);
+  det.append(h("summary",{class:"btn sm",id:"msave",title:"Save what is shown: the " + what},"Save"),
+    h("div",{class:"pop"}, what === "code" ? [item("msave-py", "Code as a Python file (.py)", async () => saveText(mdl.src + (mdl.src.endsWith("\n") ? "" : "\n"), fileSlug(mdl.name) + ".py", "text/x-python")),
+        item("msave-copy", "Copy the code", async () => { await navigator.clipboard.writeText(mdl.src); })]
+      : [item("msave-png", `The ${what} as an image (PNG)`, async () => { const g = draw(); saveBlob(await svgToPng(g.text, g.w, g.h), base + ".png"); }),
+        item("msave-svg", `The ${what} as a vector drawing (SVG)`, async () => { const g = draw(); saveText(g.text, base + ".svg", "image/svg+xml"); })],
+      h("p",{class:"fine",text:what === "code" ? "The code exactly as stored in the deposit." : what === "layers" ? "Every group is written out open, on a white background." : "The graph at full size, on a white background."})));
+  return det;
+}
 /* A model as layers, as a graph or as code. On a study's page it reads the study on screen. Elsewhere X supplies the model, which view is open and how to redraw. */
 function modelSection(r, X){
   const sec = h("div",{class:"sec"});
@@ -3362,6 +3427,7 @@ function modelSection(r, X){
   const tabs = h("span",{class:"sp"}, h("div",{class:"seg"},
     [["diagram","Layers"],["flow","Graph"],["source","Code"]].map(([v,t]) => h("button",{type:"button",id:"mtab-" + v,"aria-pressed":String(mtab===v),text:t,onclick:()=>setTab(v)}))));
   sec.append(h("h3",null, "Model", tabs));
+  if (mdl){ const sv = modelSaveMenu(mdl, mtab); if (sv) tabs.append(sv); }
   if (!X && MODELS === null){ sec.append(h("p",{class:"q",text:"Loading the model…"})); return sec; }
   if (!mdl){ sec.append(h("p",{class:"q",text:"The model record did not load."})); return sec; }
   if (!mdl.src && !mdl.tree){ sec.append(h("p",{class:"q",text:"No code is stored for this model." + (r.reported ? " It is described in the source this result was copied from." : "")})); return sec; }
