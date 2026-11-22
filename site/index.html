@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CAMEO</title>
 <meta name="description" content="CAMEO is an open database of the models a study trains, including the ones that never reach the paper: what each model was, how it was trained and how it performed.">
-<meta name="theme-color" content="#0C1418">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cstyle%3Epath%7Bstroke:%230B6B75;fill:none%7D@media (prefers-color-scheme:dark)%7Bpath%7Bstroke:%2362C6D2%7D%7D%3C/style%3E%3Cpath d='M18.20 5.51A8.1 10.1 0 1 0 18.20 18.49' stroke-width='3.4'/%3E%3Cpath d='M15.09 7.76A4.3 6.1 0 1 0 15.09 16.24' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#0A1433">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230A1433'/%3E%3Cg transform='translate%2811 11%29 scale%28.78%29' color='%2393A8FB'%3E%3Cpath d='M81.5 25.4A40 40 0 1 0 81.5 74.6' fill='none' stroke='currentColor' stroke-width='10.5'/%3E%3Cg stroke='currentColor' stroke-width='1.7' stroke-linecap='round'%3E%3Cpath d='M39 33L70 41M39 33L70 59M39 50L70 41M39 50L70 59M39 67L70 41M39 67L70 59'/%3E%3C/g%3E%3Cg fill='currentColor'%3E%3Ccircle cx='39' cy='33' r='5.3'/%3E%3Ccircle cx='39' cy='50' r='5.3'/%3E%3Ccircle cx='39' cy='67' r='5.3'/%3E%3Ccircle cx='70' cy='41' r='5.3'/%3E%3Ccircle cx='70' cy='59' r='5.3'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400..700&family=Sora:wght@400..700&display=swap" rel="stylesheet">
 <style>
 :root{
   /* Layout: benchmark header, then a two-column workbench. Left: linked chart and leaderboard. Right: sticky run inspector. */
@@ -976,13 +976,56 @@ body.has-stray{padding-bottom:72px} body.has-stray .cmptray{bottom:62px}
 .tog-rm{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--ink-2);margin-top:5px}
 .tog-rm select{font:inherit;font-size:13px;padding:3px 8px;border:1px solid var(--warn);border-radius:7px;background:var(--surface);color:var(--ink);max-width:260px}
 .btn.ovr[aria-pressed="true"]{background:var(--warn-fill);border-color:var(--warn);color:var(--warn)}
+/* ===== theme: midnight navy and periwinkle, after the logo =====
+   The header and the front page's opening are navy in both modes, as the logo is drawn. Pages are light on a cool white, or navy throughout in dark mode. */
+:root{
+  --navy:#0A1433; --navy-2:#131E48; --navy-line:#27346B; --peri:#93A8FB; --on-navy:#F4F6FF; --on-navy-2:#C3CCEE; --on-navy-3:#8E99C4;
+  --paper:#F5F7FC; --surface:#FFFFFF; --ink:#0A1433; --ink-2:#39446A; --muted:#5C6790; --line:#D8DEEF; --line-2:#EBEFF8;
+  --accent:#3F57D9; --accent-wash:#E7ECFF; --cameo:#0A1433; --band-bg:#0A1433; --band-ink:#F4F6FF; --band-muted:#A9B4DA;
+  --font-display:"Sora","Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){ --paper:#070D24; --surface:#0E1838; --ink:#EEF1FF; --ink-2:#BAC3E6; --muted:#8E99C4; --line:#25315E; --line-2:#162049; --accent:#93A8FB; --accent-wash:#1A2659; --band-bg:#111C45; --band-ink:#F4F6FF; --band-muted:#A9B4DA; }
+}
+:root[data-theme="dark"]{ --paper:#070D24; --surface:#0E1838; --ink:#EEF1FF; --ink-2:#BAC3E6; --muted:#8E99C4; --line:#25315E; --line-2:#162049; --accent:#93A8FB; --accent-wash:#1A2659; --band-bg:#111C45; --band-ink:#F4F6FF; --band-muted:#A9B4DA; }
+/* headings in the wordmark's face */
+h1,h2,h3{letter-spacing:-.022em}
+h1{font-weight:600} .page-h h1{font-size:40px;font-weight:600} .hero2 h1{font-size:33px;font-weight:600;line-height:1.15}
+.srow-t{font-size:20.5px;font-weight:600;letter-spacing:-.018em} .bcard h3{font-size:20px;font-weight:600} .use h2,.uses.four .use h2{font-size:20px;font-weight:600}
+.stat b{font-weight:600;font-size:27px;letter-spacing:-.02em} .band h2{font-size:29px;font-weight:600} .about-s h2{font-size:21px;font-weight:600} .about-w > h2{font-size:26px;font-weight:600}
+.hl h2{font-size:35px;font-weight:600} .hl li{font-size:18.5px;font-weight:500;letter-spacing:-.012em;line-height:1.35}
+.tog-card .card-h h2{font-size:17px;font-weight:600} .cmpx-h h2{font-size:20px;font-weight:600} .tog-empty b{font-size:18px;font-weight:600}
+/* the header: the logo on its own ground */
+.ribbon{background:var(--navy-2);color:var(--on-navy-2);border-bottom:1px solid var(--navy-line)}
+.top{background:var(--navy);border-bottom:1px solid var(--navy-line);-webkit-backdrop-filter:none;backdrop-filter:none}
+.top .brand{color:var(--on-navy);font-family:var(--font-display);font-weight:600;font-size:23px;letter-spacing:-.025em;gap:9px}
+.top .mark{width:31px;height:31px;color:var(--peri)}
+.top .nav a{color:var(--on-navy-2)} .top .nav a:hover{background:#ffffff14;color:#fff}
+.top .nav a[aria-current="page"]{color:#fff;box-shadow:inset 0 -2px 0 var(--peri)}
+.top .tsearch{background:var(--navy-2);border-color:var(--navy-line);color:var(--on-navy)} .top .tsearch::placeholder{color:var(--on-navy-3)}
+.top kbd{background:var(--navy);border-color:var(--navy-line);color:var(--on-navy-3)}
+.top .tsearch:focus{outline-color:var(--peri);border-color:var(--peri)}
+.top .btn.pri{background:var(--peri);border-color:var(--peri);color:var(--navy)} .top .btn.pri:hover{color:var(--navy);opacity:.9}
+.top .btn.pri[aria-current="page"]{background:#fff;border-color:#fff}
+.top a:focus-visible,.top button:focus-visible{outline:2px solid var(--peri);outline-offset:2px}
+/* the front page opens on the same navy, edge to edge */
+.at-home nav[aria-label="Breadcrumb"]{display:none}
+.at-home .top{border-bottom-color:var(--navy)} .at-home .land{margin-top:-2px;border-top:2px solid var(--navy)}   /* covers the hairline a fractional pixel leaves between the header and the opening */
+.land{background:var(--navy);box-shadow:0 0 0 100vmax var(--navy);clip-path:inset(0 -100vmax);color:var(--on-navy);padding:84px 0 76px;margin-bottom:60px}
+.land h1{color:#fff;font-weight:600;font-size:52px;letter-spacing:-.035em;line-height:1.06;max-width:13ch}
+.land .lede{color:var(--on-navy-2)} .land .count{color:var(--on-navy-3)} .land .count + .fine{color:var(--on-navy-3)}
+.land .search{background:#fff;color:#0A1433;border-color:transparent;box-shadow:0 14px 40px -18px #000a} .land .search::placeholder{color:#5C6790} .land .search:focus{outline-color:var(--peri)}
+.land .btn{background:transparent;border-color:#4A5894;color:var(--on-navy)} .land .btn:hover{border-color:var(--peri);color:var(--peri)}
+.cameo-art{color:var(--peri);max-width:300px}
+@media (max-width:980px){ .land{padding:48px 0 44px} .land h1{font-size:38px} .cameo-art{max-width:150px;justify-self:start;order:-1} }
+@media (max-width:520px){ .page-h h1{font-size:30px} .hero2 h1{font-size:26px} .hl h2{font-size:28px} }
 </style>
 </head>
 <body>
 <a class="skip" href="#app">Skip to content</a>
 <div class="ribbon" id="protolabel" role="region" aria-label="About this copy of the site" hidden></div>
 <header class="top"><div class="wrap">
-  <a class="brand" href="#/" id="homelink"><svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.20 5.51A8.1 10.1 0 1 0 18.20 18.49" fill="none" stroke="var(--accent)" stroke-width="3.2"/><path d="M15.09 7.76A4.3 6.1 0 1 0 15.09 16.24" fill="none" stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round" opacity=".75"/></svg><span>CAMEO</span></a>
+  <a class="brand" href="#/" id="homelink" aria-label="CAMEO, front page"><svg class="mark" viewBox="0 0 100 100" aria-hidden="true"><path d="M81.5 25.4A40 40 0 1 0 81.5 74.6" fill="none" stroke="currentColor" stroke-width="10.5"/><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M39 33L70 41M39 33L70 59M39 50L70 41M39 50L70 59M39 67L70 41M39 67L70 59"/></g><g fill="currentColor"><circle cx="39" cy="33" r="5.3"/><circle cx="39" cy="50" r="5.3"/><circle cx="39" cy="67" r="5.3"/><circle cx="70" cy="41" r="5.3"/><circle cx="70" cy="59" r="5.3"/></g></svg><span>cameo</span></a>
   <nav class="nav" aria-label="Site"><a href="#/database" data-nav="database">Database</a><a href="#/about" data-nav="about">About</a></nav>
   <span class="topr"><label class="tsw"><span class="vh">Search the database</span><input class="tsearch" id="tsearch" type="search" placeholder="Search"><kbd aria-hidden="true">/</kbd></label><a class="btn pri" id="depbtn" href="#/deposit" data-nav="deposit">Deposit</a></span>
 </div></header>
@@ -1227,13 +1270,11 @@ function openHome(){
   q.addEventListener("keydown", e => { if (e.key === "Enter" && q.value.trim()) location.hash = "#/database?q=" + encodeURIComponent(q.value.trim()); });
   /* a cameo of a model: a U-Net, drawn so that it makes the letter C. Its layers are the strokes of the letter, wide at the two ends and short along the back;
      its skip connections are the thin lines inside. Decoration only. */
-  const art = s("svg",{class:"cameo-art",viewBox:"0 0 340 430","aria-hidden":"true"}), relief = s("g",{class:"relief"});
-  art.append(s("ellipse",{cx:170,cy:215,rx:164,ry:209,class:"ring"}), s("ellipse",{cx:170,cy:215,rx:155,ry:200,class:"ring thin"}), s("ellipse",{cx:170,cy:215,rx:146,ry:191,class:"ground"}), relief);
-  { const cx = 184, cy = 215, RX = 98, RY = 134, rx = 48, ry = 96, tip = cx + 64, pitch = 17.8, bh = 11;
-    for (let i = -7; i <= 7; i++){ const dy = i * pitch, t = Math.sqrt(Math.max(0, 1 - (dy / RY) ** 2)), x0 = cx - RX * t, x1 = Math.abs(dy) >= ry ? Math.min(cx + RX * t, tip) : cx - rx * Math.sqrt(1 - (dy / ry) ** 2);
-      relief.append(s("rect",{x:x0,y:cy + dy - bh / 2,width:x1 - x0,height:bh,rx:bh / 2,class:"bar"})); }
-    for (const [sx, sy, bulge] of [[cx + 50, 6 * pitch - bh / 2 - 5, 76], [cx - 14, 5 * pitch, 26]])   /* the skip connections of a U-Net: thin lines inside the letter */
-      relief.append(s("path",{class:"wire skip",d:`M${sx} ${cy - sy}A${bulge} ${sy} 0 0 0 ${sx} ${cy + sy}`}), s("circle",{cx:sx,cy:cy - sy,r:3,class:"dot"}), s("circle",{cx:sx,cy:cy + sy,r:3,class:"dot"})); }
+  /* the mark: an open C around a small network. Decoration only. */
+  const art = s("svg",{class:"cameo-art",viewBox:"0 0 100 100","aria-hidden":"true"});
+  art.append(s("path",{d:"M81.5 25.4A40 40 0 1 0 81.5 74.6",fill:"none",stroke:"currentColor","stroke-width":10.5}),
+    s("path",{d:"M39 33L70 41M39 33L70 59M39 50L70 41M39 50L70 59M39 67L70 41M39 67L70 59",stroke:"currentColor","stroke-width":1.7,"stroke-linecap":"round",fill:"none"}),
+    ...[[39,33],[39,50],[39,67],[70,41],[70,59]].map(([cx, cy]) => s("circle",{cx, cy, r:5.3, fill:"currentColor"})));
   const uses = [["Keep what failed","Runs that did not work are stored beside the ones that did.","#/database","Open the database"],
     ["Reuse a training configuration","Download a study, or the runs you pick, with the architecture and the training settings each one used. A new search begins from what has been tried.","#/about/data","How to download"],
     ["See what you can rebuild","An entry holds the recorded model code, settings and results, and lists what is still needed to reproduce training.","#/about/entry","What an entry holds"]];
