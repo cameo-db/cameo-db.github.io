@@ -1038,6 +1038,28 @@ h1{font-weight:600} .page-h h1{font-size:40px;font-weight:600} .hero2 h1{font-si
 @media (max-width:980px){ .land{padding:36px 0 34px} .hl{padding:26px 22px} .band{padding:26px 22px} }
 .about-s h3{font-family:var(--font-display);font-weight:600;font-size:17.5px;letter-spacing:-.015em;margin:32px 0 6px;padding-top:22px;border-top:1px solid var(--line-2);scroll-margin-top:96px}
 .about-s h2 + h3{margin-top:4px;padding-top:0;border-top:0}
+/* leaderboards: the benchmarks on the left, the one that is picked on the right */
+.lbp{display:grid;grid-template-columns:340px minmax(0,1fr);gap:28px;align-items:start;padding-bottom:40px}
+.lbp-side{position:sticky;top:82px;max-height:calc(100vh - 100px);overflow:auto;display:grid;gap:12px;padding:2px}
+.lbp-side .search{margin:0} .lb-chips{display:flex;gap:6px;flex-wrap:wrap} .lb-sort .tsel{font-size:13px;color:var(--ink-2);display:inline-flex;gap:8px;align-items:center}
+.lb-sort select{font:inherit;font-size:13px;padding:4px 8px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink)}
+.lb-n{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:2px 0 8px}
+.lbitem{display:grid;gap:3px;width:100%;text-align:left;font:inherit;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin:0 0 8px;cursor:pointer;color:var(--ink);transition:border-color .12s,background-color .12s}
+.lbitem:hover{border-color:var(--accent)} .lbitem[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-wash);box-shadow:inset 3px 0 0 var(--accent)}
+.lbitem .t{font-family:var(--font-display);font-weight:600;font-size:15.5px;letter-spacing:-.015em} .lbitem .m{font-size:12.5px;color:var(--muted)}
+.lbitem .f{display:flex;justify-content:space-between;gap:10px;align-items:baseline;font-size:12.5px;color:var(--ink-2);margin-top:4px} .lbitem .f b{font-variant-numeric:tabular-nums;font-size:14px;color:var(--ink)}
+.lb-h{display:flex;gap:14px 24px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;padding:22px 24px 6px}
+.lb-h h2{font-family:var(--font-display);font-weight:600;font-size:26px;letter-spacing:-.022em;margin:0 0 4px} .lb-h .eyebrow{margin:0 0 8px} .lb-sub{color:var(--ink-2);font-size:14px;margin:0;max-width:70ch}
+.lb-ctl{padding:10px 24px 12px} .lb-k{font-family:var(--font-mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)} .lb-dir{color:var(--muted);font-size:12.5px}
+#lbboard .bmnote{margin:0 24px 12px}
+.lbt th,.lbt td{padding-left:14px;padding-right:14px} .lbt th:first-child,.lbt td:first-child{padding-left:24px;width:54px} .lbt th:last-child,.lbt td:last-child{padding-right:24px}
+.lbt td.rk{font-family:var(--font-display);font-weight:600;font-size:15px;color:var(--muted)} .lbt td.rk.lead{color:var(--accent)} .lbt .thsub a{color:var(--muted);text-decoration:none} .lbt .thsub a:hover{color:var(--accent);text-decoration:underline}
+.lbt td.sc{font-weight:600;font-size:15px} .lbt .thsub{white-space:normal;max-width:46ch}
+.lb-foot{display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;padding:14px 24px 18px;border-top:1px solid var(--line-2)}
+.lb-foot .seg{align-items:stretch} .lb-foot .seg button[disabled]{opacity:.4;cursor:not-allowed}
+.lball{display:inline-flex;align-items:center;padding:5px 12px;border-left:1px solid var(--line);font-size:13.5px;font-weight:600;color:var(--accent);text-decoration:none;background:var(--surface)} .lball:hover{background:var(--accent-wash)}
+.lb-hint{color:var(--muted);font-size:12.5px}
+@media (max-width:980px){ .lbp{grid-template-columns:minmax(0,1fr)} .lbp-side{position:static;max-height:none} #lblist{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px} #lblist .lb-n{display:none} .lbitem{min-width:230px;margin:0} .lb-h h2{font-size:22px} }
 </style>
 </head>
 <body>
@@ -1045,7 +1067,7 @@ h1{font-weight:600} .page-h h1{font-size:40px;font-weight:600} .hero2 h1{font-si
 <div class="ribbon" id="protolabel" role="region" aria-label="About this copy of the site" hidden></div>
 <header class="top"><div class="wrap">
   <a class="brand" href="#/" id="homelink" aria-label="CAMEO, front page"><svg class="mark" viewBox="0 0 100 100" aria-hidden="true"><path d="M81.5 25.4A40 40 0 1 0 81.5 74.6" fill="none" stroke="currentColor" stroke-width="10.5"/><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M39 33L70 41M39 33L70 59M39 50L70 41M39 50L70 59M39 67L70 41M39 67L70 59"/></g><g fill="currentColor"><circle cx="39" cy="33" r="5.3"/><circle cx="39" cy="50" r="5.3"/><circle cx="39" cy="67" r="5.3"/><circle cx="70" cy="41" r="5.3"/><circle cx="70" cy="59" r="5.3"/></g></svg><span>cameo</span></a>
-  <nav class="nav" aria-label="Site"><a href="#/database" data-nav="database">Database</a><a href="#/about" data-nav="about">About</a></nav>
+  <nav class="nav" aria-label="Site"><a href="#/database" data-nav="database">Database</a><a href="#/leaderboards" data-nav="lb">Leaderboards</a><a href="#/about" data-nav="about">About</a></nav>
   <span class="topr"><label class="tsw"><span class="vh">Search the database</span><input class="tsearch" id="tsearch" type="search" placeholder="Search"><kbd aria-hidden="true">/</kbd></label><a class="btn pri" id="depbtn" href="#/deposit" data-nav="deposit">Deposit</a></span>
 </div></header>
 <div id="banner"></div>
@@ -1178,7 +1200,7 @@ const clone = o => JSON.parse(JSON.stringify(o));
 function siteFoot(){
   const repo = "https://github.com/" + INDEX.site.repo, a = (href, t, out) => h("a", out ? {href, target:"_blank", rel:"noopener", text:t} : {href, text:t}), col = (t, ...k) => h("div",{class:"fcol"}, h("h2",{text:t}), k);
   put(document.getElementById("sitefoot"), h("div",{class:"fbrand"}, h("b",{text:"CAMEO"}), h("p",{text:"Catalog of Architecture Metadata and Experimental Outcomes. An open database of the models a study trains."})),
-    h("nav",{"aria-label":"Footer",class:"fnav"}, col("Use", a("#/database","Database"), a("#/compare","Compare runs"), a("#/about/data","Download")),
+    h("nav",{"aria-label":"Footer",class:"fnav"}, col("Use", a("#/database","Database"), a("#/leaderboards","Leaderboards"), a("#/compare","Compare runs"), a("#/about/data","Download")),
       col("Contribute", a("#/deposit","Deposit a study"), a(KITF,"Spec for agents",true), a(repo,"GitHub",true)),
       col("About", a("#/about","Why CAMEO"), a("#/about/stars","Stars"), a("#/about/cite","How to cite"), a("#/about/contact","Contact"))),
     h("p",{class:"fleg",text:"The site and its code are under the MIT license. Each study carries its own open license."}));
@@ -1200,6 +1222,7 @@ function parseHash(){
   if (path[0] === "b" && path[1]) return {view:"bench", id:path[1], only:qs.get("s") || ""};
   if (path[0] === "s" && path[1]) return {view:"study", id:path[1], run:path.slice(2).join("/") || null};
   if (path[0] === "d" && path[1]) return {view:"dep", id:path[1]};
+  if (path[0] === "leaderboards") return {view:"lb", id:path[1] || null, split:qs.get("split"), y:qs.get("y"), n:qs.get("n"), q:qs.get("q"), tag:qs.get("tag"), sort:qs.get("sort")};
   if (path[0] === "together") return {view:"together", ids:(qs.get("s") || "").split(",").filter(Boolean), bench:qs.get("b") || "", off:qs.get("off"), y:qs.get("y"), per:qs.get("per"), split:qs.get("split"), pts:qs.get("pts"), x:qs.get("x"), m:qs.get("m"), q:qs.get("q"), url:true};
   if (path[0] === "database") return list(["studies","models","benchmarks"].includes(path[1]) ? path[1] : null);
   if (["studies","models","benchmarks"].includes(path[0])) return list(path[0]);   /* older links */
@@ -1224,12 +1247,12 @@ function weightLink(w){
   return null;
 }
 const madeUp = x => x.made_up ? h("span",{class:"pill bad",title:"Every number in this study is made up, so the demo has more than one study",text:"made-up data"}) : null;
-const TITLES = {database:"Database", together:"Merged studies", about:"About", deposit:"Deposit", compare:"Compare", notfound:"Not found"};
+const TITLES = {database:"Database", lb:"Leaderboards", together:"Merged studies", about:"About", deposit:"Deposit", compare:"Compare", notfound:"Not found"};
 async function route(){
   const r = parseHash(); ROUTE = r; window.scrollTo(0, 0); closeDialog(); if (FIELD_STOP){ FIELD_STOP(); FIELD_STOP = null; }
   document.title = TITLES[r.view] ? TITLES[r.view] + " · CAMEO" : "CAMEO";
-  document.body.classList.toggle("wide", ["study","bench","compare","together"].includes(r.view)); document.body.classList.toggle("at-home", r.view === "home"); document.body.classList.toggle("at-db", r.view === "database");   /* those two pages have their own search box, so the one in the header steps aside */
-  const here = {database:["database","bench","study","dep","together"], about:["about"], deposit:["deposit"]};
+  document.body.classList.toggle("wide", ["study","bench","compare","together","lb"].includes(r.view)); document.body.classList.toggle("at-home", r.view === "home"); document.body.classList.toggle("at-db", r.view === "database");   /* those two pages have their own search box, so the one in the header steps aside */
+  const here = {database:["database","bench","study","dep","together"], lb:["lb"], about:["about"], deposit:["deposit"]};
   document.querySelectorAll("[data-nav]").forEach(a => { if ((here[a.dataset.nav] || []).includes(r.view)) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   TOG.redraw = null; TOG.compare = null;   /* they belong to the merged view that was on screen; it sets them again when it opens */
   renderTray(); renderStudyTray();
@@ -1243,6 +1266,7 @@ async function route(){
   else if (r.view === "compare") await openCompare(r);
   else if (r.view === "dep") openDepositor(r.id);
   else if (r.view === "together") await openTogether(r);
+  else if (r.view === "lb") await openLeaderboards(r);
   else if (r.view === "notfound"){ leave(); setCrumbs([]); put(document.getElementById("app"), pageHead(null, "This page does not exist", "The address may be mistyped, or the page may have moved."), h("p",{class:"empty"}, h("a",{href:"#/",text:"Go to the front page"}), " · ", h("a",{href:"#/database",text:"Open the database"}))); }
   else openHome();
 }
@@ -1416,6 +1440,74 @@ function paintPicked(){
   const pa = document.getElementById("pickall"); if (pa){ const k = shown.filter(id => DB.picked.has(id)).length; pa.checked = k > 0 && k === shown.length; pa.indeterminate = k > 0 && k < shown.length; }
 }
 /* Studies that a search found, or that the visitor ticked, may share a benchmark. Then the next step is its leaderboard, where they can be compared. */
+/* ---------- leaderboards: pick a benchmark, see who leads it ----------
+   On the left, the benchmarks, which can be searched, narrowed by tag and sorted. On the right, the one that is picked: its top models, who deposited them and how they scored.
+   The split and the metric can be changed, and the ranking follows. Top 10 by default, then 20, 50 or 100; all of them open as merged studies, where every model can be explored. */
+const LB = {id:null, split:null, metric:null, n:10, q:"", tags:new Set(), sort:"studies"}, LBN = [10, 20, 50, 100], LBB = {};
+const LBSORT = {studies:["Most studies", (a, c) => c.studies - a.studies || c.models - a.models], models:["Most models", (a, c) => c.models - a.models], name:["Name, A to Z", (a, c) => String(a.title).localeCompare(String(c.title))]};
+async function openLeaderboards(r){
+  leave(); setCrumbs([]); const app = document.getElementById("app"), all = INDEX.benchmarks;
+  if (r.q != null || r.tag != null || r.sort != null || r.n != null || r.id){ LB.q = r.q || ""; LB.tags = new Set(String(r.tag || "").split(",").filter(Boolean)); LB.sort = LBSORT[r.sort] ? r.sort : "studies"; LB.n = LBN.includes(+r.n) ? +r.n : 10; }
+  if (r.id && all.some(b => b.id === r.id)){ if (LB.id !== r.id || r.split || r.y){ LB.split = r.split === "valid" || r.split === "test" ? r.split : null; LB.metric = r.y || null; } LB.id = r.id; }
+  const tagsOf = b => [b.domain, b.task_type].filter(Boolean), tagCount = {}; for (const b of all) for (const t of tagsOf(b)) tagCount[t] = (tagCount[t] || 0) + 1;
+  const listBox = h("div",{id:"lblist"}), boardBox = h("section",{class:"card",id:"lbboard","aria-live":"polite"}), chips = h("div",{class:"lb-chips"});
+  const q = h("input",{class:"search",type:"search",id:"lbq",value:LB.q,placeholder:"Find a benchmark: dataset, task, assay…","aria-label":"Find a benchmark"}); q.addEventListener("input", () => { LB.q = q.value; drawList(); });
+  const sortSel = selectOf("lbsort", "Sort", Object.keys(LBSORT).map(k => [k, LBSORT[k][0]]), LB.sort, v => { LB.sort = v; drawList(); });
+  const sync = () => { const a = []; if (LB.split) a.push("split=" + LB.split); if (LB.metric) a.push("y=" + encodeURIComponent(LB.metric)); if (LB.n !== 10) a.push("n=" + LB.n); if (LB.q.trim()) a.push("q=" + encodeURIComponent(LB.q.trim())); if (LB.tags.size) a.push("tag=" + [...LB.tags].map(encodeURIComponent).join(",")); if (LB.sort !== "studies") a.push("sort=" + LB.sort);
+    const to = "#/leaderboards" + (LB.id ? "/" + LB.id : "") + (a.length ? "?" + a.join("&") : ""); if (ROUTE.view === "lb" && location.hash !== to) try{ history.replaceState(null, "", to); }catch(e){} };
+  function drawList(){
+    const hit = hitFn(wordsOf(LB.q)), L = all.filter(b => hit(b.title, b.dataset, b.task, b.domain, b.task_type, b.description) && [...LB.tags].every(t => tagsOf(b).includes(t))).sort(LBSORT[LB.sort][1]);
+    put(chips, Object.keys(tagCount).sort((a, c) => tagCount[c] - tagCount[a] || a.localeCompare(c)).map(t => { const on = LB.tags.has(t); return h("button",{class:"fchip",type:"button","aria-pressed":String(on),onclick:()=>{ if (on) LB.tags.delete(t); else LB.tags.add(t); drawList(); }}, t, h("span",{class:"n",text:String(tagCount[t])})); }));
+    const prev = LB.id; if (!L.some(b => b.id === LB.id)){ LB.id = L.length ? L[0].id : null; LB.split = null; LB.metric = null; }
+    put(listBox, h("p",{class:"lb-n",id:"lbn",text:pl(L.length,"benchmark","benchmarks") + (L.length < all.length ? ` of ${all.length}` : "")}),
+      L.length ? L.map(b => h("button",{class:"lbitem",type:"button",id:"lbi-" + b.id,"aria-pressed":String(b.id === LB.id),onclick:()=>{ if (LB.id !== b.id){ LB.id = b.id; LB.split = null; LB.metric = null; } drawList(); const e = document.getElementById("lbi-" + b.id); if (e) e.focus(); }},
+          h("span",{class:"t",text:b.title}), h("span",{class:"m",text:b.task}), h("span",{class:"f"}, h("span",{text:`${pl(b.studies,"study","studies")} · ${pl(b.models,"model","models")}`}), b.best != null ? h("b",{title:"Best " + b.metric_label,text:fmt(b.best,3)}) : null)))
+        : h("p",{class:"q",text:"No benchmark matches. Clear the search or a tag."}));
+    if (prev !== LB.id || !boardBox.firstChild || boardBox.dataset.id !== String(LB.id)) drawBoard(); else sync();
+  }
+  async function drawBoard(){
+    const id = LB.id; boardBox.dataset.id = String(id); sync();
+    if (!id){ put(boardBox, h("p",{class:"q",style:"padding:22px 24px",text:"Pick a benchmark to see its leaderboard."})); return; }
+    if (!LBB[id]){ put(boardBox, h("div",{class:"loading",role:"status",text:"Loading the leaderboard…"})); try{ LBB[id] = await getJSON("boards/" + id + ".json"); }catch(e){ if (LB.id === id) put(boardBox, h("div",{class:"err",style:"margin:18px"}, h("b",{text:"The leaderboard did not load. "}), "Reload the page to try again. (" + e.message + ")")); return; } }
+    if (LB.id !== id || ROUTE.view !== "lb") return;
+    const B = LBB[id], b = B.benchmark, bi = INDEX.benchmarks.find(x => x.id === id) || b, runBy = {}; for (const u of B.runs || []) runBy[u.study + "~" + u.run] = u;
+    const studies = INDEX.studies.filter(x => (x.benchmarks || [x.benchmark]).includes(id)), of = r_ => runBy[r_.study + "~" + r_.run] || {};
+    /* a model's value on a split, for a metric: the benchmark's own ranking number where that is what is asked for, else what its chosen run recorded */
+    const val = (r_, sp, k) => k === b.metric && sp === b.split ? r_.metric : k === b.metric ? of(r_)[sp] : ((of(r_).m || {})[sp] || {})[k];
+    const keysOn = sp => { const ks = new Set(); for (const r_ of B.rows){ if (val(r_, sp, b.metric) != null) ks.add(b.metric); for (const k in ((of(r_).m || {})[sp] || {})) ks.add(k); } return [...ks].sort((a, c) => (c === b.metric) - (a === b.metric) || bmLabel(b, a).localeCompare(bmLabel(b, c))); };
+    const splits = ["valid","test"].filter(sp => keysOn(sp).length); if (!splits.includes(LB.split)) LB.split = splits.includes(b.split) ? b.split : splits[0] || b.split;
+    const keys = keysOn(LB.split); if (!keys.includes(LB.metric)) LB.metric = keys.includes(b.metric) ? b.metric : keys[0] || b.metric;
+    const k = LB.metric, sp = LB.split, low = k === b.metric ? b.direction === "minimize" : metricInfo0(k)[2] === "low";
+    const ranked = B.rows.map(r_ => ({r:r_, v:val(r_, sp, k)})).filter(x => x.v != null).sort((x, y) => (x.v - y.v) * (low ? 1 : -1)), shown = ranked.slice(0, LB.n);
+    const silent = studies.filter(x => !ranked.some(y => y.r.study === x.id)), label = SPLITN[sp] + " " + bmLabel(b, k);
+    const seg = h("div",{class:"seg",role:"group","aria-label":"Split"}, ["valid","test"].map(v => h("button",{type:"button",id:"lbsp-" + v,"aria-pressed":String(sp === v),disabled:!splits.includes(v) || null,title:splits.includes(v) ? null : `No study on this benchmark recorded ${SPLITN[v].toLowerCase()} results`,text:SPLITN[v],onclick:()=>{ LB.split = v; LB.metric = null; drawBoard().then(() => { const e = document.getElementById("lbsp-" + v); if (e) e.focus(); }); }})));
+    const msel = h("select",{id:"lbmetric","aria-label":"Metric to rank by"}, keys.map(x => h("option",{value:x,text:bmLabel(b, x).replace(/^./, c => c.toUpperCase()) + (x === b.metric ? " (the benchmark's metric)" : "")}))); msel.value = k; msel.disabled = keys.length < 2;
+    msel.addEventListener("change", () => { LB.metric = msel.value; drawBoard().then(() => { const e = document.getElementById("lbmetric"); if (e) e.focus(); }); });
+    const tog = "#/together?s=" + studies.map(x => encodeURIComponent(x.id)).join(",") + "&b=" + id + "&split=" + sp + "&pts=model&x=params" + (k !== b.metric ? "&y=" + encodeURIComponent(k) : "");
+    put(boardBox,
+      h("div",{class:"lb-h"}, h("div",null, h("div",{class:"eyebrow",text:tagsOf(b).join(" · ")}), h("h2",{id:"lbtitle",text:b.title}), h("p",{class:"lb-sub",text:`${b.dataset} · ${b.task}`})),
+        h("div",{class:"lb-links"}, h("a",{class:"btn sm",href:"#/b/" + id,title:"The benchmark's own page: its chart, the full table, and how each study prepared the data",text:"Benchmark page"}))),
+      h("div",{class:"bctl lb-ctl"}, h("span",{class:"lb-k",text:"Ranked by"}), seg, h("label",null, "Metric", msel), h("span",{class:"lb-dir",text:low ? "lower is better" : "higher is better"})),
+      b.note && sp === b.split && k === b.metric ? h("p",{class:"bmnote",text:b.note}) : null,
+      silent.length && ranked.length ? h("p",{class:"bmnote warn",text:`${silent.map(x => x.title).join(" and ")} recorded no ${label.toLowerCase()}, so ${silent.length === 1 ? "its models are" : "their models are"} not ranked here.`}) : null,
+      ranked.length ? h("div",{class:"scrollx",tabindex:"0",role:"region","aria-label":"Leaderboard"}, h("table",{class:"lb lbt",id:"lbtable"},
+          h("thead",null, h("tr",null, h("th",{class:"num",text:"#"}), h("th",{text:"Model"}), h("th",{text:"Deposited by"}), h("th",{class:"num",text:label}), h("th",{class:"num",text:"Parameters"}))),
+          h("tbody",null, shown.map((x, i) => { const r_ = x.r, to = tog + "&m=" + encodeURIComponent(r_.study + "~" + r_.run);
+            return h("tr",{class:"go",onclick:e=>rowGo(e, to)}, h("td",{class:"num rk" + (i < 3 ? " lead" : ""),text:String(i + 1)}),
+              h("td",null, h("a",{class:"rowlink",href:to,title:"Open this model among the benchmark's merged studies",text:r_.name}), h("div",{class:"thsub",text:[known(r_.family) ? pretty(String(r_.family)) : null, r_.kind === "reported" ? "reported in " + ((r_.reported || {}).citation || "its source") : null].filter(Boolean).join(" · ")})),
+              h("td",null, r_.depositor ? h("a",{class:"plainlink",href:"#/d/" + encodeURIComponent((INDEX.studies.find(q_ => q_.id === r_.study) || {}).depositor_slug || ""),text:r_.depositor}) : "not named", h("div",{class:"thsub"}, h("a",{href:"#/s/" + r_.study,text:r_.study_title || "Untitled study"}))),
+              h("td",{class:"num sc",title:r_.n > 1 && k === b.metric && sp === b.split ? `mean of ${r_.n} seeds` : ""}, fmt(x.v,4)), h("td",{class:"num",text:fmtInt(r_.params)})); }))))
+        : h("p",{class:"bempty",text:`No model on this benchmark has a ${label.toLowerCase()}.`}),
+      h("div",{class:"lb-foot"}, h("span",{class:"lb-k",text:ranked.length > shown.length ? `Top ${shown.length} of ${fmtInt(ranked.length)} models` : pl(ranked.length,"model","models")}),
+        h("div",{class:"seg",role:"group","aria-label":"How many to show"}, LBN.map(n => h("button",{type:"button",id:"lbn-" + n,"aria-pressed":String(LB.n === n),disabled:(n > 10 && ranked.length <= LBN[LBN.indexOf(n) - 1]) || null,text:"Top " + n,onclick:()=>{ LB.n = n; drawBoard().then(() => { const e = document.getElementById("lbn-" + n); if (e) e.focus(); }); }})),
+          h("a",{class:"lball",id:"lball",href:tog,title:"Every model on this benchmark, with its studies merged: one plot, one list, and each model's details",text:`All ${fmtInt(B.rows.length)} →`})),
+        h("span",{class:"lb-hint",text:"All opens the benchmark's studies merged, where every model can be explored."})));
+    sync();
+  }
+  put(app, pageHead(null, "Leaderboards", "The leading models on each benchmark, as their depositors recorded them."),
+    h("div",{class:"lbp"}, h("aside",{class:"lbp-side","aria-label":"Benchmarks"}, q, chips, h("div",{class:"lb-sort"}, sortSel), listBox), boardBox));
+  drawList();
+}
 const togHref = ids => "#/together?s=" + ids.map(encodeURIComponent).join(",");
 /* The studies that are ticked, and what can be done with them. It stays in view while the list scrolls. */
 function renderStudyTray(){
@@ -1759,7 +1851,7 @@ function openAbout(sub){
     h3("licenses", "Credit and licenses"), p("The depositor's name stays on the study, on every leaderboard row and on every run. Each entry carries an open license: MIT unless the depositor chooses another from the list."),
     h3("cite", "How to cite"), p("To credit a study, use Cite on its page. That citation names the depositor. To cite the database:"), citeBlock("Citation", cs.text), citeBlock("BibTeX", cs.bib),
     cs.doi ? h("p",null, "DOI: ", a("https://doi.org/" + cs.doi, cs.doi), ".") : p("The database has no DOI yet. Until it does, cite its address and the date you used it."),
-    h3("contact", "Contact"), mt && known(mt.name) ? p("CAMEO is maintained by ", String(mt.name), known(mt.affiliation) ? " at " + mt.affiliation : "", ".") : null,
+    h3("contact", "Contact"), mt && known(mt.name) ? p("CAMEO was created by ", String(mt.name), known(mt.affiliation) ? " at " + mt.affiliation : "", ", who maintains it.") : null,
     p("The database is a public repository, ", a(repo, INDEX.site.repo), ". The study files in it are the database."),
     p("To report a problem with the site or with an entry, ", a(repo + "/issues", "open an issue on GitHub"), ...(mt && known(mt.email) ? [" or write to ", h("a",{href:"mailto:" + mt.email,text:String(mt.email)})] : []), "."));
   /* older addresses of topics that are now parts of a longer one: open that topic and move to the part */
@@ -1995,8 +2087,11 @@ function openDepositPage(){
 const bx = t => String(t).replace(/([&%#_$])/g, "\\$1");
 function citeSite(){
   const doi = known(INDEX.site.doi) ? String(INDEX.site.doi).replace(/^(doi:|https?:\/\/(dx\.)?doi\.org\/)/i, "") : null, yr = new Date().getFullYear(), base = siteBase();
-  return {doi, text:`CAMEO contributors (${yr}). CAMEO: Catalog of Architecture Metadata and Experimental Outcomes. ${doi ? "https://doi.org/" + doi : base + " (accessed " + today() + ")"}`,
-    bib:`@misc{cameo,\n  author = {{CAMEO contributors}},\n  title = {CAMEO: Catalog of Architecture Metadata and Experimental Outcomes},\n  year = {${yr}},\n${doi ? "  doi = {" + doi + "},\n" : ""}  url = {${base}},\n  note = {Accessed ${today()}}\n}`};
+  /* the database is cited under the name of whoever created and maintains it, as "Family, G." and as BibTeX's "Family, Given" */
+  const mt = isObj(INDEX.site.maintainer) && known(INDEX.site.maintainer.name) ? String(INDEX.site.maintainer.name).trim().split(/\s+/) : null, fam = mt ? mt[mt.length - 1] : null, giv = mt ? mt.slice(0, -1) : [];
+  const who = fam ? (giv.length ? `${fam}, ${giv.map(x => x[0] + ".").join(" ")}` : fam) : "CAMEO contributors", bibWho = fam ? (giv.length ? `${fam}, ${giv.join(" ")}` : fam) : "{CAMEO contributors}";
+  return {doi, text:`${who} (${yr}). CAMEO: Catalog of Architecture Metadata and Experimental Outcomes. ${doi ? "https://doi.org/" + doi : base + " (accessed " + today() + ")"}`,
+    bib:`@misc{cameo,\n  author = {${bibWho}},\n  title = {CAMEO: Catalog of Architecture Metadata and Experimental Outcomes},\n  year = {${yr}},\n${doi ? "  doi = {" + doi + "},\n" : ""}  url = {${base}},\n  note = {Accessed ${today()}}\n}`};
 }
 function citeStudy(){
   const m = META, id = ENTRY.id, who = known((m.contributor || {}).name) ? String(m.contributor.name) : "Depositor not named", title = blank(m.study.title) ? "Untitled study" : String(m.study.title);
