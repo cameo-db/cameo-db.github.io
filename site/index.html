@@ -1452,6 +1452,8 @@ function paintPicked(){
   const pa = document.getElementById("pickall"); if (pa){ const k = shown.filter(id => DB.picked.has(id)).length; pa.checked = k > 0 && k === shown.length; pa.indeterminate = k > 0 && k < shown.length; }
 }
 /* Studies that a search found, or that the visitor ticked, may share a benchmark. Then the next step is its leaderboard, where they can be compared. */
+/* a study in the form its own page draws from: runs, and models with their layers, graph and code. Kept once made. */
+async function studyView(id){ if (!CMPD[id]){ const S = clone(await loadStudy(id)); CMPD[id] = {S, F:fromStudy(S)}; } return CMPD[id]; }
 const MDET = {};   /* what a study's own file adds about a run, once the file has loaded */
 async function modelDetail(u){ const k = u.study + "~" + u.run; if (MDET[k]) return MDET[k]; const S = await loadStudy(u.study), e = modelEntry(S, u.run), t = S.trials.find(x => x.id === u.run) || {}, m = S.models.find(x => x.id === t.model) || {};
   return MDET[k] = {settings:(e && e.training.settings) || {}, own:new Set((e && e.training.set_by_this_run) || []), recipe:e ? e.training.recipe : null, change:known(m.change_summary) ? String(m.change_summary) : null, hyp:known(t.hypothesis) ? String(t.hypothesis) : null,
@@ -1535,23 +1537,29 @@ async function openLeaderboards(r){
     const pickModel = key => { LB.sel = key; drawBoard().then(() => { const e = document.getElementById(LB.focus || "lbm-" + key); LB.focus = null; if (e && !e.disabled) e.focus(); }); };
     const drawPanel = () => { const at = ranked.findIndex(x => x.r.study + "~" + x.r.run === LB.sel), wrap = document.getElementById("lbp"); if (at < 0) LB.sel = null; wrap.classList.toggle("has-sel", !!LB.sel);
       if (!LB.sel){ put(panel); panel.hidden = true; return; } panel.hidden = false;
-      const r_ = ranked[at].r, u = Object.assign({}, of(r_), {study:r_.study, run:r_.run, name:r_.name, family:r_.family, params:r_.params, minutes:r_.minutes}), body = h("div",{class:"sec",id:"lbdet"}, h("p",{class:"q",text:"Loading the training settings…"}));
+      const r_ = ranked[at].r, u = Object.assign({}, of(r_), {study:r_.study, run:r_.run, name:r_.name, family:r_.family, params:r_.params, minutes:r_.minutes}), ptab = LB.ptab === "model" ? "model" : "details", body = h("div",{id:"lbdet"}, h("div",{class:"sec"}, h("p",{class:"q",text:ptab === "model" ? "Loading the model…" : "Loading the training settings…"})));
+      const refocus = () => { const e = LB.focus && document.getElementById(LB.focus); LB.focus = null; if (e && !e.disabled) e.focus(); };
       const step = d_ => { const n = ranked[at + d_]; if (!n) return; if (at + d_ >= LB.n) LB.n = LBN.find(v => v > at + d_) || LBN[LBN.length - 1]; LB.focus = d_ < 0 ? "lbprev" : "lbnext"; pickModel(n.r.study + "~" + n.r.run); };
       put(panel, h("div",{class:"insp-h"},
           h("div",{class:"tog-nav"}, `Rank ${at + 1} of ${fmtInt(ranked.length)}`, h("span",{class:"sp"}, h("button",{class:"btn sm",type:"button",id:"lbprev",disabled:at <= 0 || null,title:"The model ranked above this one",text:"← Previous",onclick:()=>step(-1)}),
             h("button",{class:"btn sm",type:"button",id:"lbnext",disabled:at >= Math.min(ranked.length, 100) - 1 || null,title:"The model ranked below this one",text:"Next →",onclick:()=>step(1)}),
             h("button",{class:"x",type:"button",id:"lbclose","aria-label":"Close the model's details",title:"Close",text:"×",onclick:()=>{ const kk = LB.sel; LB.sel = null; drawBoard().then(() => { const e = document.getElementById("lbm-" + kk); if (e) e.focus(); }); }}))),
           h("div",{class:"k",text:(r_.depositor ? r_.depositor + " · " : "") + (r_.study_title || "Untitled study")}), h("h2",{id:"lbname",text:r_.name}),
-          h("div",{class:"pills"}, known(r_.family) ? h("span",{class:"pill plain",text:pretty(String(r_.family))}) : null, r_.kind === "reported" ? h("span",{class:"pill plain",text:"reported elsewhere"}) : null, h("span",{class:"pill tie",text:`${label} ${fmt(ranked[at].v,4)}`})),
-          h("div",{class:"insp-a"}, (b_ => { b_.id = "cmpinsp"; return b_; })(cmpBtn(r_.study, r_.run, r_.name, true)),
+          h("div",{class:"pills"}, known(r_.family) ? h("span",{class:"pill plain",text:pretty(String(r_.family))}) : null, r_.kind === "reported" ? h("span",{class:"pill plain",text:"reported elsewhere"}) : null),
+          h("div",{class:"insp-a"},
             h("button",{class:"btn sm",type:"button",title:"The model, its training settings and recipe, its data and its results, as one JSON file",text:"Download run configuration (JSON)",onclick:e=>downloadModel(r_.study, r_.run, e.currentTarget)}),
-            h("a",{class:"btn sm",id:"lbtog",href:tog + "&m=" + encodeURIComponent(LB.sel),title:"Leaves this page: this model on the plot of the benchmark's merged studies",text:"See it on the plot ↗"}),
-            h("a",{class:"btn sm",id:"lbsrc",href:"#/s/" + r_.study + "/" + encodeURIComponent(r_.run),title:"Leaves this page: the run on its own study's page, with its layers, graph, code and lineage",text:"Open source study ↗"}))), body);
-      const want = LB.sel;
-      modelDetail(u).then(d_ => { if (LB.sel !== want || !body.isConnected) return; const rows = modelRows([{u, d:d_}], b);
-        put(body, h("table",{class:"tog-cmp",id:"lbcmp"}, h("tbody",null, rows.map(x => x.sec ? h("tr",null, h("th",{colspan:"2",scope:"colgroup",style:"padding-top:12px;text-transform:uppercase;letter-spacing:.07em;font-size:11.5px;font-weight:600",text:x.sec}))
-          : h("tr",null, h("th",{scope:"row"}, x.label, x.own ? h("span",{class:"own",title:"Set by this run, not by the study's defaults",text:"set by this run"}) : null), h("td",{text:x.vals[0] == null || x.vals[0] === "" ? "–" : String(x.vals[0])})))))); })
-        .catch(e => { if (body.isConnected) put(body, h("p",{class:"q",text:"The training settings did not load. (" + e.message + ")"})); }); };
+            h("a",{class:"btn sm",id:"lbsrc",href:"#/s/" + r_.study + "/" + encodeURIComponent(r_.run),title:"Leaves this page: the run on its own study's page, with its lineage and the rest of its search",text:"Open source study ↗"}))),
+        h("div",{class:"itabs"}, h("div",{class:"tabs",role:"tablist","aria-label":"What to show about the model"}, [["details","Details"],["model","Model"]].map(([v, t]) => h("button",{class:"tab",role:"tab",type:"button",id:"lbpt-" + v,"aria-selected":String(ptab === v),text:t,onclick:()=>{ LB.ptab = v; LB.focus = "lbpt-" + v; drawPanel(); refocus(); }})))),
+        body);
+      const want = LB.sel + "|" + ptab, live = () => LB.sel + "|" + (LB.ptab === "model" ? "model" : "details") === want && body.isConnected;
+      if (ptab === "model")   /* the model as layers, as a graph, or as code: the same three views as on its study's page */
+        studyView(r_.study).then(V => { if (!live()) return; const run = V.F.runs.find(x => x.id === r_.run) || {}, mdl = V.F.models.find(x => x.id === run.model) || null;
+          put(body, modelSection(run, {mdl, tab:LB.mtab || "diagram", setTab:v => { LB.mtab = v; LB.focus = "mtab-" + v; }, redraw:() => { drawPanel(); }})); refocus(); })
+          .catch(e => { if (body.isConnected) put(body, h("div",{class:"sec"}, h("p",{class:"q",text:"The model did not load. (" + e.message + ")"}))); });
+      else modelDetail(u).then(d_ => { if (!live()) return; const rows = modelRows([{u, d:d_}], b);
+        put(body, h("div",{class:"sec"}, h("table",{class:"tog-cmp",id:"lbcmp"}, h("tbody",null, rows.map(x => x.sec ? h("tr",null, h("th",{colspan:"2",scope:"colgroup",style:"padding-top:12px;text-transform:uppercase;letter-spacing:.07em;font-size:11.5px;font-weight:600",text:x.sec}))
+          : h("tr",null, h("th",{scope:"row"}, x.label, x.own ? h("span",{class:"own",title:"Set by this run, not by the study's defaults",text:"set by this run"}) : null), h("td",{text:x.vals[0] == null || x.vals[0] === "" ? "–" : String(x.vals[0])}))))))); })
+        .catch(e => { if (body.isConnected) put(body, h("div",{class:"sec"}, h("p",{class:"q",text:"The training settings did not load. (" + e.message + ")"}))); }); };
     put(boardBox,
       h("div",{class:"lb-h"}, h("div",null, h("div",{class:"eyebrow",text:tagsOf(b).join(" · ")}), h("h2",{id:"lbtitle",text:b.title}), h("p",{class:"lb-sub",text:`${b.dataset} · ${b.task}`})),
         h("div",{class:"lb-links"}, refs.map(l => h("a",{class:"lk",href:l.href,target:"_blank",rel:"noopener",text:l.label + " ↗"})), h("a",{class:"btn sm",href:"#/b/" + id,title:"The benchmark's own page: its chart, the full table, and how each study prepared the data",text:"Benchmark page"}))),
@@ -1572,7 +1580,7 @@ async function openLeaderboards(r){
       h("div",{class:"lb-foot"}, h("span",{class:"lb-k",text:ranked.length > shown.length ? `Top ${shown.length} of ${fmtInt(ranked.length)} models` : pl(ranked.length,"model","models")}),
         h("div",{class:"seg",role:"group","aria-label":"How many to show"}, LBN.map(n => h("button",{type:"button",id:"lbn-" + n,"aria-pressed":String(LB.n === n),disabled:(n > 10 && ranked.length <= LBN[LBN.indexOf(n) - 1]) || null,text:"Top " + n,onclick:()=>{ LB.n = n; drawBoard().then(() => { const e = document.getElementById("lbn-" + n); if (e) e.focus(); }); }})),
           h("a",{class:"lball",id:"lball",href:tog,title:"Every model on this benchmark, with its studies merged: one plot, one list, and each model's details",text:`All ${fmtInt(B.rows.length)} →`})),
-        h("span",{class:"lb-hint",text:"Click a model to see its details here. All opens the benchmark's studies merged, on a plot."})));
+        h("span",{class:"lb-hint",text:"Click a model for its details, layers, graph and code. All opens the benchmark's studies merged, on a plot."})));
     drawPanel(); sync();
   }
   put(app, pageHead(null, "Leaderboards", "The leading models on each benchmark, as their depositors recorded them."),
@@ -3261,7 +3269,7 @@ function flowSection(mdl){
   const ops = {}; let layers = 0; for (const x of F.nodes){ if (x.kind === "op") ops[x.op] = (ops[x.op] || 0) + 1; else layers++; }
   const nOps = Object.values(ops).reduce((a, b) => a + b, 0), list = Object.keys(ops).sort((a, b) => ops[b] - ops[a]).map(k => `${ops[k]} ${k}`).join(", ");
   const box = h("div",{class:"flowwrap",id:"flowbox",tabindex:"0",role:"region","aria-label":"Model graph"}), bar = h("div",{class:"zrow",role:"group","aria-label":"Zoom"});
-  const room = () => Math.max(240, ((document.getElementById("insp") || {}).clientWidth || 380) - 54);
+  const room = () => Math.max(240, ((document.getElementById("insp") || document.getElementById("lbinsp") || {}).clientWidth || 380) - 54);
   /* zoom is a few steps: the whole model, then larger, until every layer shows its full name */
   const fit = flowView(mdl, {size:"small", maxH:520, maxW:room()}), m0 = fit.dataset.mode, steps = [null].concat(m0 === "mini" ? ["small","big"] : ["big"]);
   const draw = keep => { const z = state.gz = Math.max(0, Math.min(steps.length - 1, state.gz || 0));
@@ -3347,21 +3355,22 @@ const ioFull = o => known(ioFirst(o).kind) ? String(ioFirst(o).kind) : "";
 const ioName = o => { const k = ioFull(o); return k ? ": " + (k.length > 40 ? k.slice(0, 38) + "…" : k) : ""; };
 const ioShape = o => { const sh = ioFirst(o).shape; if (Array.isArray(sh)) return sh.join(" × ");
   return known(sh) ? String(sh).replace(/[()\[\]]/g, "").split(",").map(x => x.trim()).filter(x => x && !/^(N|B|batch)$/i.test(x)).join(" × ") : ""; };
-function modelSection(r){
+/* A model as layers, as a graph or as code. On a study's page it reads the study on screen. Elsewhere X supplies the model, which view is open and how to redraw. */
+function modelSection(r, X){
   const sec = h("div",{class:"sec"});
-  const mdl = modelById[r.model];
+  const mdl = X ? X.mdl : modelById[r.model], mtab = X ? X.tab : state.mtab, again = X ? X.redraw : renderInspector, setTab = v => { if (X) X.setTab(v); else state.mtab = v; again(); };
   const tabs = h("span",{class:"sp"}, h("div",{class:"seg"},
-    [["diagram","Layers"],["flow","Graph"],["source","Code"]].map(([v,t]) => h("button",{"aria-pressed":String(state.mtab===v),text:t,onclick:()=>{state.mtab=v; renderInspector();}}))));
+    [["diagram","Layers"],["flow","Graph"],["source","Code"]].map(([v,t]) => h("button",{type:"button",id:"mtab-" + v,"aria-pressed":String(mtab===v),text:t,onclick:()=>setTab(v)}))));
   sec.append(h("h3",null, "Model", tabs));
-  if (MODELS === null){ sec.append(h("p",{class:"q",text:"Loading the model…"})); return sec; }
+  if (!X && MODELS === null){ sec.append(h("p",{class:"q",text:"Loading the model…"})); return sec; }
   if (!mdl){ sec.append(h("p",{class:"q",text:"The model record did not load."})); return sec; }
   if (!mdl.src && !mdl.tree){ sec.append(h("p",{class:"q",text:"No code is stored for this model." + (r.reported ? " It is described in the source this result was copied from." : "")})); return sec; }
-  if (state.mtab === "source"){
-    sec.append(mdl.constants ? h("p",{class:"fine",id:"srcconst",style:"margin:0 0 8px"}, "The training script set these before the code ran: ", h("code",{text:Object.entries(mdl.constants).map(([k, v]) => `${k} = ${typeof v === "string" ? JSON.stringify(v) : v}`).join(", ")}), ".") : null,
-      h("pre",{class:"src",tabindex:"0",text:mdl.src}), h("p",{class:"fine",text:`${mdl.src.split("\n").length} lines of code, stored in the deposit as text.`}));
+  if (mtab === "source"){
+    sec.append(...[mdl.constants ? h("p",{class:"fine",id:"srcconst",style:"margin:0 0 8px"}, "The training script set these before the code ran: ", h("code",{text:Object.entries(mdl.constants).map(([k, v]) => `${k} = ${typeof v === "string" ? JSON.stringify(v) : v}`).join(", ")}), ".") : null,
+      h("pre",{class:"src",tabindex:"0",text:mdl.src}), h("p",{class:"fine",text:`${mdl.src.split("\n").length} lines of code, stored in the deposit as text.`})].filter(Boolean));
     return sec;
   }
-  if (state.mtab === "flow"){ sec.append(...flowSection(mdl)); return sec; }
+  if (mtab === "flow"){ sec.append(...flowSection(mdl)); return sec; }
   if (!mdl.tree){
     sec.append(h("div",{class:"warnline",text:mdl.trace_error ? "No workflow can be drawn for this model. Its code did not build when traced (" + mdl.trace_error.slice(0,160) + ")."
       : "This entry holds the model as code only, so there is no layer list to draw. cameo.py add-layers adds one when the model can be built from its code alone. The Code tab shows the code."}));
@@ -3381,7 +3390,7 @@ function modelSection(r){
         mdl.match === false ? h("span",{style:"color:var(--warn)",text:`differs from the recorded ${rec.map(fmtInt).join(", ")}`}) : null), toggle),
     flow,
     h("div",{class:"key"}, h("span",{class:"kw",text:"weights"}), h("span",{class:"kn",text:"normalization"}), h("span",{class:"kc",text:"custom block"})),
-    h("button",{class:"linkish","aria-expanded":String(state.diagNote),style:"font-size:12.5px;margin-top:8px",text:state.diagNote ? "Hide the details" : "What changed, and how to read this",onclick:()=>{ state.diagNote = !state.diagNote; renderInspector(); }}),
+    h("button",{class:"linkish","aria-expanded":String(state.diagNote),style:"font-size:12.5px;margin-top:8px",text:state.diagNote ? "Hide the details" : "What changed, and how to read this",onclick:()=>{ state.diagNote = !state.diagNote; again(); }}),
     h("div",{hidden:!state.diagNote},
       mdl.change ? h("p",{class:"q",style:"margin-top:8px"}, h("b",{text:"What changed. "}), mdl.change) : null,
       h("p",{class:"fine",text:"Each row is a layer, in the order it ran in one forward pass, with its output shape and parameter count on the right. Steps written inline in the model's code (activations, pooling, additions, joins) are not layers, so they do not appear. A full graph in the deposit would show them."})));
