@@ -4,7 +4,7 @@ An open database of model searches.
 
 Behind a published model there is usually a search through hundreds of architectures and training settings. CAMEO keeps the whole search: every model, with the code that builds it, how it was trained and how it scored. The models can be ranked on shared benchmarks, compared across studies, downloaded, and used to start new searches.
 
-The studies here were run with [evoloop](https://evoloop.readthedocs.io/en/latest/), open-source code that runs such searches and saves them in CAMEO's format.
+[evoloop](https://evoloop.readthedocs.io/en/latest/) is open-source code that runs such searches and saves them in CAMEO's format.
 
 - `studies/` is the database: one JSON file per study.
 - `benchmarks.json` lists the benchmarks. A benchmark is a dataset, a split to score on and a metric.

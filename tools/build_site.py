@@ -247,9 +247,11 @@ open(os.path.join(out, "llms.txt"), "w", encoding="utf-8").write("""# CAMEO
 - [Example entry](%(b)skit/example_minimal.json): a complete entry that passes every check
 - [All of these as one zip](%(b)skit/cameo-agent-kit.zip)
 
-## Run a search
+## Run a new search
 
-- [evoloop](https://evoloop.readthedocs.io/en/latest/): open-source code that runs a search over model designs and saves it as a CAMEO study. It can also start a new search from a study downloaded here
+Any agent or training loop can write an entry from the instructions above.
+
+- [evoloop](https://evoloop.readthedocs.io/en/latest/): open-source code for autoresearch loops. It saves each search as a CAMEO study and can start a search from a study downloaded here
 
 ## Read the database
 
