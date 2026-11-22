@@ -1019,6 +1019,23 @@ h1{font-weight:600} .page-h h1{font-size:40px;font-weight:600} .hero2 h1{font-si
 .cameo-art{color:var(--peri);max-width:300px}
 @media (max-width:980px){ .land{padding:48px 0 44px} .land h1{font-size:38px} .cameo-art{max-width:150px;justify-self:start;order:-1} }
 @media (max-width:520px){ .page-h h1{font-size:30px} .hero2 h1{font-size:26px} .hl h2{font-size:28px} }
+/* a study's run table: columns can be hidden and resized, and the two score columns say which metric they show */
+.colmenu{position:relative} .colmenu > summary{list-style:none;cursor:pointer;display:inline-flex;gap:6px;align-items:center} .colmenu > summary::-webkit-details-marker{display:none}
+.colmenu .pop{position:absolute;right:0;top:calc(100% + 6px);z-index:25;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:0 14px 34px #0003;min-width:210px;display:grid;gap:6px}
+.colmenu .pop label{display:flex;gap:9px;align-items:center;font-size:13.5px;color:var(--ink);cursor:pointer;white-space:nowrap} .colmenu .pop input{accent-color:var(--accent);width:15px;height:15px}
+.colmenu .pop .fine{margin:4px 0 0;padding-top:8px;border-top:1px solid var(--line-2);white-space:normal;max-width:230px}
+#tbl th{position:sticky} #tbl th .rz{position:absolute;top:0;right:-4px;width:9px;height:100%;cursor:col-resize;z-index:3;touch-action:none}
+#tbl th .rz::after{content:"";position:absolute;left:4px;top:22%;height:56%;width:1px;background:var(--line)} #tbl th:hover .rz::after,#tbl th .rz.on::after{width:2px;left:3px;background:var(--accent)}
+#tbl th select.msel{display:block;margin:4px 0 0;font:inherit;font-size:11.5px;font-weight:400;max-width:100%;width:100%;min-width:92px;padding:2px 4px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink-2)}
+#tbl th.r select.msel{margin-left:auto} #tbl th:has(select.msel){min-width:168px} .colmenu .pop{left:0;right:auto} #tbl th{vertical-align:bottom} #tbl td.r{overflow:hidden;text-overflow:ellipsis}
+/* the front page, closer set: less air between its parts */
+.land{padding:52px 0 46px;margin-bottom:36px;gap:56px} .land h1{margin:0 0 16px} .land .lede{margin:0 0 22px} .land .count{margin-top:18px}
+.cameo-art{max-width:250px}
+.hl{padding:36px 40px;margin:0 0 32px;gap:22px 52px} .hl h2{margin:0 0 12px} .hl p{margin:0 0 10px} .hl-a{margin-top:18px} .hl li{padding:13px 0}
+.uses{padding:28px 0 4px;gap:40px} .use h2{margin:0 0 8px} .use p{margin:0 0 10px}
+.band{margin:34px 0 0;padding:34px 40px} .band h2{margin:0 0 8px} .band .soon{margin-top:10px}
+.at-home + * , .at-home .foot-site{margin-top:44px}
+@media (max-width:980px){ .land{padding:36px 0 34px} .hl{padding:26px 22px} .band{padding:26px 22px} }
 </style>
 </head>
 <body>
@@ -2240,7 +2257,7 @@ function init(meta, runs, models, entry){
     const scored = RUNS.filter(r => r.score != null), most = k => scored.length && scored.filter(r => Q[k].get(r) != null).length * 2 >= scored.length;
     state.ax = {x:blankAxis(RUNS.some(r => r.speed) ? "speed" : ["params","mins"].find(most) || "order"), y:yAxis()}; }
   state.hx = blankAxis("order"); state.hy = blankAxis(Q[OBJ.metric] ? OBJ.metric : acc[0], OBJ.split === "test" ? "test" : "valid");
-  state.tab = (RUNS.some(r => (r.evals || []).length) && Object.keys(META.datasets || {}).length > 1) ? "datasets" : "compare"; state.dsSort = null; state.rowsAll = false; state.mode = "family"; state.sort = RUNS.some(r => r.score != null) ? {key:"score", dir:OBJ.dir} : {key:"tp", dir:-1}; state.hidden = new Set(); state.q = ""; state.noScore = false; state.corrOpen = false;
+  state.tab = (RUNS.some(r => (r.evals || []).length) && Object.keys(META.datasets || {}).length > 1) ? "datasets" : "compare"; state.dsSort = null; state.rowsAll = false; state.mode = "family"; state.sort = RUNS.some(r => r.score != null) ? {key:"score", dir:OBJ.dir} : {key:"tp", dir:-1}; state.hidden = new Set(); state.q = ""; state.noScore = false; state.hideCols = new Set(); state.colW = {}; state.vm = null; state.tm = null; state.corrOpen = false;
   for (const f of FIELDS) f._other = false;
   snapshot(); state.editorOpen = staged() && checklist().block.length > 0;
   build(); wire();
@@ -2374,7 +2391,7 @@ function build(){
     h("div",{id:"cap"}));
   const tableCard = h("section",{class:"card","aria-label":"Leaderboard"},
     h("div",{class:"card-h"}, h("h2",{text:"Leaderboard"}),
-      h("div",{class:"seg",role:"group","aria-label":"Rows to show",id:"mode"}),
+      h("div",{class:"seg",role:"group","aria-label":"Rows to show",id:"mode"}), h("div",{id:"colmenu"}),
       h("label",{class:"ctl",style:"margin-left:auto;flex-direction:row;align-items:center;gap:8px"}, "Search",
         h("input",{id:"q",type:"search",placeholder:"name, family, idea…  ( / )",value:state.q,oninput:e=>{state.q=e.target.value; drawMain(); renderTable();}}))),
     h("div",{class:"tnote",id:"tnote"}),
@@ -2795,12 +2812,15 @@ function drawLineage(){
 }
 
 /* ---------- leaderboard ---------- */
+/* The validation column shows the study's objective unless another metric is chosen; the test column shows the benchmark's metric unless another is chosen. */
+const vmOpts = () => QGROUPS[0][1].filter(id => RUNS.some(r => (r.v || {})[id] != null)), tmOpts = () => QGROUPS[0][1].filter(id => RUNS.some(r => (r.t || {})[id] != null));
+const TM = () => state.tm && Q[state.tm] ? state.tm : YM(), vmGet = r => state.vm && Q[state.vm] ? (r.v || {})[state.vm] : r.score;
 const COLS = [
   {key:"tie", label:""},
   {key:"name", label:"Model", get:r=>r.name},
   {key:"fam", label:"Family", get:r=>pretty(r.fam)},
-  {key:"score", get label(){ return OBJ.short; }, num:true, get:r=>r.score, show:r=>fmt(r.score,4), get first(){ return OBJ.dir; }},
-  {key:"tp", label:"Test r", num:true, get:r=>(r.t||{})[YM()], show:r=>fmt((r.t||{})[YM()],3), first:-1},
+  {key:"score", get label(){ return OBJ.short; }, num:true, get:r=>vmGet(r), show:r=>fmt(vmGet(r),4), get first(){ return state.vm && Q[state.vm] ? (Q[state.vm].better === "low" ? 1 : -1) : OBJ.dir; }},
+  {key:"tp", label:"Test r", num:true, get:r=>(r.t||{})[TM()], show:r=>fmt((r.t||{})[TM()],4), get first(){ return Q[TM()] && Q[TM()].better === "low" ? 1 : -1; }},
   {key:"speed", get label(){ return Q.speed.short; }, num:true, get:r=>r.speed, show:r=>fmtInt(r.speed), first:-1},
   {key:"params", label:"Parameters", num:true, get:r=>r.params, show:r=>fmtInt(r.params), first:1},
   {key:"mins", label:"Train min", num:true, get:r=>r.mins, show:r=>fmt(r.mins,1), first:1},
@@ -2820,7 +2840,8 @@ function tableRows(){
     return (typeof x === "string" ? x.localeCompare(y) : x - y) * dir || a.r.n - b.r.n; });
   return rows;
 }
-const tcols = () => COLS.filter(c => (c.key !== "tp" || hasTest(YM())) && (c.key !== "score" || RUNS.some(r => r.score != null)) && (c.key !== "speed" || RUNS.some(r => r.speed != null)) && (c.key !== "mins" || RUNS.some(r => r.mins != null)));
+const tcolsAll = () => COLS.filter(c => (c.key !== "tp" || tmOpts().length > 0) && (c.key !== "score" || RUNS.some(r => r.score != null)) && (c.key !== "speed" || RUNS.some(r => r.speed != null)) && (c.key !== "mins" || RUNS.some(r => r.mins != null)));
+const tcols = () => COLS.filter(c => !(state.hideCols && state.hideCols.has(c.key)) && (c.key !== "tp" || tmOpts().length > 0) && (c.key !== "score" || RUNS.some(r => r.score != null)) && (c.key !== "speed" || RUNS.some(r => r.speed != null)) && (c.key !== "mins" || RUNS.some(r => r.mins != null)));
 function renderTable(){
   const t = document.getElementById("tbl"), all = tableRows(), ti = tieInfo(), LIMIT = 10;
   const rows = state.rowsAll ? all : all.slice(0, LIMIT);
@@ -2828,11 +2849,34 @@ function renderTable(){
     : ti.total ? [h("b",{text:!ti.nf ? pl(ti.total,"scored run","scored runs") : ti.n < 2 ? `No other scored run is within the study's ${fmtSmall(ti.nf)} margin of the best` : `${ti.n} of ${ti.total} scored runs are within the study's ${fmtSmall(ti.nf)} margin of the best`}), h("span",{class:"m",text:ti.nf ? ` · one seed per run, so this is not a statistical tie` : ` · the file gives no margin to judge ties by`})]
     : [h("span",{class:"m",text:RUNS.some(r => r.kind === "reported") ? "These results were reported elsewhere. Nothing was run in this study." : "No run has a score yet."})]));
   const pickable = ENTRY.status === "published" && !!ENTRY.id;
+  const wst = k => state.colW[k] ? `width:${state.colW[k]}px;min-width:${state.colW[k]}px;max-width:${state.colW[k]}px` : null;
+  /* drag a column's right edge to resize it; double-click the edge to let it size itself again */
+  const grip = (c, th) => { const g = h("span",{class:"rz",title:"Drag to resize. Double-click to reset.","aria-hidden":"true"});
+    g.addEventListener("dblclick", e => { e.stopPropagation(); delete state.colW[c.key]; renderTable(); });
+    g.addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); g.setPointerCapture(e.pointerId); g.classList.add("on"); const x0 = e.clientX, w0 = th.getBoundingClientRect().width, idx = [...th.parentNode.children].indexOf(th) + 1, cells = t.querySelectorAll(`tr > :nth-child(${idx})`); let w = w0;
+      const mv = ev => { w = Math.max(48, Math.round(w0 + ev.clientX - x0)); for (const el of cells){ el.style.width = el.style.minWidth = el.style.maxWidth = w + "px"; } };
+      const up = () => { g.removeEventListener("pointermove", mv); g.removeEventListener("pointerup", up); g.classList.remove("on"); if (w !== Math.round(w0)) state.colW[c.key] = w; };
+      g.addEventListener("pointermove", mv); g.addEventListener("pointerup", up); });
+    return g; };
+  /* which metric a score column shows: chosen in the column's own header */
+  const msel = (id, label, opts, cur, set) => { if (opts.length < 2) return null; const e = h("select",{class:"msel",id,"aria-label":label,title:label}, opts.map(([v, tx]) => h("option",{value:v,text:tx}))); e.value = cur; e.addEventListener("click", ev => ev.stopPropagation());
+    e.addEventListener("change", () => { set(e.value); renderTable(); const n = document.getElementById(id); if (n) n.focus(); }); return e; };
+  const vo = vmOpts(), to = tmOpts(), objIn = vo.includes(OBJ.metric);
+  const vsel = () => msel("vmsel", "Validation metric in this column", (objIn ? [] : [["", OBJ.short + " (objective)"]]).concat(vo.map(id => [id, Q[id].short + (id === OBJ.metric ? " (objective)" : "")])), state.vm && Q[state.vm] ? state.vm : objIn ? OBJ.metric : "", v => { state.vm = v && v !== OBJ.metric ? v : null; if (state.sort.key === "score") state.sort.dir = COLS.find(c => c.key === "score").first; });
+  const tsel = () => msel("tmsel", "Test metric in this column", to.map(id => [id, Q[id].short + (id === YM() ? " (benchmark)" : "")]), TM(), v => { state.tm = v && v !== YM() ? v : null; if (state.sort.key === "tp") state.sort.dir = COLS.find(c => c.key === "tp").first; });
   const head = h("thead",null, h("tr",null, pickable ? h("th",{scope:"col",class:"cmpc"}, h("span",{style:"position:absolute;left:-9999px",text:"Select"})) : null, tcols().map(c => {
     if (!c.get) return h("th",{scope:"col"}, h("span",{style:"position:absolute;left:-9999px",text:"Standing"}));
-    const on = state.sort.key === c.key;
-    return h("th",{scope:"col",class:c.num?"r":"","aria-sort":on ? (state.sort.dir>0?"ascending":"descending") : "none"},
-      h("button",{onclick:()=>{ state.sort = on ? {key:c.key,dir:-state.sort.dir} : {key:c.key,dir:c.first||1}; renderTable(); }}, (c.key === "tp" && !Q.pearson) ? sw("Test", Q[YM()].short) : c.label, on ? (state.sort.dir>0?" ↑":" ↓") : "")); })));
+    const on = state.sort.key === c.key, pick = c.key === "score" ? vsel() : c.key === "tp" ? tsel() : null;
+    const label = c.key === "score" ? (pick ? "Validation" : c.label) : c.key === "tp" ? (pick ? "Test" : sw("Test", Q[TM()].short)) : c.label;
+    const th = h("th",{scope:"col",class:c.num?"r":"",style:wst(c.key),"aria-sort":on ? (state.sort.dir>0?"ascending":"descending") : "none"},
+      h("button",{onclick:()=>{ state.sort = on ? {key:c.key,dir:-state.sort.dir} : {key:c.key,dir:c.first||1}; renderTable(); }}, label, on ? (state.sort.dir>0?" ↑":" ↓") : ""), pick);
+    th.append(grip(c, th)); return th; })));
+  /* the list of columns, each with a tick: untick one to hide it */
+  { const box = document.getElementById("colmenu"); if (box){ const was = (box.querySelector("details") || {}).open, names = {fam:"Family", score:"Validation score", tp:"Test score", speed:"Speed", params:"Parameters", mins:"Training time"};
+      put(box, h("details",{class:"colmenu",open:was || null}, h("summary",{class:"btn sm",id:"colbtn",title:"Show or hide columns"}, "Columns" + (state.hideCols.size ? ` · ${state.hideCols.size} hidden` : "")),
+        h("div",{class:"pop"}, tcolsAll().filter(c => names[c.key]).map(c => h("label",null, (cb => { cb.checked = !state.hideCols.has(c.key); cb.addEventListener("change", () => { if (cb.checked) state.hideCols.delete(c.key); else { state.hideCols.add(c.key); if (state.sort.key === c.key) state.sort = {key:"name", dir:1}; } renderTable(); const n = document.getElementById("colcb-" + c.key); if (n) n.focus(); }); return cb; })(h("input",{type:"checkbox",id:"colcb-" + c.key})), names[c.key])),
+          Object.keys(state.colW).length ? h("button",{class:"linkish",type:"button",id:"colwreset",style:"font-size:13px;text-align:left",text:"Reset column widths",onclick:()=>{ state.colW = {}; renderTable(); }}) : null,
+          h("p",{class:"fine",text:"Drag the right edge of a column's heading to resize it."})))); } }
   const body = h("tbody",null, rows.map(({r,k}) => {
     const sr = SERIES.find(x => x.key === seriesOf(r));
     const tr = h("tr",{tabindex:"0","aria-selected":String(r.id===state.sel),"data-id":r.id,
@@ -2840,11 +2884,11 @@ function renderTable(){
       onkeydown:e=>{ if (e.target !== tr) return; if (e.key==="Enter"||e.key===" "){ e.preventDefault(); select(r.id); }
         else if (e.key==="ArrowDown"||e.key==="ArrowUp"){ e.preventDefault(); const n = e.key==="ArrowDown" ? tr.nextElementSibling : tr.previousElementSibling; if (n){ n.focus(); select(n.dataset.id, true); } } }},
       pickable ? h("td",{class:"cmpc"}, cmpBtn(ENTRY.id, r.id, r.name)) : null,
-      h("td",null, r.kind === "reported" ? h("span",{class:"pill plain",title:"Copied from " + (r.reported.citation || "its source") + ". Not run in this study.",text:"reported"}) : r.status !== "done" ? h("span",{class:"pill bad",title:(META.failures || {})[r.id] || r.note || "The file gives no reason",text:known(r.status) ? String(r.status).replace(/_/g, " ") : "no result"}) : isTie(r) ? h("span",{class:"pill tie",text:"tied"}) : "",
-        isRevised(r) ? h("span",{class:"pill rev",style:"margin-left:4px",title:revisedNote(r),text:"revised"}) : null),
-      h("td",{class:"name",title:r.name}, r.name),
-      h("td",{class:"fam",title:pretty(r.fam)}, h("span",{class:"dot",style:`background:${sr.color}`}), pretty(r.fam), (state.mode==="family" && k>1) ? h("span",{style:"color:var(--muted)",text:` · ${k} runs`}) : ""),
-      tcols().slice(3).map(c => h("td",{class:"r"}, r.status !== "done" && c.key !== "speed" && c.key !== "params" ? "–" : c.show(r))));
+      tcols().map(c => c.key === "tie" ? h("td",null, r.kind === "reported" ? h("span",{class:"pill plain",title:"Copied from " + (r.reported.citation || "its source") + ". Not run in this study.",text:"reported"}) : r.status !== "done" ? h("span",{class:"pill bad",title:(META.failures || {})[r.id] || r.note || "The file gives no reason",text:known(r.status) ? String(r.status).replace(/_/g, " ") : "no result"}) : isTie(r) ? h("span",{class:"pill tie",text:"tied"}) : "",
+        isRevised(r) ? h("span",{class:"pill rev",style:"margin-left:4px",title:revisedNote(r),text:"revised"}) : null)
+      : c.key === "name" ? h("td",{class:"name",style:wst("name"),title:r.name}, r.name)
+      : c.key === "fam" ? h("td",{class:"fam",style:wst("fam"),title:pretty(r.fam)}, h("span",{class:"dot",style:`background:${sr.color}`}), pretty(r.fam), (state.mode==="family" && k>1) ? h("span",{style:"color:var(--muted)",text:` · ${k} runs`}) : "")
+      : h("td",{class:"r",style:wst(c.key)}, r.status !== "done" && c.key !== "speed" && c.key !== "params" ? "–" : c.show(r))));
     return tr; }));
   t.replaceChildren(head, body);
   document.getElementById("twrap").className = "tablewrap" + (state.rowsAll ? " all" : "");
