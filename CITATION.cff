@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 title: "CAMEO: Catalog of Architecture Metadata and Experimental Outcomes"
 message: "If you use CAMEO, please cite it as below. To credit one study, use Cite on that study's page."
-abstract: "An open database of the models that studies train, including those that never reach the paper: what each model was, how it was trained, and how it performed. Each entry is one JSON file."
+abstract: "An open database of model searches. Each study is one JSON file holding every model a search tried: the code that builds it, how it was trained, and how it scored."
 authors:
   - family-names: "Koo"
     given-names: "Peter"

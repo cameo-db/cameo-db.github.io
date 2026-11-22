@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CAMEO</title>
-<meta name="description" content="CAMEO is an open database of the models a study trains, including the ones that never reach the paper: what each model was, how it was trained and how it performed.">
+<title>CAMEO · an open database of model searches</title>
+<meta name="description" content="CAMEO is an open database of model searches. Every architecture a search tried is here with its code, how it was trained and how it scored, so you can see what worked, what didn't, and what carries over between studies.">
 <meta name="theme-color" content="#0A1433">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230A1433'/%3E%3Cg transform='translate%2811 11%29 scale%28.78%29' color='%2393A8FB'%3E%3Cpath d='M81.5 25.4A40 40 0 1 0 81.5 74.6' fill='none' stroke='currentColor' stroke-width='10.5'/%3E%3Cg stroke='currentColor' stroke-width='1.7' stroke-linecap='round'%3E%3Cpath d='M39 33L70 41M39 33L70 59M39 50L70 41M39 50L70 59M39 67L70 41M39 67L70 59'/%3E%3C/g%3E%3Cg fill='currentColor'%3E%3Ccircle cx='39' cy='33' r='5.3'/%3E%3Ccircle cx='39' cy='50' r='5.3'/%3E%3Ccircle cx='39' cy='67' r='5.3'/%3E%3Ccircle cx='70' cy='41' r='5.3'/%3E%3Ccircle cx='70' cy='59' r='5.3'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1077,6 +1077,31 @@ h1{font-weight:600} .page-h h1{font-size:40px;font-weight:600} .hero2 h1{font-si
 /* one page width everywhere, so the header and the page's left edge do not move from tab to tab */
 .wrap,body.wide .wrap{max-width:1480px}
 html{scrollbar-gutter:stable}   /* a short page keeps the room a scrollbar takes, so nothing shifts sideways between short and long pages */
+/* the front page's last band: two ways to add a search */
+.band.two{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 64px;align-items:start}
+.band.two > h2{grid-column:1 / -1;margin:0 0 4px}
+.bcol .bk{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--peri);margin:0 0 8px}
+.bcol h3{font-family:var(--font-display);font-weight:600;font-size:20px;letter-spacing:-.02em;margin:0 0 8px;color:var(--band-ink)}
+.bcol p + p{margin-top:8px}
+.band.two .band-a{flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px 20px;margin-top:18px}
+.land .land-s{max-width:760px}
+@media (max-width:900px){ .band.two{grid-template-columns:minmax(0,1fr);gap:26px} }
+/* evoloop's page */
+.evo-loop{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin:0 0 6px;font-size:14px}
+.evo-loop .st{background:var(--accent-wash);color:var(--ink);border-radius:999px;padding:7px 15px;font-weight:600}
+.evo-loop .st:first-child{background:var(--navy);color:var(--on-navy)}
+.evo-loop .ar{color:var(--muted);font-size:16px}
+.evo-h{font-family:var(--font-display);font-weight:600;font-size:24px;letter-spacing:-.022em;margin:38px 0 14px}
+.evo-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.evo-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.evo-step{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 24px}
+.evo-step .n{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.evo-step h3{font-family:var(--font-display);font-weight:600;font-size:18.5px;letter-spacing:-.018em;margin:6px 0 8px}
+.evo-step p{color:var(--ink-2);margin:0 0 10px;font-size:14.5px;max-width:66ch} .evo-step p:last-child{margin-bottom:0}
+.evo-step .citeb{margin:12px 0 14px} .evo-more{font-size:13.5px} .evo-more a{font-weight:600}
+.evo-p{color:var(--ink-2);margin:0 0 6px;max-width:80ch}
+.page-h .evo-links{margin-top:16px}
+@media (max-width:900px){ .evo-steps,.evo-two{grid-template-columns:minmax(0,1fr)} }
 </style>
 </head>
 <body>
@@ -1084,7 +1109,7 @@ html{scrollbar-gutter:stable}   /* a short page keeps the room a scrollbar takes
 <div class="ribbon" id="protolabel" role="region" aria-label="About this copy of the site" hidden></div>
 <header class="top"><div class="wrap">
   <a class="brand" href="#/" id="homelink" aria-label="CAMEO, front page"><svg class="mark" viewBox="0 0 100 100" aria-hidden="true"><path d="M81.5 25.4A40 40 0 1 0 81.5 74.6" fill="none" stroke="currentColor" stroke-width="10.5"/><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M39 33L70 41M39 33L70 59M39 50L70 41M39 50L70 59M39 67L70 41M39 67L70 59"/></g><g fill="currentColor"><circle cx="39" cy="33" r="5.3"/><circle cx="39" cy="50" r="5.3"/><circle cx="39" cy="67" r="5.3"/><circle cx="70" cy="41" r="5.3"/><circle cx="70" cy="59" r="5.3"/></g></svg><span>cameo</span></a>
-  <nav class="nav" aria-label="Site"><a href="#/database" data-nav="database">Database</a><a href="#/leaderboards" data-nav="lb">Leaderboards</a><a href="#/about" data-nav="about">About</a></nav>
+  <nav class="nav" aria-label="Site"><a href="#/database" data-nav="database">Database</a><a href="#/leaderboards" data-nav="lb">Leaderboards</a><a href="#/evoloop" data-nav="evoloop">evoloop</a><a href="#/about" data-nav="about">About</a></nav>
   <span class="topr"><label class="tsw"><span class="vh">Search the database</span><input class="tsearch" id="tsearch" type="search" placeholder="Search"><kbd aria-hidden="true">/</kbd></label><a class="btn pri" id="depbtn" href="#/deposit" data-nav="deposit">Deposit</a></span>
 </div></header>
 <div id="banner"></div>
@@ -1216,9 +1241,9 @@ let BUNDLED = null, WIRED = false;
 const clone = o => JSON.parse(JSON.stringify(o));
 function siteFoot(){
   const repo = "https://github.com/" + INDEX.site.repo, a = (href, t, out) => h("a", out ? {href, target:"_blank", rel:"noopener", text:t} : {href, text:t}), col = (t, ...k) => h("div",{class:"fcol"}, h("h2",{text:t}), k);
-  put(document.getElementById("sitefoot"), h("div",{class:"fbrand"}, h("b",{text:"CAMEO"}), h("p",{text:"Catalog of Architecture Metadata and Experimental Outcomes. An open database of the models a study trains."})),
+  put(document.getElementById("sitefoot"), h("div",{class:"fbrand"}, h("b",{text:"CAMEO"}), h("p",{text:"Catalog of Architecture Metadata and Experimental Outcomes. An open database of model searches: every model tried, with its code, its training and its results."})),
     h("nav",{"aria-label":"Footer",class:"fnav"}, col("Use", a("#/database","Database"), a("#/leaderboards","Leaderboards"), a("#/compare","Compare runs"), a("#/about/data","Download")),
-      col("Contribute", a("#/deposit","Deposit a study"), a(KITF,"Spec for agents",true), a(repo,"GitHub",true)),
+      col("Contribute", a("#/deposit","Deposit a study"), a("#/evoloop","Search with evoloop"), a(KITF,"Spec for agents",true), a(repo,"GitHub",true)),
       col("About", a("#/about","Why CAMEO"), a("#/about/stars","Stars"), a("#/about/cite","How to cite"), a("#/about/contact","Contact"))),
     h("p",{class:"fleg",text:"The site and its code are under the MIT license. Each study carries its own open license."}));
 }
@@ -1239,7 +1264,8 @@ function parseHash(){
   if (path[0] === "b" && path[1]) return {view:"bench", id:path[1], only:qs.get("s") || ""};
   if (path[0] === "s" && path[1]) return {view:"study", id:path[1], run:path.slice(2).join("/") || null};
   if (path[0] === "d" && path[1]) return {view:"dep", id:path[1]};
-  if (path[0] === "leaderboards") return {view:"lb", id:path[1] || null, m:qs.get("m"), split:qs.get("split"), y:qs.get("y"), n:qs.get("n"), q:qs.get("q"), tag:qs.get("tag"), sort:qs.get("sort")};
+  if (path[0] === "evoloop") return {view:"evoloop"};
+  if (path[0] === "leaderboards") return {view:"lb", id:path[1] || null, tab:qs.get("tab"), m:qs.get("m"), split:qs.get("split"), y:qs.get("y"), n:qs.get("n"), q:qs.get("q"), tag:qs.get("tag"), sort:qs.get("sort")};
   if (path[0] === "together") return {view:"together", ids:(qs.get("s") || "").split(",").filter(Boolean), bench:qs.get("b") || "", off:qs.get("off"), y:qs.get("y"), per:qs.get("per"), split:qs.get("split"), pts:qs.get("pts"), x:qs.get("x"), m:qs.get("m"), q:qs.get("q"), url:true};
   if (path[0] === "database") return list(["studies","models","benchmarks"].includes(path[1]) ? path[1] : null);
   if (["studies","models","benchmarks"].includes(path[0])) return list(path[0]);   /* older links */
@@ -1264,12 +1290,12 @@ function weightLink(w){
   return null;
 }
 const madeUp = x => x.made_up ? h("span",{class:"pill bad",title:"Every number in this study is made up, so the demo has more than one study",text:"made-up data"}) : null;
-const TITLES = {database:"Database", lb:"Leaderboards", together:"Merged studies", about:"About", deposit:"Deposit", compare:"Compare", notfound:"Not found"};
+const TITLES = {database:"Database", lb:"Leaderboards", evoloop:"Search with evoloop", together:"Merged studies", about:"About", deposit:"Deposit", compare:"Compare", notfound:"Not found"};
 async function route(){
   const r = parseHash(); ROUTE = r; window.scrollTo(0, 0); closeDialog(); if (FIELD_STOP){ FIELD_STOP(); FIELD_STOP = null; }
-  document.title = TITLES[r.view] ? TITLES[r.view] + " · CAMEO" : "CAMEO";
+  document.title = TITLES[r.view] ? TITLES[r.view] + " · CAMEO" : "CAMEO · an open database of model searches";
   document.body.classList.toggle("wide", ["study","bench","compare","together","lb"].includes(r.view)); document.body.classList.toggle("at-home", r.view === "home"); document.body.classList.toggle("at-db", r.view === "database");   /* those two pages have their own search box, so the one in the header steps aside */
-  const here = {database:["database","bench","study","dep","together"], lb:["lb"], about:["about"], deposit:["deposit"]};
+  const here = {database:["database","bench","study","dep","together"], lb:["lb"], evoloop:["evoloop"], about:["about"], deposit:["deposit"]};
   document.querySelectorAll("[data-nav]").forEach(a => { if ((here[a.dataset.nav] || []).includes(r.view)) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   TOG.redraw = null; TOG.compare = null;   /* they belong to the merged view that was on screen; it sets them again when it opens */
   renderTray(); renderStudyTray();
@@ -1284,6 +1310,7 @@ async function route(){
   else if (r.view === "dep") openDepositor(r.id);
   else if (r.view === "together") await openTogether(r);
   else if (r.view === "lb") await openLeaderboards(r);
+  else if (r.view === "evoloop") openEvoloop();
   else if (r.view === "notfound"){ leave(); setCrumbs([]); put(document.getElementById("app"), pageHead(null, "This page does not exist", "The address may be mistyped, or the page may have moved."), h("p",{class:"empty"}, h("a",{href:"#/",text:"Go to the front page"}), " · ", h("a",{href:"#/database",text:"Open the database"}))); }
   else openHome();
 }
@@ -1326,7 +1353,7 @@ function studyList(St, pick){
 let FIELD_STOP = null;
 function openHome(){
   leave(); setCrumbs([]); const T = INDEX.totals;
-  const q = h("input",{class:"search big",type:"search",id:"homeq",placeholder:"Search by dataset, task, model family or depositor","aria-label":"Search the database"});
+  const q = h("input",{class:"search big",type:"search",id:"homeq",placeholder:"Search by dataset, task or model family","aria-label":"Search the database"});
   q.addEventListener("keydown", e => { if (e.key === "Enter" && q.value.trim()) location.hash = "#/database?q=" + encodeURIComponent(q.value.trim()); });
   /* a cameo of a model: a U-Net, drawn so that it makes the letter C. Its layers are the strokes of the letter, wide at the two ends and short along the back;
      its skip connections are the thin lines inside. Decoration only. */
@@ -1335,29 +1362,72 @@ function openHome(){
   art.append(s("path",{d:"M81.5 25.4A40 40 0 1 0 81.5 74.6",fill:"none",stroke:"currentColor","stroke-width":10.5}),
     s("path",{d:"M39 33L70 41M39 33L70 59M39 50L70 41M39 50L70 59M39 67L70 41M39 67L70 59",stroke:"currentColor","stroke-width":1.7,"stroke-linecap":"round",fill:"none"}),
     ...[[39,33],[39,50],[39,67],[70,41],[70,59]].map(([cx, cy]) => s("circle",{cx, cy, r:5.3, fill:"currentColor"})));
-  const uses = [["Keep what failed","Runs that did not work are stored beside the ones that did.","#/database","Open the database"],
-    ["Reuse a training configuration","Download a study, or the runs you pick, with the architecture and the training settings each one used. A new search begins from what has been tried.","#/about/data","How to download"],
-    ["See what you can rebuild","An entry holds the recorded model code, settings and results, and lists what is still needed to reproduce training.","#/about/entry","What an entry holds"]];
+  const B0 = INDEX.benchmarks[0], doms = [...new Set(INDEX.benchmarks.map(b => b.domain).filter(Boolean))], nB = INDEX.benchmarks.length, share = evoShare();
+  /* four things a visitor can do, each with the page where it is done */
+  const uses = [["Find a model for your task","Each benchmark has a leaderboard of every architecture tried on it, not only the published ones. Pick one and take the code and settings that built it.","#/leaderboards","See the leaderboards"],
+    ["Follow a search run by run","Open a study to see how it unfolded. Each run records the idea it tested, the model it started from, and whether the change helped.","#/database","Browse the studies"],
+    ["Look inside any model","Read an architecture as a layer list, a graph or its code, and save any of them as a figure or a file.",B0 ? "#/leaderboards/" + B0.id + "?m=top&tab=model" : "#/leaderboards","Open a model"],
+    ["Start your next search here","Download a model, a study or the whole database as JSON. Rebuild a model from its entry, or give a study to evoloop and begin a new search from it.","#/about/data","How to download"]];
   put(document.getElementById("app"),
     h("section",{class:"land"}, h("div",{class:"land-t"},
         h("h1",{text:"Most models never make the paper."}),
-        h("p",{class:"lede",text:"CAMEO is an open database of model architectures, training settings and experimental results. Explore baselines, ablations and unsuccessful runs across studies to decide what to try next."}),
-        h("div",{class:"land-s"}, q, h("a",{class:"btn big",id:"browse",href:"#/database",text:"Browse the database"})),
-        h("p",{class:"count",id:"totals",text:[pl(T.studies,"study","studies"), pl(T.models,"architecture recorded","architectures recorded"), pl(T.runs,"training run","training runs")].join(" · ")}),
-        h("p",{class:"fine",text:"A study is one experimental campaign. An architecture can have several training runs."})), art),
+        h("p",{class:"lede",text:"Behind a published model there is usually a search through hundreds of architectures and training settings. CAMEO opens those searches up: every model, with its code, how it was trained and how it scored. See what worked, what didn't, and what carries over between studies."}),
+        h("div",{class:"land-s"}, q, h("a",{class:"btn big",id:"browse",href:"#/database",text:"Browse the database"}), h("a",{class:"btn big",id:"tolb",href:"#/leaderboards",text:"Leaderboards"})),
+        h("p",{class:"count",id:"totals",text:[pl(T.models,"architecture","architectures"), pl(T.runs,"training run","training runs"), pl(T.studies,"study","studies"), pl(T.benchmarks,"benchmark","benchmarks")].join(" · ")}),
+        h("p",{class:"fine",id:"scope",text:"A study is one search, deposited whole." + (doms.length === 1 && nB ? (nB === 1 ? ` So far, its one benchmark is in ${doms[0].toLowerCase()}.` : ` So far, all ${nB} benchmarks are in ${doms[0].toLowerCase()}.`) : "")})), art),
     h("section",{class:"hl",id:"learn","aria-label":"Learn across studies"},
-      h("div",null, h("div",{class:"eyebrow",text:"Why keep every model"}), h("h2",{text:"Learn across studies"}),
-        h("p",{text:"A leaderboard shows which model did best on one task. The runs behind it, including the baselines and the changes that failed, show why. CAMEO keeps them all in one format, so a search can be read as a whole, within a study or across several."}),
+      h("div",null, h("div",{class:"eyebrow",text:"Why keep the whole search"}), h("h2",{text:"Learn across studies"}),
+        h("p",{text:"One search shows what works on one dataset. Put several side by side and you can start to see what works in general."}),
+        h("p",{text:"Every study in CAMEO is in the same format, so their models can share a plot, a leaderboard and a comparison table."}),
         h("div",{class:"hl-a"}, h("a",{class:"btn pri big",href:"#/database",text:"Explore the studies"}), h("a",{class:"hl-more",href:"#/about/why",text:"Why CAMEO"}))),
-      h("ol",{"aria-label":"Questions a record of whole searches can answer"},
+      h("ol",{"aria-label":"Questions that several searches can answer together"},
         h("li",null, h("span",{text:"What helped"}), "Which design choices improved a model, and which made no difference?"),
-        h("li",null, h("span",{text:"Where"}), "Did they hold on other tasks and architectures?"),
-        h("li",null, h("span",{text:"What next"}), "What has already been tried?"))),
-    h("section",{class:"uses","aria-label":"What else the record is for"}, uses.map(([t, d, href, cta]) => h("div",{class:"use"}, h("h2",{text:t}), h("p",{text:d}), h("a",{href,text:cta})))),
-    h("section",{class:"band"}, h("div",null, h("h2",{text:"Deposit your models"}),
-        h("p",{text:"CAMEO provides a spec that tells an agent, or a training loop, what to record and how to write it as JSON. Baselines belong in the entry too."}),
-        h("p",{class:"soon",text:"Code for running your own agentic search is coming soon."})),
-      h("div",{class:"band-a"}, h("a",{class:"btn inv big",href:KITF,target:"_blank",rel:"noopener",id:"speclink",text:"Read the spec"}), h("a",{class:"band-l",href:"#/deposit",text:"How to deposit"}))));
+        h("li",null, h("span",{text:"Where"}), "Does a choice that helped on one dataset help on another?"),
+        h("li",null, h("span",{text:"What next"}), "What has been tried already, and what hasn't?"))),
+    h("section",{class:"uses four","aria-label":"What you can do here"}, uses.map(([t, d, href, cta]) => h("div",{class:"use"}, h("h2",{text:t}), h("p",{text:d}), h("a",{href,text:cta})))),
+    /* two ways to add a search: run one with evoloop, or deposit one that is already done */
+    h("section",{class:"band two",id:"addsearch"}, h("h2",{text:"Add a search of your own"}),
+      h("div",{class:"bcol"}, h("div",{class:"bk",text:"Run one"}), h("h3",{text:"Search with evoloop"}),
+        h("p",{text:"evoloop is open-source autoresearch code. You mark the parts of your code that may change, such as an architecture, a loss or a training recipe. LLM agents write candidate designs, and code trains and scores every one."}),
+        h("p",{id:"evoshare",text:(share ? `It ran ${share}. ` : "") + "Each search is saved as a CAMEO study, and a new search can start from designs already here."}),
+        h("div",{class:"band-a"}, h("a",{class:"btn inv big",id:"evolink",href:"#/evoloop",text:"How evoloop works with CAMEO"}), h("a",{class:"band-l",href:EVO.docs,target:"_blank",rel:"noopener",text:"evoloop docs ↗"}))),
+      h("div",{class:"bcol"}, h("div",{class:"bk",text:"Deposit one"}), h("h3",{text:"Deposit a search you already ran"}),
+        h("p",{text:"Give the CAMEO spec to your agent or training loop and it writes the whole search as one JSON file: every model, not only the best."}),
+        h("p",{text:"Your name stays on the study, on every leaderboard row and on every run."}),
+        h("div",{class:"band-a"}, h("a",{class:"btn inv big",href:"#/deposit",text:"How to deposit"}), h("a",{class:"band-l",href:KITF,target:"_blank",rel:"noopener",id:"speclink",text:"Read the spec"})))));
+}
+/* ---------- evoloop: the code that runs searches, and how it and CAMEO fit together ----------
+   evoloop writes every search as a CAMEO study and can start a search from one. What is said about it here follows its documentation;
+   how many studies it ran is counted from the study files. */
+const EVO = {docs:"https://evoloop.readthedocs.io/en/latest/", repo:"https://github.com/cameo-db/evoloop"};
+const evoStudies = () => INDEX.studies.filter(x => String(x.tool || "").toLowerCase() === "evoloop");
+const evoShare = () => { const n = evoStudies().length, N = INDEX.studies.length; return !n ? null : n < N ? `${n} of the ${N} studies in CAMEO` : N === 1 ? "the one study in CAMEO so far" : `all ${N} studies in CAMEO so far`; };
+function openEvoloop(){
+  leave(); setCrumbs([]); const st = evoStudies(), share = evoShare();
+  const ext = (href, text, pri) => h("a",{class:"btn" + (pri ? " pri" : ""),href,target:"_blank",rel:"noopener",text:text + " ↗"}), doc = (path, text) => h("a",{href:EVO.docs + path,target:"_blank",rel:"noopener",text:text + " ↗"});
+  const step = (n, t, ...k) => h("div",{class:"evo-step"}, h("div",{class:"n",text:n}), h("h3",{text:t}), k), stage = t => h("span",{class:"st",text:t}), arrow = () => h("span",{class:"ar","aria-hidden":"true",text:"→"});
+  put(document.getElementById("app"),
+    pageHead("Run a search", "Search with evoloop", "evoloop is open-source autoresearch code. It runs the search, and CAMEO keeps what it finds.",
+      h("div",{class:"links evo-links"}, ext(EVO.docs, "Read the evoloop docs", true), ext(EVO.repo, "evoloop on GitHub"))),
+    h("div",{class:"evo-loop",id:"evoloopstrip",role:"img","aria-label":"evoloop runs a search and saves it as one study file. CAMEO shows every model in it. The next search starts from those models."},
+      stage("evoloop runs a search"), arrow(), stage("one study file"), arrow(), stage("CAMEO shows every model"), arrow(), stage("the next search starts from them")),
+    h("h2",{class:"evo-h",text:"What evoloop does"}),
+    h("div",{class:"evo-steps"},
+      step("01", "You choose what may change", h("p",{text:"Mark the parts of your code a search may edit, such as an architecture, a loss or a training recipe. Give it a script that trains one model and reports its validation score."})),
+      step("02", "Agents propose, code decides", h("p",{text:"An LLM agent writes each candidate: an edit to an earlier design, a cross of two, or something new. Code trains and scores it, chooses the parents of the next round and keeps to the budget."})),
+      step("03", "The whole search is saved", h("p",{text:"When the budget is spent, evoloop writes one study file in CAMEO's format: every model it tried, with its code, its settings and its score."}))),
+    h("p",{class:"fine",style:"margin-top:12px",text:"The method follows FunSearch and AlphaEvolve, adapted to searches in which every evaluation is a full training run."}),
+    h("h2",{class:"evo-h",text:"How evoloop and CAMEO fit together"}),
+    h("div",{class:"evo-two"},
+      step("Search, then deposit", "From a search to CAMEO", h("p",{text:"Every evoloop search ends as a study file that CAMEO can read. Write it out, check it with CAMEO's checker, and deposit it."}),
+        citeBlock("Write the study file and check it", "evoloop study mysearch --name r1\npython3 cameo.py check mysearch/runs/r1/study.json"),
+        h("p",{class:"evo-more"}, h("a",{href:"#/deposit",text:"How to deposit"}), " · ", doc("study/", "evoloop docs: the study file"))),
+      step("Download, then search", "From CAMEO to a new search", h("p",{text:"Download a study here and give it to evoloop. Its best designs become the starting points of your search."}),
+        citeBlock("Start a search from a CAMEO study", "evoloop import mysearch --name r1 --from-study study.json --top 5 --by \"Your Name\""),
+        h("p",{text:"Designs from the same project are trained again in your search. Designs from another project come in as ideas for the agents to adapt. Scores from another study are never compared with yours."}),
+        h("p",{class:"evo-more"}, h("a",{href:"#/database",text:"Find a study to start from"}), " · ", doc("warm-start/", "evoloop docs: warm start")))),
+    h("p",{class:"fine",style:"margin-top:12px"}, "The commands are from evoloop's documentation. ", doc("", "Check it"), " for the version you have."),
+    st.length ? [h("h2",{class:"evo-h",id:"evoran",text:"Searches run with evoloop"}), h("p",{class:"evo-p",text:`evoloop ran ${share}. Each one is a whole search: open it to see every model it tried.`}), studyList(st, false)] : null);
 }
 /* ---------- the database: one page, one search box, three ways to look at what is in it ---------- */
 const DB = {q:"", view:"studies", auto:false, filt:false, picked:new Set()};
@@ -1390,7 +1460,7 @@ function openDatabase(r){
   const q = h("input",{class:"search",type:"search",id:"browseq",value:DB.q,placeholder:"Search by dataset, task, model family, base model, depositor or tag","aria-label":"Search the database"});
   q.addEventListener("input", () => { DB.q = q.value; MOD.more = false; drawDatabase(); });
   const adv = h("button",{class:"btn advbtn",type:"button",id:"filt","aria-expanded":String(DB.filt),"aria-controls":"advbox",text:"Advanced search",onclick:()=>{ DB.filt = !DB.filt; adv.setAttribute("aria-expanded", String(DB.filt)); drawAdv(); }});
-  put(document.getElementById("app"), pageHead(null, "Database", "Studies, models and benchmarks in one place."),
+  put(document.getElementById("app"), pageHead(null, "Database", "Every study, with all of its models. Tick two or more studies to explore them together."),
     h("div",{class:"toolbar dbsearch"}, q, adv), h("div",{id:"advbox"}), h("div",{class:"dbtabs",id:"dbtabs",role:"tablist","aria-label":"What to list"}), h("div",{class:"toolbar",id:"dbctl"}), h("div",{id:"results"}));
   drawAdv(); drawDatabase();
   if (!MODELS_ALL) getJSON("models.json").then(m => { MODELS_ALL = m; if (ROUTE.view === "database"){ drawAdv(); drawDatabase(); } }).catch(() => { MODELS_ALL = []; if (ROUTE.view === "database") drawDatabase(); });
@@ -1484,6 +1554,7 @@ const LBSORT = {studies:["Most studies", (a, c) => c.studies - a.studies || c.mo
 async function openLeaderboards(r){
   leave(); setCrumbs([]); const app = document.getElementById("app"), all = INDEX.benchmarks;
   if (r.q != null || r.tag != null || r.sort != null || r.n != null || r.id){ LB.q = r.q || ""; LB.tags = new Set(String(r.tag || "").split(",").filter(Boolean)); LB.sort = LBSORT[r.sort] ? r.sort : "studies"; LB.n = LBN.includes(+r.n) ? +r.n : 10; }
+  if (r.tab === "model" || r.tab === "details") LB.ptab = r.tab;
   if (r.id && all.some(b => b.id === r.id)){ if (LB.id !== r.id || r.split || r.y){ LB.split = r.split === "valid" || r.split === "test" ? r.split : null; LB.metric = r.y || null; } if (LB.id !== r.id || r.m) LB.sel = r.m || null; LB.id = r.id; }
   const tagsOf = b => [b.domain, b.task_type].filter(Boolean), tagCount = {}; for (const b of all) for (const t of tagsOf(b)) tagCount[t] = (tagCount[t] || 0) + 1;
   const listBox = h("div",{id:"lblist"}), boardBox = h("section",{class:"card",id:"lbboard","aria-live":"polite"}), panel = h("aside",{class:"card insp",id:"lbinsp","aria-label":"Selected model",hidden:true}), chips = h("div",{class:"lb-chips"});
@@ -1515,6 +1586,7 @@ async function openLeaderboards(r){
     /* LB.metric is what the visitor chose. It is used on every split that has it, and never dropped when a split does not. */
     const keys = keysOn(LB.split), k = keys.includes(LB.metric) ? LB.metric : keys.includes(b.metric) ? b.metric : keys[0] || b.metric, missed = LB.metric && LB.metric !== k ? LB.metric : null, sp = LB.split, low = k === b.metric ? b.direction === "minimize" : metricInfo0(k)[2] === "low";
     const ranked = B.rows.map(r_ => ({r:r_, v:val(r_, sp, k)})).filter(x => x.v != null).sort((x, y) => (x.v - y.v) * (low ? 1 : -1)), shown = ranked.slice(0, LB.n);
+    if (LB.sel === "top") LB.sel = ranked.length ? ranked[0].r.study + "~" + ranked[0].r.run : null;   /* a link may ask for whichever model leads */
     const silent = studies.filter(x => !ranked.some(y => y.r.study === x.id)), label = SPLITN[sp] + " " + bmLabel(b, k);
     /* what the benchmark is, where its data comes from and how each study prepared it, with what can be downloaded. Folded until asked for. */
     const refs = (b.links || []).filter(l => /^https:\/\//.test(l.href || "")), P = B.prep || [], fact = (kq, ...v) => [h("dt",{text:kq}), h("dd",null, ...v)];
@@ -1588,7 +1660,7 @@ async function openLeaderboards(r){
         h("span",{class:"lb-hint",text:"Click a model for its details, layers, graph and code. All opens the benchmark's studies merged, on a plot."})));
     drawPanel(); sync();
   }
-  put(app, pageHead(null, "Leaderboards", "The leading models on each benchmark, as their depositors recorded them."),
+  put(app, pageHead(null, "Leaderboards", "The best models on each benchmark, as their depositors scored them. Click one to see how it was built and trained."),
     h("div",{class:"lbp",id:"lbp"}, h("aside",{class:"lbp-side","aria-label":"Benchmarks"}, q, chips, h("div",{class:"lb-sort"}, sortSel), listBox), boardBox, panel));
   drawList();
 }
@@ -1882,14 +1954,18 @@ function openAbout(sub){
     ["kit/rules.json","kit/rules.json","The checks, the open licenses, and what each star means."],
     ["llms.txt","llms.txt","This list as plain text, for agents."]];
   const h3 = (id, t) => h("h3",{id:"about-" + id,text:t});
-  sec("why", "", p("A study that searches for a model trains many of them, often hundreds, and its paper reports one. Every other model makes a cameo: it is trained, scored, and left out."),
-    p("CAMEO keeps the record of all of them. A study is deposited as one JSON file describing each model, its training and its results."),
+  const evoA = () => inl("#/evoloop", "evoloop"), share = evoShare();
+  sec("why", "", p("Behind a published model there is usually a search. A person, or more and more often an AI agent, trains hundreds of architectures and training settings, compares them, and writes up the one that won. The rest make a cameo: trained, scored, and left out."),
+    p("CAMEO keeps the whole search. Each study is one JSON file holding every model the search tried: the code that builds it, how it was trained, and how it scored. Here is what that is good for."),
     h("ul",null,
-      h("li",null, h("b",{text:"Design choices can be learned across studies. "}), "A leaderboard shows which model did best on one task. The runs behind it show which changes helped and which did not. With every run recorded in one format, a search can be read as a whole, within a study or across several."),
-      h("li",null, h("b",{text:"Failed experiments are kept. "}), "What did not work is stored beside what did, so nobody has to find it out again."),
-      h("li",null, h("b",{text:"New searches can start warm. "}), "Entries can be downloaded and merged, so a new search begins from what has already been tried."),
-      h("li",null, h("b",{text:"Models can be rebuilt from the entry. "}), "An entry records each model's code and training settings, and lists what is still missing to retrain it. Code, datasets and weights can also be linked by DOI.")),
-    p("Agentic search makes this more pressing. One search can produce hundreds of models that perform about equally well and share little architecture, and the full set is more informative than the single best model."));
+      h("li",null, h("b",{text:"Find a model for your task. "}), "Every benchmark has a leaderboard of all the architectures tried on it, not only the published ones. Plot score against size or training time to find one that fits your budget, then download the code and settings that built it."),
+      h("li",null, h("b",{text:"See why a model won. "}), "A winning score does not say why it won. Each run in a study records the idea it tested, the model it started from, and whether the change helped."),
+      h("li",null, h("b",{text:"Learn what carries over. "}), "One search shows what works on one dataset. Because every study is in the same format, several can share a plot and a comparison table, and a design choice can be followed from one task to the next."),
+      h("li",null, h("b",{text:"Skip what has been tried. "}), "Runs that failed, diverged or changed nothing are kept, each with the idea it was testing, so nobody has to spend the compute to find out again."),
+      h("li",null, h("b",{text:"Start a new search from here. "}), "Everything downloads as JSON. A person or an agent can rebuild a model from its entry, and ", evoA(), " can begin a new search from the designs in a study."),
+      h("li",null, h("b",{text:"Study search itself. "}), `The database is also data: ${fmtInt(INDEX.totals.models)} architectures with their code, settings and scores, for anyone building performance predictors or search agents.`)),
+    p("Agentic search makes this pressing. One automated search can train hundreds of models, and several can finish within noise of the best, sometimes with quite different architectures. The set says more than the winner does."),
+    share ? p(evoA(), " is open-source code that runs such searches and saves them in CAMEO's format. It ran ", share, ".") : null);
   sec("entry", "", p("An entry is one JSON file for one study. It has four parts."), h("ul",null,
       h("li",null, h("b",{text:"Experiment. "}), "What was studied, by whom, on what data, and in what software and hardware environment."),
       h("li",null, h("b",{text:"Models. "}), "Each architecture."),
@@ -1909,13 +1985,14 @@ function openAbout(sub){
       h("li",null, h("b",{text:"One study. "}), "Use Download study (JSON) on the study's page. The file is indented for reading. The same entry on one line is at ", mono("studies/<study id>.json"), "."),
       h("li",null, h("b",{text:"Several studies. "}), "Tick studies in the database and choose Download merged studies (JSON). The file has three lists. ", mono("studies"), " holds the whole entries, unchanged. ", mono("rows"), " has one line per run with the benchmark's metric on both splits, ready to plot. ", mono("contents"), " says where each study stores that metric. Run ids repeat between studies, so key a run by study and run together."),
       h("li",null, h("b",{text:"Everything. "}), mono("cameo-all.json"), " holds every study."),
-      h("li",null, h("b",{text:"Models. "}), "Select models on a leaderboard, in the Models list, in a study's table or in the merged view. The bar at the foot of the page downloads them as one file or compares them side by side. Each model comes with its code, training settings and results, and a list of what is still needed to retrain it.")),
+      h("li",null, h("b",{text:"Models. "}), "Select models on a leaderboard, in the Models list, in a study's table or in the merged view. The bar at the foot of the page downloads them as one file or compares them side by side. Each model comes with its code, training settings and results, and a list of what is still needed to retrain it."),
+      h("li",null, h("b",{text:"A starting point for a search. "}), "Give a study's file to ", inl("#/evoloop", "evoloop"), " and its best designs become the starting points of a new search.")),
     h("div",{class:"card scrollx",tabindex:"0",role:"region","aria-label":"Data files"}, h("table",{class:"lb",id:"filetable"}, h("thead",null, h("tr",null, h("th",{text:"File"}), h("th",{text:"What it holds"}), h("th",null, h("span",{class:"vh",text:"Open"})))),
       h("tbody",null, files.map(([name, href, what]) => h("tr",null, h("td",null, mono(name)), h("td",{text:what}), h("td",null, href ? h("a",{class:"plainlink",href,target:"_blank",rel:"noopener",text:name.includes("<") ? "Open an example" : "Open"}) : "")))))),
     p("The files are at ", mono(base), " and are rebuilt whenever a study is added."));
   sec("credit", "", h3("deposit", "Deposit"),
     p("A deposit is one JSON file, added by pull request. The ", inl("#/deposit", "Deposit"), " page has the ", a(KITF, "spec"), " that tells an agent or a training loop what to record, the checker, and a preview."),
-    p("Code for running your own agentic search is coming soon."),
+    p("To run a new search, use ", inl("#/evoloop", "evoloop"), ". It does the searching and writes the entry for you."),
     h3("licenses", "Credit and licenses"), p("The depositor's name stays on the study, on every leaderboard row and on every run. Each entry carries an open license: MIT unless the depositor chooses another from the list."),
     h3("cite", "How to cite"), p("To credit a study, use Cite on its page. That citation names the depositor. To cite the database:"), citeBlock("Citation", cs.text), citeBlock("BibTeX", cs.bib),
     cs.doi ? h("p",null, "DOI: ", a("https://doi.org/" + cs.doi, cs.doi), ".") : p("The database has no DOI yet. Until it does, cite its address and the date you used it."),
@@ -2137,7 +2214,8 @@ function openDepositPage(){
   const kit = dl("kit/cameo-agent-kit.zip", "Download the kit (.zip)");
   fetch("kit/cameo-agent-kit.zip", {method:"HEAD"}).then(r => { if (!r.ok) throw 0; }).catch(() => kit.replaceWith(h("span",{class:"btn",id:"nokit",style:"opacity:.6;cursor:default",text:"The kit (.zip) is on the live site"})));
   const step = (n, t, ...k) => h("section",{class:"dstep"}, h("div",{class:"dstep-n","aria-hidden":"true",text:String(n)}), h("div",{class:"dstep-b"}, h("h2",{text:t}), k));
-  put(document.getElementById("app"), pageHead("Deposit", "Deposit a study", "A deposit is one JSON file. An agent or a training loop writes it from the spec, you check it, and you add it by pull request. Partial entries are accepted."),
+  put(document.getElementById("app"), pageHead("Deposit", "Deposit a study", "A deposit is one JSON file holding a whole search. An agent or a training loop writes it from the spec, you check it, and you add it by pull request. Partial entries are accepted."),
+    h("p",{class:"benchnote",id:"evonote",style:"margin:-8px 0 26px"}, "Starting a new search? ", h("a",{href:"#/evoloop",text:"evoloop"}), " runs the search and writes this file for you."),
     h("div",{class:"dsteps"},
       step(1, "Give the spec to your agent", h("p",{text:"The spec lists what to record and how to write it as JSON. Use it at the start of a search, or afterwards to convert a finished project. Baselines belong in the entry: the model you started from, and any published results on the same data."}),
         h("div",{class:"kitrow"}, dl(KITF, "Download the spec", true), copySpec, kit),
@@ -2546,7 +2624,7 @@ function build(){
       row("How models were chosen", `${OBJ.label}, ${OBJ.dir > 0 ? "lower" : "higher"} is better. ${known((m.evaluation||{}).test_policy) ? m.evaluation.test_policy : ""}`),
       ti.nf ? row("Noise floor", `${fmt(ti.nf,3)} ${lowerFirst(OBJ.label)}. How it was estimated: ${(m.evaluation||{}).noise_floor_method || "not described"}.`) : null,
       (m.search||{}).method ? row("Method", m.search.method) : null,
-      known(rb.tool) ? row("Run by", `The ${rb.tool} agent${known(rb.model) ? ` (${rb.model})` : ""}${known(rb.supervised_by) ? `, supervised by ${rb.supervised_by}` : ""}.`) : null,
+      known(rb.tool) ? row("Run by", "The ", /^evoloop$/i.test(String(rb.tool)) ? h("a",{href:"#/evoloop",title:"What evoloop is, and how it and CAMEO fit together",text:String(rb.tool)}) : String(rb.tool), ` agent${known(rb.model) ? ` (${rb.model})` : ""}${known(rb.supervised_by) ? `, supervised by ${rb.supervised_by}` : ""}.`) : null,
       blank(m.study.license) ? null : row("Metadata license", m.study.license),
       row("Study id", h("span",{class:"mono",text:m.study.id || "none"})),
       ENTRY.history.length ? row("History", h("ul",null, ENTRY.history.slice().reverse().map(x => h("li",{text:`Version ${x.v} · ${x.date} · ${x.reason}` + ((x.nd || x.nr) ? ` (${x.nd} detail${x.nd===1?"":"s"}, ${x.nr} result${x.nr===1?"":"s"} changed)` : "")})))) : null,

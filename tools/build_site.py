@@ -190,7 +190,7 @@ for path in paths:
              "created": I["study"].get("created"), "license": I["study"].get("license"), "benchmark": benches[0]["id"] if benches else None, "benchmark_title": benches[0]["title"] if benches else None,
              "benchmarks": [b["id"] for b in benches], "runs": sum(1 for t in I["trials"] if C.kind_of(t) != "reported"), "models": len(I["models"]), "star": rep["star"]["level"], "made_up": made_up, "tags": tags_of(I, benches),
              "families": sorted({str(m.get("family")).replace("_", " ") for m in I["models"] if C.known(m.get("family"))}), "bases": bases,
-             "kinds": sorted({C.kind_of(t) for t in I["trials"]}), "reported": len(reported), "best": best_here}
+             "kinds": sorted({C.kind_of(t) for t in I["trials"]}), "reported": len(reported), "best": best_here, "tool": kn(C.D_(con.get("run_by")).get("tool"))}
     index["studies"].append(entry)
     d = deps.setdefault(slug, {"slug": slug, "name": kn(con.get("name")) or "Depositor not named", "lab": None, "institution": None, "orcid": None, "studies": [], "runs": 0, "models": 0})
     d["studies"].append(sid); d["runs"] += entry["runs"]; d["models"] += entry["models"]
@@ -237,7 +237,7 @@ with zipfile.ZipFile(os.path.join(out, "kit", "cameo-agent-kit.zip"), "w", zipfi
 base = (str(SITE.get("url")).rstrip("/") + "/") if C.known(SITE.get("url")) else ""
 open(os.path.join(out, "llms.txt"), "w", encoding="utf-8").write("""# CAMEO
 
-> Catalog of Architecture Metadata and Experimental Outcomes: an open database of the models that studies train, including the ones that never reach the paper. Each entry is one JSON file that holds the models, how they were trained and how they performed.
+> Catalog of Architecture Metadata and Experimental Outcomes: an open database of model searches. Each study is one JSON file that holds every model a search tried: the code that builds it, how it was trained and how it scored.
 
 ## Write an entry
 
@@ -246,6 +246,10 @@ open(os.path.join(out, "llms.txt"), "w", encoding="utf-8").write("""# CAMEO
 - [Rules](%(b)skit/rules.json): the checks, the open licenses and what each star means
 - [Example entry](%(b)skit/example_minimal.json): a complete entry that passes every check
 - [All of these as one zip](%(b)skit/cameo-agent-kit.zip)
+
+## Run a search
+
+- [evoloop](https://evoloop.readthedocs.io/en/latest/): open-source code that runs a search over model designs and saves it as a CAMEO study. It can also start a new search from a study downloaded here
 
 ## Read the database
 
